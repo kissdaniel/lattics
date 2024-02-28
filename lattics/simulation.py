@@ -1,7 +1,7 @@
 """The main component of the LattiCS framework containing functionalities to set up and execute a simulation.
 """
 
-import agent
+import .agent
 
 class Simulation:
     def __init__(self):        
