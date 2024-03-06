@@ -58,6 +58,7 @@ class Agent:
         """
         if self._cellcycle_model is None:
             self._cellcycle_model = model
+            model.attach_agent(self)
         else:
             raise ValueError('A cell cycle model is already attached to the agent. Only one cell cycle model can be used at a time.')
         
@@ -105,9 +106,9 @@ class Agent:
         Args:
             dt (int): time elapsed since the last update step (milliseconds)
         """
-        for m in self.biochemical_models:
+        for m in self._biochemical_models:
             m.update(dt)
-        self.cellcycle_model.update(dt)
+        self._cellcycle_model.update(dt)
 
     def clone_from(source_agent):
         """Returns a deep copy of the source agent.
