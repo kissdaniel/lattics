@@ -8,7 +8,7 @@ class Simulation:
         pass
 
     def initialize(self):
-        pass
+        a = agent.Agent()
 
     def run(self):
         pass
