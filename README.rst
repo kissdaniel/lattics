@@ -20,13 +20,11 @@ Lattice-based Cellular Simulator
 
 
 * Free software: MIT license
-* Documentation: https://lattics.readthedocs.io.
 
+Installation
+------------
 
-Features
---------
-
-* TODO
+* Install LattiCS directly from git by calling  `pip install git+https://github.com/kissdaniel/lattics`
 
 Credits
 -------
