@@ -24,7 +24,9 @@ Lattice-based Cellular Simulator
 Installation
 ------------
 
-* Install LattiCS directly from git by calling `pip install git+https://github.com/kissdaniel/lattics`
+Install LattiCS directly from git by calling
+
+    pip install git+https://github.com/kissdaniel/lattics
 
 Credits
 -------
