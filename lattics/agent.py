@@ -9,11 +9,13 @@ class Agent:
     def __init__(self,
                  simulation=None
                  ):
+        """Constructor method.
+        """
         self._simulation = simulation
         self._status_flags = dict()
-        self._biochemical_models = list()
-        self._cellcycle_model = None
-        self._phenotype_transition_models = list()
+        self._metabolic_models = list()
+        self._proliferation_models = list()
+        self._state_transition_models = list()
 
     def __deepcopy__(self, memo):
         new_instance = Agent(
@@ -22,14 +24,14 @@ class Agent:
         new_instance._status_flags = copy.deepcopy(
             self._status_flags, memo
         )
-        new_instance._biochemical_models = copy.deepcopy(
-            self._biochemical_models, memo
+        new_instance._metabolic_models = copy.deepcopy(
+            self._metabolic_models, memo
         )
-        new_instance._cellcycle_model = copy.deepcopy(
-            self._cellcycle_model, memo
+        new_instance._proliferation_models = copy.deepcopy(
+            self._proliferation_models, memo
         )
-        new_instance._phenotype_transition_models = copy.deepcopy(
-            self._phenotype_transition_models, memo
+        new_instance._state_transition_models = copy.deepcopy(
+            self._state_transition_models, memo
         )
         return new_instance
 
@@ -45,7 +47,8 @@ class Agent:
         return self._simulation
 
     def initialize_status_flag(self, identifier):
-        """Initialize a new status flag for the agent instance with the specified identifier.
+        """Initialize a new status flag for the agent instance with the
+        specified identifier.
 
         Parameters
         ----------
@@ -115,29 +118,20 @@ class Agent:
             raise ValueError(f'Status flag \'{identifier}\' not available.')
 
     def update_models(self, dt):
-        for m in self._biochemical_models:
-            m.update(dt)
-        for m in self._phenotype_transition_models:
-            m.update(dt)
-        if self._cellcycle_model:
-            self._cellcycle_model.update(dt)
+        """Sequentially updates all models associated with the agent,
+        including metabolic, proliferation, and state transition models,
+        in the listed order. If multiple sub-models exist within the
+        same category, they are updated in the order they appear in their
+        respective collection.
 
-    def update_attributes(self, **kwargs):
-        for key, value in kwargs.items():
-            if hasattr(self, key):
-                setattr(self, key, value)
-            else:
-                if hasattr(self.cellcycle_model, key):
-                    setattr(self.cellcycle_model, key, value)
-                else:
-                    raise AttributeError(f"Agent or any of its sub-models have no attribute '{key}'.")
-
-    def clone(self):
-        cloned = copy.deepcopy(self)
-        cloned.cellcycle_model.set_owner(cloned)
-        # TODO
-        # for m in cloned.biochemical_models:
-        #     pass
-        for m in cloned.phenotype_transition_models:
-            m.set_owner(cloned)
-        return cloned
+        Parameters
+        ----------
+        dt : int
+            The time elapsed since the last update, in milliseconds.
+        """
+        for m in self._metabolic_models:
+            m.update(dt)
+        for m in self._proliferation_models:
+            m.update(dt)
+        for m in self._state_transition_models:
+            m.update(dt)
