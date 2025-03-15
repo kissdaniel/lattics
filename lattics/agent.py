@@ -37,16 +37,20 @@ class Agent:
     def simulation(self):
         """Get the simulation instance associated with the agent.
 
-        :return: An instance representing the simulation
-        :rtype: Simulation
+        Returns
+        -------
+        Simulation
+            An instance representing the simulation
         """
         return self._simulation
 
     def initialize_status_flag(self, identifier):
         """Initialize a new status flag for the agent instance with the specified identifier.
 
-        :param identifier: The name of the status flag
-        :type identifier: str
+        Parameters
+        ----------
+        identifier : str
+            The name of the status flag
         """
         if identifier not in self._status_flags:
             self._status_flags[identifier] = None
@@ -56,11 +60,20 @@ class Agent:
     def get_status_flag(self, identifier):
         """Returns the value of the specified status flag.
 
-        :param identifier: The name of the status flag
-        :type identifier: str
-        :raises ValueError: If the specified :param identifier: does not exist
-        :return: The current value of the status flag
-        :rtype: any type
+        Parameters
+        ----------
+        identifier : str
+            The name of the status flag
+
+        Returns
+        -------
+        any type
+            The current value of the status flag
+
+        Raises
+        ------
+        ValueError
+            If the specified :param identifier: does not exist
         """
         if identifier in self._status_flags:
             return self._status_flags[identifier]
@@ -70,11 +83,17 @@ class Agent:
     def set_status_flag(self, identifier, value):
         """Set the value of the specified status flag.
 
-        :param identifier: The name of the status flag
-        :type identifier: str
-        :param value: The new value to set
-        :type value: any type
-        :raises ValueError: If the specified :param identifier: does not exist
+        Parameters
+        ----------
+        identifier : str
+            The name of the status flag
+        value : any type
+            The new value to be set
+
+        Raises
+        ------
+        ValueError
+            If the specified :param identifier: does not exist
         """
         if identifier in self._status_flags:
             self._status_flags[identifier] = value
@@ -82,11 +101,6 @@ class Agent:
             raise ValueError(f'Status flag \'{identifier}\' not available.')
 
     def update_models(self, dt):
-        """Updates all sub-models attached to an agent.
-
-        Args:
-            dt (int): time elapsed since the last update step (milliseconds)
-        """
         for m in self._biochemical_models:
             m.update(dt)
         for m in self._phenotype_transition_models:
@@ -105,11 +119,6 @@ class Agent:
                     raise AttributeError(f"Agent or any of its sub-models have no attribute '{key}'.")
 
     def clone(self):
-        """Returns a deep copy of the source agent.
-
-        Returns:
-            Agent: a deep copy instance of the source agent
-        """
         cloned = copy.deepcopy(self)
         cloned.cellcycle_model.set_owner(cloned)
         # TODO
