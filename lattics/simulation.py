@@ -3,6 +3,7 @@ set up and execute a simulation.
 """
 
 from .agent import Agent
+import math
 import warnings
 
 
@@ -42,7 +43,8 @@ class Simulation:
 
     @property
     def time(self) -> int:
-        """Get the current internal time of the simulation, representing the elapsed time since the simulation started.
+        """Get the current internal time of the simulation, representing the
+        elapsed time since the simulation started.
 
         Returns
         -------
@@ -102,7 +104,7 @@ class Simulation:
         dt : _type_
             Time step, in milliseconds
         """
-        steps = int(round(time / dt, 0))
+        steps = int(math.ceil(time / dt))
         for t in range(steps):
             for a in self._agents:
                 a.update_models(dt)
