@@ -25,6 +25,7 @@ class Simulation:
         self._simulation_space = None
         self._agents = list()
         self._substrates = list()
+        self._time = None
 
     @property
     def agents(self) -> list[Agent]:
@@ -38,6 +39,18 @@ class Simulation:
             Collection of the agents
         """
         return self._agents
+
+    @property
+    def time(self) -> int:
+        """Get the current internal time of the simulation, representing the elapsed time since the simulation started.
+
+        Returns
+        -------
+        int
+            Internal time of the simulation, in milliseconds.
+        """
+
+        return self._time
 
     def add_agent(self, agent: Agent) -> None:
         """Adds the specified agent to the simulation. The agent will be added
@@ -71,13 +84,29 @@ class Simulation:
         if self._simulation_space:
             self._simulation_space.remove_agent(agent)
 
-    def initialize(self):
-        pass
+    def initialize(self) -> None:
+        """Initializes the simulation before start. It initializes the
+        simulation settings to default values and registers the necessary
+        connections with the utilized sub-modules. Call this function only once.
+        """
+        self._time = 0
 
-    def run(self, steps):
+    def run(self, time, dt) -> None:
+        """Runs the simulation from the current state for the specified
+        duration using the given time step.
+
+        Parameters
+        ----------
+        time : int
+            The duration to be simulated, in milliseconds.
+        dt : _type_
+            Time step, in milliseconds.
+        """
+        steps = int(round(time / dt, 0))
         for t in range(steps):
             for a in self._agents:
-                a.update_models(1)
+                a.update_models(dt)
+            self._time = self._time + dt
 
     def _get_id(self, identifier):
         return identifier if identifier else id(self)
