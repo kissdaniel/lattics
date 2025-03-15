@@ -41,3 +41,17 @@ def test_agent_removal_no_space():
         expected = a2
         actual = sim.agents[0]
         assert actual == expected
+
+
+@pytest.mark.parametrize('time, dt, expected',
+                         [(10, 2, 10),
+                          (5, 3, 6),
+                          (5, 7, 7)
+                          ])
+def test_simulation_run_elapsed_time(time, dt, expected):
+    from lattics import simulation
+    sim = simulation.Simulation()
+    sim.initialize()
+    sim.run(time=time, dt=dt)
+    actual = sim.time
+    assert actual == expected
