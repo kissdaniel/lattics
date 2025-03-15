@@ -1,13 +1,14 @@
 """Basic unit of the LattiCS framework representing a single biological cell.
 """
 
+from typing import Any
 import copy
 import warnings
 
 
 class Agent:
     def __init__(self,
-                 simulation=None
+                 simulation: 'simulation.Simulation' = None
                  ):
         """Constructor method.
         """
@@ -36,7 +37,7 @@ class Agent:
         return new_instance
 
     @property
-    def simulation(self):
+    def simulation(self) -> 'simulation.Simulation':
         """Get the simulation instance associated with the agent.
 
         Returns
@@ -46,7 +47,7 @@ class Agent:
         """
         return self._simulation
 
-    def initialize_status_flag(self, identifier):
+    def initialize_status_flag(self, identifier: str) -> None:
         """Initialize a new status flag for the agent instance with the
         specified identifier.
 
@@ -65,14 +66,14 @@ class Agent:
         else:
             warnings.warn(f'Status flag \'{identifier}\' already in use.')
 
-    def set_status_flag(self, identifier, value):
+    def set_status_flag(self, identifier: str, value: Any) -> None:
         """Set the value of the specified status flag.
 
         Parameters
         ----------
         identifier : str
             The name of the status flag
-        value : any type
+        value : Any
             The new value to be set
 
         Raises
@@ -89,7 +90,7 @@ class Agent:
         else:
             raise ValueError(f'Status flag \'{identifier}\' not available.')
 
-    def get_status_flag(self, identifier):
+    def get_status_flag(self, identifier: str) -> Any:
         """Returns the value of the specified status flag.
 
         Parameters
@@ -117,12 +118,11 @@ class Agent:
         else:
             raise ValueError(f'Status flag \'{identifier}\' not available.')
 
-    def update_models(self, dt):
-        """Sequentially updates all models associated with the agent,
-        including metabolic, proliferation, and state transition models,
-        in the listed order. If multiple sub-models exist within the
-        same category, they are updated in the order they appear in their
-        respective collection.
+    def update_models(self, dt: int) -> None:
+        """Sequentially updates all models associated with the agent, including
+        metabolic, proliferation, and state transition models, in the listed
+        order. If multiple sub-models exist within the same category, they are
+        updated in the order they appear in their respective collection.
 
         Parameters
         ----------
