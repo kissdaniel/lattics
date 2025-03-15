@@ -51,11 +51,40 @@ class Agent:
         ----------
         identifier : str
             The name of the status flag
+
+        Examples
+        --------
+        >>> a = Agent()
+        >>> a.initialize_status_flag('my_flag')
         """
         if identifier not in self._status_flags:
             self._status_flags[identifier] = None
         else:
             warnings.warn(f'Status flag \'{identifier}\' already in use.')
+
+    def set_status_flag(self, identifier, value):
+        """Set the value of the specified status flag.
+
+        Parameters
+        ----------
+        identifier : str
+            The name of the status flag
+        value : any type
+            The new value to be set
+
+        Raises
+        ------
+        ValueError
+            If the specified identifier does not exist
+
+        Examples
+        --------
+        >>> a.set_status_flag('my_flag', True)
+        """
+        if identifier in self._status_flags:
+            self._status_flags[identifier] = value
+        else:
+            raise ValueError(f'Status flag \'{identifier}\' not available.')
 
     def get_status_flag(self, identifier):
         """Returns the value of the specified status flag.
@@ -73,30 +102,15 @@ class Agent:
         Raises
         ------
         ValueError
-            If the specified :param identifier: does not exist
+            If the specified identifier does not exist
+
+        Examples
+        --------
+        >>> print(a.get_status_flag('my_flag'))
+        True
         """
         if identifier in self._status_flags:
             return self._status_flags[identifier]
-        else:
-            raise ValueError(f'Status flag \'{identifier}\' not available.')
-
-    def set_status_flag(self, identifier, value):
-        """Set the value of the specified status flag.
-
-        Parameters
-        ----------
-        identifier : str
-            The name of the status flag
-        value : any type
-            The new value to be set
-
-        Raises
-        ------
-        ValueError
-            If the specified :param identifier: does not exist
-        """
-        if identifier in self._status_flags:
-            self._status_flags[identifier] = value
         else:
             raise ValueError(f'Status flag \'{identifier}\' not available.')
 
