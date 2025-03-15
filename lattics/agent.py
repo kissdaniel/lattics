@@ -127,7 +127,7 @@ class Agent:
         Parameters
         ----------
         dt : int
-            The time elapsed since the last update, in milliseconds.
+            The time elapsed since the last update, in milliseconds
         """
         for m in self._metabolic_models:
             m.update(dt)

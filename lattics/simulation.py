@@ -98,9 +98,9 @@ class Simulation:
         Parameters
         ----------
         time : int
-            The duration to be simulated, in milliseconds.
+            The duration to be simulated, in milliseconds
         dt : _type_
-            Time step, in milliseconds.
+            Time step, in milliseconds
         """
         steps = int(round(time / dt, 0))
         for t in range(steps):
