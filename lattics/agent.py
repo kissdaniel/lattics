@@ -57,7 +57,7 @@ class Agent:
         >>> a.initialize_status_flag('my_flag_2', 0)
         """
         if identifier not in self._status_flags:
-            self._status_flags[identifier] = None
+            self._status_flags[identifier] = value
         else:
             warnings.warn(f'Status flag \'{identifier}\' already in use.')
 
