@@ -111,7 +111,7 @@ class Agent:
             raise ValueError(f'Status flag \'{identifier}\' not available.')
 
     def add_model(self, model: 'cellfunction.CellFunctionModel') -> None:
-        model.initialize_agent_state_flags()
+        model.initialize_agent_state_flags(self)
 
     def update_models(self, dt: int) -> None:
         """Sequentially updates all models associated with the agent. If
