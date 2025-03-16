@@ -14,7 +14,7 @@ class Agent:
         """
         self._simulation = simulation
         self._status_flags = dict()
-        self._state_transition_models = list()
+        self._cell_function_models = list()
 
     def __deepcopy__(self, memo):
         new_instance = Agent(
@@ -23,8 +23,8 @@ class Agent:
         new_instance._status_flags = copy.deepcopy(
             self._status_flags, memo
         )
-        new_instance._state_transition_models = copy.deepcopy(
-            self._state_transition_models, memo
+        new_instance._cell_function_models = copy.deepcopy(
+            self._cell_function_models, memo
         )
         return new_instance
 
@@ -39,7 +39,7 @@ class Agent:
         """
         return self._simulation
 
-    def initialize_status_flag(self, identifier: str) -> None:
+    def initialize_status_flag(self, identifier: str, value: Any = None) -> None:
         """Initialize a new status flag for the agent instance with the
         specified identifier.
 
@@ -47,11 +47,14 @@ class Agent:
         ----------
         identifier : str
             The name of the status flag
+        value : Any, optional
+            The initial value to be set, by default None
 
         Examples
         --------
         >>> a = Agent()
-        >>> a.initialize_status_flag('my_flag')
+        >>> a.initialize_status_flag('my_flag_1')
+        >>> a.initialize_status_flag('my_flag_2', 0)
         """
         if identifier not in self._status_flags:
             self._status_flags[identifier] = None
@@ -75,7 +78,7 @@ class Agent:
 
         Examples
         --------
-        >>> a.set_status_flag('my_flag', True)
+        >>> a.set_status_flag('my_flag_1', True)
         """
         if identifier in self._status_flags:
             self._status_flags[identifier] = value
@@ -102,7 +105,7 @@ class Agent:
 
         Examples
         --------
-        >>> print(a.get_status_flag('my_flag'))
+        >>> print(a.get_status_flag('my_flag_1'))
         True
         """
         if identifier in self._status_flags:
@@ -111,7 +114,8 @@ class Agent:
             raise ValueError(f'Status flag \'{identifier}\' not available.')
 
     def add_model(self, model: 'cellfunction.CellFunctionModel') -> None:
-        model.initialize_agent_state_flags(self)
+        self._cell_function_models.append(model)
+        model.initialize_agent_state_flags()
 
     def update_models(self, dt: int) -> None:
         """Sequentially updates all models associated with the agent. If
@@ -123,5 +127,5 @@ class Agent:
         dt : int
             The time elapsed since the last update, in milliseconds
         """
-        for m in self._state_transition_models:
+        for m in self._cell_function_models:
             m.update(dt)
