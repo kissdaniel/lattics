@@ -13,7 +13,7 @@ class Simulation:
     the various chemical substances (:class:`Substrate`) present within it.
     The class provides high-level access to configure and execute a simulation.
     """
-    def __init__(self, id=None):
+    def __init__(self, id=None) -> None:
         """Constructor method.
 
         Parameters
@@ -68,8 +68,8 @@ class Simulation:
         if self._simulation_space:
             self._simulation_space.add_agent(agent)
         else:
-            warnings.warn('No simulation space has been defined.'
-                          'You can proceed without one, but this may'
+            warnings.warn('No simulation space has been defined. '
+                          'You can proceed without one, but this may '
                           'lead to unexpected consequences.')
 
     def remove_agent(self, agent: Agent) -> None:
@@ -108,7 +108,7 @@ class Simulation:
         for t in range(steps):
             for a in self._agents:
                 a.update_models(dt)
-            self._time = self._time + dt
+            self._time += dt
 
     def _get_id(self, identifier):
         return identifier if identifier else id(self)
