@@ -9,7 +9,7 @@ import warnings
 
 class Simulation:
     """Represents a simulation instance. This object manages the participating
-    agents (:class:`Agent`), the environment (:class:`SimulationSpace`), and
+    agents (:class:`Agent`), the environment (:class:`SimulationDomain`), and
     the various chemical substances (:class:`Substrate`) present within it.
     The class provides high-level access to configure and execute a simulation.
     """
@@ -23,7 +23,7 @@ class Simulation:
             random identifier will be generated.
         """
         self._id = self._get_id(id)
-        self._simulation_space = None
+        self._simulation_domain = None
         self._agents = list()
         self._substrates = list()
         self._time = None
@@ -56,8 +56,8 @@ class Simulation:
 
     def add_agent(self, agent: Agent) -> None:
         """Adds the specified agent to the simulation. The agent will be added
-        to the collection of all agents and, if a simulation space is defined,
-        will also be placed within the simulation space.
+        to the collection of all agents and, if a simulation domain is defined,
+        will also be placed within the simulation domain.
 
         Parameters
         ----------
@@ -65,17 +65,17 @@ class Simulation:
             The agent to be added
         """
         self._agents.append(agent)
-        if self._simulation_space:
-            self._simulation_space.add_agent(agent)
+        if self._simulation_domain:
+            self._simulation_domain.add_agent(agent)
         else:
-            warnings.warn('No simulation space has been defined. '
+            warnings.warn('No simulation domain has been defined. '
                           'You can proceed without one, but this may '
                           'lead to unexpected consequences.')
 
     def remove_agent(self, agent: Agent) -> None:
         """Removes the specified agent from the simulation. The agent will be
         removed from the collection of all agents and, if applicable, will also
-        be removed from the simulation space.
+        be removed from the simulation domain.
 
         Parameters
         ----------
@@ -83,8 +83,8 @@ class Simulation:
             The agent to be removed
         """
         self._agents.remove(agent)
-        if self._simulation_space:
-            self._simulation_space.remove_agent(agent)
+        if self._simulation_domain:
+            self._simulation_domain.remove_agent(agent)
 
     def initialize(self) -> None:
         """Initializes the simulation before start. It initializes the
