@@ -26,7 +26,7 @@ class Simulation:
         self._simulation_domain = None
         self._agents = list()
         self._substrates = list()
-        self._time = None
+        self._time = 0
 
     @property
     def agents(self) -> list[Agent]:
@@ -99,13 +99,6 @@ class Simulation:
         self._simulation_domain = domain
         self._simulation_domain.initialize()
 
-    def initialize(self) -> None:
-        """Initializes the simulation before start. It initializes the
-        simulation settings to default values and registers the necessary
-        connections with the utilized sub-modules. Call this function only once.
-        """
-        self._time = 0
-
     def run(self, time, dt) -> None:
         """Runs the simulation from the current state for the specified
         duration using the given time step.
@@ -121,6 +114,8 @@ class Simulation:
         for t in range(steps):
             for a in self._agents:
                 a.update_models(dt)
+            if self._simulation_domain:
+                self._simulation_domain.update(dt)
             self._time += dt
 
     def _get_id(self, identifier):
