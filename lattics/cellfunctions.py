@@ -63,10 +63,10 @@ class CellFunctionModel:
             The time elapsed since the last update call, in milliseconds
         """
         self._status_check()
-        self._time_since_last_update += dt
         if self._update_interval <= self._time_since_last_update:
             self._update()
-            self._time_since_last_update -= self._update_interval
+            self._time_since_last_update = 0
+        self._time_since_last_update += dt
 
     def _status_check(self) -> None:
         """Checks if the model is initialized with the required parameters.
