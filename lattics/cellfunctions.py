@@ -9,12 +9,22 @@ class CellFunctionModel:
     """Acts as a base class for all cellular function models, such as
     metabolism, cell cycle regulation, and other regulatory processes.
     """
-    def __init__(self
+    def __init__(self,
+                 agent: Agent,
+                 update_interval: int
                  ) -> None:
         """Constructor method.
+
+        Parameters
+        ----------
+        agent : Agent
+            The Agent to which the model is attached
+        update_interval : int
+            The time interval that passes between two update steps,
+            in milliseconds
         """
-        self._agent = None
-        self._update_interval = None
+        self._agent = agent
+        self._update_interval = update_interval
         self._time_since_last_update = 0
 
     def set_agent(self, agent: Agent) -> None:
@@ -100,6 +110,8 @@ class FixedIncrementalCellCycle(CellFunctionModel):
     internal time counter resets, and the cell cycle begins again.
     """
     def __init__(self,
+                 agent: Agent,
+                 update_interval: int,
                  length: int,
                  initial_time: int = 0,
                  random_initial: bool = False
@@ -108,6 +120,11 @@ class FixedIncrementalCellCycle(CellFunctionModel):
 
         Parameters
         ----------
+        agent : Agent
+            The Agent to which the model is attached
+        update_interval : int
+            The time interval that passes between two update steps,
+            in milliseconds
         length : int
             The length of the cell cycle, in milliseconds
         initial_time : int, optional
@@ -116,7 +133,7 @@ class FixedIncrementalCellCycle(CellFunctionModel):
             If True, ``initial_time`` is assigned a random value uniformly
             distributed between 0 and ``length``, by default False
         """
-        super().__init__()
+        super().__init__(agent, update_interval)
         self._length = length
         self._current_time = initial_time
         if random_initial:
