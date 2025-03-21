@@ -1,6 +1,7 @@
 
 from .agent import Agent
 import numpy as np
+import copy
 import warnings
 
 
@@ -8,23 +9,33 @@ class CellFunctionModel:
     """Acts as a base class for all cellular function models, such as
     metabolism, cell cycle regulation, and other regulatory processes.
     """
-    def __init__(self,
-                 update_interval: int,
-                 agent: Agent
+    def __init__(self
                  ) -> None:
         """Constructor method.
+        """
+        self._agent = None
+        self._update_interval = None
+        self._time_since_last_update = 0
+
+    def set_agent(self, agent: Agent) -> None:
+        """Sets the model's reference to the Agent to which it is attached.
+
+        Parameters
+        ----------
+        agent : Agent
+            The containing agent
+        """
+        self._agent = agent
+
+    def set_update_interval(self, update_interval: int) -> None:
+        """Sets the time interval that passes between two update steps.
 
         Parameters
         ----------
         update_interval : int
-            The time interval that passes between two update steps,
-            in milliseconds
-        agent : Agent
-            The Agent to which the model is attached
+            Time between two update steps, in milliseconds
         """
         self._update_interval = update_interval
-        self._time_since_last_update = 0
-        self._agent = agent
 
     def initialize_agent_state_flags(self) -> None:
         """Initializes the state flags required for the model.
@@ -41,10 +52,28 @@ class CellFunctionModel:
         dt : int
             The time elapsed since the last update call, in milliseconds
         """
+        self._status_check()
         self._time_since_last_update += dt
         if self._update_interval <= self._time_since_last_update:
             self._update()
             self._time_since_last_update -= self._update_interval
+
+    def _status_check(self) -> None:
+        """Checks if the model is initialized with the required parameters.
+
+        Raises
+        ------
+        ValueError
+            If there is no update interval set for the model
+        ValueError
+            If there is no Agent associated with the model
+        """
+        if not self._update_interval:
+            raise ValueError('The update interval of the model is undefined. '
+                             'Call \'set_update_interval\' before updating the model.')
+        if not self._agent:
+            raise ValueError('The containing agent of the model is undefined.'
+                             'Call \'set_agent\' before updating the model.')
 
     def _reset(self) -> None:
         """Resets the model to its initial state.
@@ -56,6 +85,12 @@ class CellFunctionModel:
         """
         pass
 
+    def __deepcopy__(self, memo):
+        new_instance = self.__class__.__new__(self.__class__)
+        for key, value in self.__dict__.items():
+            setattr(new_instance, key, copy.deepcopy(value, memo))
+        return new_instance
+
 
 class FixedIncrementalCellCycle(CellFunctionModel):
     """A cell function model that implements a simple fixed-length cell cycle.
@@ -65,8 +100,6 @@ class FixedIncrementalCellCycle(CellFunctionModel):
     internal time counter resets, and the cell cycle begins again.
     """
     def __init__(self,
-                 update_interval: int,
-                 agent: Agent,
                  length: int,
                  initial_time: int = 0,
                  random_initial: bool = False
@@ -75,11 +108,6 @@ class FixedIncrementalCellCycle(CellFunctionModel):
 
         Parameters
         ----------
-        update_interval : int
-            The time interval that passes between two update steps,
-            in milliseconds
-        agent : Agent
-            The Agent to which the model is attached
         length : int
             The length of the cell cycle, in milliseconds
         initial_time : int, optional
@@ -88,7 +116,7 @@ class FixedIncrementalCellCycle(CellFunctionModel):
             If True, ``initial_time`` is assigned a random value uniformly
             distributed between 0 and ``length``, by default False
         """
-        super().__init__(update_interval, agent)
+        super().__init__()
         self._length = length
         self._current_time = initial_time
         if random_initial:
