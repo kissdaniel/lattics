@@ -36,7 +36,7 @@ class Simulation:
 
         Returns
         -------
-        list[agent.Agent]
+        list[Agent]
             Collection of the agents
         """
         return self._agents
@@ -61,7 +61,7 @@ class Simulation:
 
         Parameters
         ----------
-        agent : agent.Agent
+        agent : Agent
             The agent to be added
         """
         self._agents.append(agent)
@@ -79,12 +79,25 @@ class Simulation:
 
         Parameters
         ----------
-        agent : agent.Agent
+        agent : Agent
             The agent to be removed
         """
         self._agents.remove(agent)
         if self._simulation_domain:
             self._simulation_domain.remove_agent(agent)
+
+    def add_simulation_domain(self, domain: 'domains.SimulationDomain') -> None:
+        """Sets the simulation domain to the instance passed as a parameter.
+
+        Parameters
+        ----------
+        domain : SimulationDomain
+            The simulation domain instance to be used
+        """
+        if self._simulation_domain:
+            raise AttributeError('Simulation domain is already set and cannot be modified.')
+        self._simulation_domain = domain
+        self._simulation_domain.initialize()
 
     def initialize(self) -> None:
         """Initializes the simulation before start. It initializes the
