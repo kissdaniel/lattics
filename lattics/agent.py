@@ -119,6 +119,14 @@ class Agent:
             raise ValueError(f'Status flag \'{identifier}\' not available.')
 
     def add_model(self, model: 'cellfunction.CellFunctionModel') -> None:
+        """Adds the provided model instance to the agent's collection of cell
+        function models and invokes the model's initialization method.
+
+        Parameters
+        ----------
+        model : CellFunctionModel
+            A subclass of the ``CellFunctionModel`` abstract base class.
+        """
         self._cell_function_models.append(model)
         model.initialize_agent_state_flags()
 
