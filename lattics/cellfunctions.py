@@ -137,17 +137,23 @@ class FixedIncrementalCellCycle(CellFunctionModel):
     def initialize_agent_state_flags(self) -> None:
         """Initializes the state flags required for the model. The model uses
         two flags: ``division_pending`` and ``division_completed``. For a
-        detailed description, refer to the :class:`FixedIncrementalCellCycle` documentation.
+        detailed description, refer to the :class:`FixedIncrementalCellCycle`
+        documentation.
         """
         self._agent.initialize_status_flag('division_pending', False)
         self._agent.initialize_status_flag('division_completed', False)
 
     def _reset(self) -> None:
+        """Resets the model to its initial state by setting the current time
+        to zero and resetting the related state flags.
+        """
         self._current_time = 0
         self._agent.set_status_flag('division_pending', False)
         self._agent.set_status_flag('division_completed', False)
 
     def _update(self) -> None:
+        """Performs the actual update of the model's state.
+        """
         if self._agent.get_status_flag('division_completed'):
             self._reset()
         self._current_time += self._time_since_last_update
