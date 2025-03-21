@@ -16,17 +16,19 @@ class Agent:
         self._status_flags = dict()
         self._cell_function_models = list()
 
-    def __deepcopy__(self, memo):
-        new_instance = Agent(
-            self.simulation
-        )
-        new_instance._status_flags = copy.deepcopy(
-            self._status_flags, memo
-        )
-        new_instance._cell_function_models = copy.deepcopy(
-            self._cell_function_models, memo
-        )
-        return new_instance
+    # def __deepcopy__(self, memo):
+    #     new_instance = Agent(
+    #         self.simulation
+    #     )
+    #     new_instance._status_flags = copy.deepcopy(
+    #         self._status_flags, memo
+    #     )
+    #     new_instance._cell_function_models = copy.deepcopy(
+    #         self._cell_function_models, memo
+    #     )
+    #     for cfm in new_instance._cell_function_models:
+    #         cfm.set_linked_agent(new_instance)
+    #     return new_instance
 
     @property
     def simulation(self) -> 'simulation.Simulation':
@@ -38,6 +40,23 @@ class Agent:
             An instance representing the simulation
         """
         return self._simulation
+
+    def clone(self) -> 'Agent':
+        """Returns a deep copy instance of the agent.
+
+        Returns
+        -------
+        Agent
+            The cloned agent instance
+        """
+
+        cloned = Agent()
+        cloned._simulation = self._simulation
+        cloned._status_flags = copy.deepcopy(self._status_flags)
+        cloned._cell_function_models = copy.deepcopy(self._cell_function_models)
+        for m in cloned._cell_function_models:
+            m.set_agent(cloned)
+        return cloned
 
     def initialize_status_flag(self, identifier: str, value: Any = None) -> None:
         """Initialize a new status flag for the agent instance with the
