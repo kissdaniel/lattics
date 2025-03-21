@@ -16,20 +16,6 @@ class Agent:
         self._status_flags = dict()
         self._cell_function_models = list()
 
-    # def __deepcopy__(self, memo):
-    #     new_instance = Agent(
-    #         self.simulation
-    #     )
-    #     new_instance._status_flags = copy.deepcopy(
-    #         self._status_flags, memo
-    #     )
-    #     new_instance._cell_function_models = copy.deepcopy(
-    #         self._cell_function_models, memo
-    #     )
-    #     for cfm in new_instance._cell_function_models:
-    #         cfm.set_linked_agent(new_instance)
-    #     return new_instance
-
     @property
     def simulation(self) -> 'simulation.Simulation':
         """Get the simulation instance associated with the agent.
