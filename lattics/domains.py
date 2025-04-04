@@ -94,6 +94,9 @@ class UnstructuredSimulationDomain(SimulationDomain):
         agent : Agent
             The agent to be added
         """
+        if self._capacity < len(self._agents):
+            warnings.warn('The number of agents exceeded the capacity '
+                          'of the domain.')
         self._agents.append(agent)
         self.initialize_agent_status_flags(agent)
 
