@@ -152,7 +152,7 @@ class Agent:
             A subclass of the ``CellFunctionModel`` abstract base class.
         """
         self._cell_function_models.append(model)
-        model.initialize_agent_state_flags()
+        model.initialize_agent_status_flags()
 
     def update_models(self, dt: int) -> None:
         """Sequentially updates all models associated with the agent. If

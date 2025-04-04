@@ -47,7 +47,7 @@ class CellFunctionModel:
         """
         self._update_interval = update_interval
 
-    def initialize_agent_state_flags(self) -> None:
+    def initialize_agent_status_flags(self) -> None:
         """Initializes the state flags required for the model.
         """
         pass
