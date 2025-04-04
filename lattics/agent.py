@@ -66,6 +66,29 @@ class Agent:
         else:
             warnings.warn(f'Status flag \'{identifier}\' already in use.')
 
+    def has_status_flag(self, identifier: str) -> bool:
+        """Returns whether the agent instance has a specific status flag initialized.
+
+        Parameters
+        ----------
+        identifier : str
+            The name of the status flag
+
+        Returns
+        -------
+        bool
+            True if the agent has the status flag, otherwise false
+
+        Examples
+        --------
+        >>> a.initialize_status_flag('my_flag')
+        >>> a.has_status_flag('my_flag')
+        True
+        >>> a.has_status_flag('nonexisting_flag')
+        False
+        """
+        return identifier in self._status_flags
+
     def set_status_flag(self, identifier: str, value: Any) -> None:
         """Set the value of the specified status flag.
 
@@ -83,6 +106,7 @@ class Agent:
 
         Examples
         --------
+        >>> a.initialize_status_flag('my_flag_1')
         >>> a.set_status_flag('my_flag_1', True)
         """
         if identifier in self._status_flags:
