@@ -95,6 +95,7 @@ class UnstructuredSimulationDomain(SimulationDomain):
             The agent to be added
         """
         self._agents.append(agent)
+        self.initialize_agent_status_flags(agent)
 
     def remove_agent(self, agent: Agent) -> None:
         """Removes the specified agent from the internal list of the agents.
@@ -119,6 +120,19 @@ class UnstructuredSimulationDomain(SimulationDomain):
         for a in self._agents:
             if a.get_status_flag('division_pending'):
                 self._perform_cell_division(a)
+
+    def initialize_agent_status_flags(self, agent) -> None:
+        """Initializes the status flags used by the domain. The domain tracks
+        two flags: ``division_pending`` and ``division_completed``. The
+        ``division_pending`` flag can be set by cell-level functions to indicate
+        that an agent is ready to divide and that the domain should handle the
+        division event. Once division has occurred, the ``division_completed``
+        flag is set to ``True``.
+        """
+        if not agent.has_status_flag('division_pending'):
+            agent.initialize_status_flag('division_pending', False)
+        if not agent.has_status_flag('division_completed'):
+            agent.initialize_status_flag('division_completed', False)
 
     def _perform_cell_division(self, agent: Agent) -> None:
         if np.random.random() < self._get_division_probability():
