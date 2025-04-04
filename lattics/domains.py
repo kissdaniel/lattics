@@ -122,7 +122,7 @@ class UnstructuredSimulationDomain(SimulationDomain):
         """
         for a in self._agents:
             if a.get_status_flag('division_pending'):
-                self._perform_cell_division(a)
+                self._perform_cell_division(a, dt)
 
     def initialize_agent_status_flags(self, agent) -> None:
         """Initializes the status flags used by the domain. The domain tracks
@@ -137,18 +137,12 @@ class UnstructuredSimulationDomain(SimulationDomain):
         if not agent.has_status_flag('division_completed'):
             agent.initialize_status_flag('division_completed', False)
 
-    def _perform_cell_division(self, agent: Agent) -> None:
-        if np.random.random() < self._get_division_probability():
+    def _perform_cell_division(self, agent: Agent, dt: int) -> None:
+        if len(self._agents) < self._capacity:
             agent.set_status_flag('division_pending', False)
             agent.set_status_flag('division_completed', True)
             new_agent = agent.clone()
             self._simulation.add_agent(new_agent)
-
-    def _get_division_probability(self) -> float:
-        if self._capacity:
-            return 1.0 - len(self._agents) / self._capacity
-        else:
-            return 1.0
 
 
 class Structured2DSimulationDomain(SimulationDomain):
