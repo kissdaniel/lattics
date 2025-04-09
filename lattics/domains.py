@@ -160,14 +160,15 @@ class Structured2DSimulationDomain(SimulationDomain):
         ----------
         simulation : Simulation
             The Simulation instance containing the domain
-        capacity : int, optional
-            The maximum number of agents in the population. Defaults to None,
-            meaning no limit (infinite population).
+        dimensions : tuple[int, int]
+            Width and height of the lattice on which agents are located, given
+            as the number of columns and rows
         """
         super().__init__(simulation)
         self._agents = None
         self._agent_layer = None
         self._dimensions = dimensions
+        self._dx = 1    # TODO
         self.initialize()
 
     def initialize(self) -> None:
@@ -176,7 +177,12 @@ class Structured2DSimulationDomain(SimulationDomain):
         self._agents = list()
         self._agent_layer = np.empty(self._dimensions, dtype='object')
 
-    def add_agent(self, agent: Agent, position: tuple[int, int]) -> None:
+    def add_agent(self,
+                  agent: Agent,
+                  position: tuple[int, int],
+                  motility: int = 0,
+                  binding_affinity: int = 0,
+                  displacement_limit: int = 1) -> None:
         """Adds the specified agent to the specified index of the internal
         array of the agents.
 
@@ -185,7 +191,18 @@ class Structured2DSimulationDomain(SimulationDomain):
         agent : Agent
             The agent to be added
         position : tuple[int, int]
-            The index describing the agent's position
+            The column and row index describing the agent's position
+        motility : int, optional
+            Characteristic velocity of the agent, expressed in
+            micrometers per millisecond, by default 0
+        binding_affinity : int, optional
+            Scale factor that determines the binding strength between
+            the agent and other agents, by default 0
+
+        Raises
+        ------
+        ValueError
+            If the position of the agent is out of the bounds of the domain
         """
         if not self.is_valid_position(position):
             raise ValueError(f'Position {position} is out of the bounds of the domain.')
@@ -196,6 +213,9 @@ class Structured2DSimulationDomain(SimulationDomain):
         self._agents.append(agent)
         self._agent_layer[tuple(position)] = agent
         agent.set_status_flag('position', position)
+        agent.set_status_flag('motility', motility)
+        agent.set_status_flag('binding_affinity', binding_affinity)
+        agent.set_status_flag('displacement_limit', displacement_limit)
 
     def remove_agent(self, agent: Agent) -> None:
         """Removes the specified agent from the internal list of the agents.
@@ -210,28 +230,26 @@ class Structured2DSimulationDomain(SimulationDomain):
         self._agent_layer[tuple(position)] = None
 
     def update(self, dt: int) -> None:
-        """Updates the domain according to the specified time duration. Agents
-        labeled as ``division_pending`` are duplicated based on the available
-        space in the domain, constrained by ``capacity``.
+        """Updates the domain according to the specified time duration.
 
         Parameters
         ----------
         dt : int
             The time elapsed since the last update call, in milliseconds
         """
-        agents_temp = copy.copy(self._agents)
-        np.random.shuffle(agents_temp)
-        for a in agents_temp:
-            if a.get_status_flag('division_pending'):
-                self._perform_cell_division(a, dt)
+        self._displacement_trials(dt)
+        self._cell_division_trials(dt)
 
     def initialize_agent_status_flags(self, agent) -> None:
-        """Initializes the status flags used by the domain. The domain tracks
-        two flags: ``division_pending`` and ``division_completed``. The
-        ``division_pending`` flag can be set by cell-level functions to indicate
-        that an agent is ready to divide and that the domain should handle the
-        division event. Once division has occurred, the ``division_completed``
-        flag is set to ``True``.
+        """Initializes the status flags used by the domain. The domain uses
+        the following attributes: ``division_pending``, ``division_completed``,
+        ``motility``, ``binding_affinity``, and ``displacement_limit``. Agents
+        are displaced to adjacent grid points based on their ``motility`` and
+        ``binding_affinity`` values. Agents labeled as ``division_pending``
+        are duplicated depending on the number of available grid points and the
+        ``displacement_limit``, which specifies how far an agent can push others
+        to create space for a daughter cell. Once division has occurred, the
+        ``division_completed`` attribute is set to ``True``.
         """
         if not agent.has_status_flag('division_pending'):
             agent.initialize_status_flag('division_pending', False)
@@ -239,16 +257,88 @@ class Structured2DSimulationDomain(SimulationDomain):
             agent.initialize_status_flag('division_completed', False)
         if not agent.has_status_flag('position'):
             agent.initialize_status_flag('position', (None, None))
+        if not agent.has_status_flag('motility'):
+            agent.initialize_status_flag('motility', None)
+        if not agent.has_status_flag('binding_affinity'):
+            agent.initialize_status_flag('binding_affinity', None)
+        if not agent.has_status_flag('displacement_limit'):
+            agent.initialize_status_flag('displacement_limit', None)
 
     def is_valid_position(self, position: tuple[int, int]) -> bool:
+        """Indicates whether the given position lies within the bounds
+        of the domain.
+
+        Parameters
+        ----------
+        position : tuple[int, int]
+            The column and row index describing the position
+
+        Returns
+        -------
+        bool
+            ``True`` if the position exists within the domain, ``False`` otherwise
+        """
         return np.all(np.zeros(2) <= np.array(position)) and np.all(np.array(position) < self._agent_layer.shape)
 
     def is_empty_position(self, position: tuple[int, int]) -> bool:
+        """Indicates whether the specified lattice point is unoccupied
+        (i.e., not containing any agent instance).
+
+        Parameters
+        ----------
+        position : tuple[int, int]
+            The column and row index describing the position
+
+        Returns
+        -------
+        bool
+            ``True`` if the lattice point is empty, ``False`` otherwise
+        """
         return self._agent_layer[tuple(position)] is None
+
+    def _displacement_trials(self, dt: int) -> None:
+        if self._agents:
+            agents = copy.copy(self._agents)
+            np.random.shuffle(agents)
+            positions = np.array([a.get_status_flag('position') for a in agents], dtype='int32')
+            disp_probs = np.array([a.get_status_flag('motility') * dt / self._dx for a in agents], dtype='float32')
+            binding_affs = np.array([a.get_status_flag('binding_affinity') for a in agents], dtype='float32')
+            # 3D array containing identifiers (idx) at those elements occupied by agents
+            idx_array = np.full((self._agent_layer.shape[0], self._agent_layer.shape[1]), -1, dtype='int32')
+            for i, a in enumerate(agents):
+                position = a.get_status_flag('position')
+                idx_array[tuple(position)] = np.int32(i)
+            # Indicates whether a certain agent changed its position during the MC trial
+            change_flags = np.full(len(agents), False, dtype='bool8')
+
+            for i, dprob in enumerate(disp_probs):
+                # Check if trial is needed based on the displacement probability
+                if np.random.random() < dprob:
+                    numba_functions.displacement_trial_2d(i, positions, binding_affs, idx_array, change_flags)
+
+            for i, cflag in enumerate(change_flags):
+                if cflag:
+                    pos_new = positions[i]
+                    pos_old = agents[i].get_status_flag('position')
+                    agent_new = self._agent_layer[pos_new[0], pos_new[1]]
+                    agent_old = self._agent_layer[pos_old[0], pos_old[1]]
+                    self._agent_layer[tuple(pos_new)] = agent_old
+                    self._agent_layer[tuple(pos_old)] = agent_new
+                    if agent_new:
+                        agent_new.set_status_flag('position', pos_old)
+                    if agent_old:
+                        agent_old.set_status_flag('position', pos_new)
+
+    def _cell_division_trials(self, dt: int) -> None:
+        agents_temp = copy.copy(self._agents)
+        np.random.shuffle(agents_temp)
+        for a in agents_temp:
+            if a.get_status_flag('division_pending'):
+                self._perform_cell_division(a, dt)
 
     def _perform_cell_division(self, agent: Agent, dt: int) -> None:
         current_position = agent.get_status_flag('position')
-        displacement_limit = 100
+        displacement_limit = agent.get_status_flag('displacement_limit')
         coverage_mask = np.where(self._agent_layer, float('inf'), 0)
         if np.any(coverage_mask == 0):
             source_map = np.ones(self._agent_layer.shape)
