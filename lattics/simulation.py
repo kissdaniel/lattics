@@ -26,7 +26,7 @@ class Simulation:
         self._simulation_domain = None
         self._agents = list()
         self._substrates = list()
-        self._time = None
+        self._time = 0
 
     @property
     def agents(self) -> list[Agent]:
@@ -36,7 +36,7 @@ class Simulation:
 
         Returns
         -------
-        list[agent.Agent]
+        list[Agent]
             Collection of the agents
         """
         return self._agents
@@ -54,19 +54,19 @@ class Simulation:
 
         return self._time
 
-    def add_agent(self, agent: Agent) -> None:
+    def add_agent(self, agent: Agent, **kwargs) -> None:
         """Adds the specified agent to the simulation. The agent will be added
         to the collection of all agents and, if a simulation domain is defined,
         will also be placed within the simulation domain.
 
         Parameters
         ----------
-        agent : agent.Agent
+        agent : Agent
             The agent to be added
         """
         self._agents.append(agent)
         if self._simulation_domain:
-            self._simulation_domain.add_agent(agent)
+            self._simulation_domain.add_agent(agent, **kwargs)
         else:
             warnings.warn('No simulation domain has been defined. '
                           'You can proceed without one, but this may '
@@ -79,19 +79,25 @@ class Simulation:
 
         Parameters
         ----------
-        agent : agent.Agent
+        agent : Agent
             The agent to be removed
         """
         self._agents.remove(agent)
         if self._simulation_domain:
             self._simulation_domain.remove_agent(agent)
 
-    def initialize(self) -> None:
-        """Initializes the simulation before start. It initializes the
-        simulation settings to default values and registers the necessary
-        connections with the utilized sub-modules. Call this function only once.
+    def add_simulation_domain(self, domain: 'domains.SimulationDomain') -> None:
+        """Sets the simulation domain to the instance passed as a parameter.
+
+        Parameters
+        ----------
+        domain : SimulationDomain
+            The simulation domain instance to be used
         """
-        self._time = 0
+        if self._simulation_domain:
+            raise AttributeError('Simulation domain is already set and cannot be modified.')
+        self._simulation_domain = domain
+        self._simulation_domain.initialize()
 
     def run(self, time, dt) -> None:
         """Runs the simulation from the current state for the specified
@@ -108,6 +114,8 @@ class Simulation:
         for t in range(steps):
             for a in self._agents:
                 a.update_models(dt)
+            if self._simulation_domain:
+                self._simulation_domain.update(dt)
             self._time += dt
 
     def _get_id(self, identifier):
