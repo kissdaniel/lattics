@@ -187,12 +187,9 @@ class Structured2DSimulationDomain(SimulationDomain):
         position : tuple[int, int]
             The index describing the agent's position
         """
-        # if 'position' not in kwargs:
-        #     raise ValueError('Position is needed.')
-        # position = kwargs['position']
-        if not self._is_valid_position(position):
+        if not self.is_valid_position(position):
             raise ValueError(f'Position {position} is out of the bounds of the domain.')
-        if not self._is_empty_position(position):
+        if not self.is_empty_position(position):
             warnings.warn(f'Position {position} already occupied, existing '
                           'agent overwritten by new agent.')
         self.initialize_agent_status_flags(agent)
@@ -243,6 +240,12 @@ class Structured2DSimulationDomain(SimulationDomain):
         if not agent.has_status_flag('position'):
             agent.initialize_status_flag('position', (None, None))
 
+    def is_valid_position(self, position: tuple[int, int]) -> bool:
+        return np.all(np.zeros(2) <= np.array(position)) and np.all(np.array(position) < self._agent_layer.shape)
+
+    def is_empty_position(self, position: tuple[int, int]) -> bool:
+        return self._agent_layer[tuple(position)] is None
+
     def _perform_cell_division(self, agent: Agent, dt: int) -> None:
         current_position = agent.get_status_flag('position')
         displacement_limit = 100
@@ -274,9 +277,3 @@ class Structured2DSimulationDomain(SimulationDomain):
                 gen = agent.get_status_flag('generation')
                 new_agent.set_status_flag('generation', gen + 1)
                 self._simulation.add_agent(new_agent, position=clone_position)
-
-    def _is_valid_position(self, position: tuple[int, int]) -> bool:
-        return np.all(np.zeros(2) <= np.array(position)) and np.all(np.array(position) < self._agent_layer.shape)
-
-    def _is_empty_position(self, position: tuple[int, int]) -> bool:
-        return self._agent_layer[tuple(position)] is None
