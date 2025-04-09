@@ -47,8 +47,8 @@ class CellFunctionModel:
         """
         self._update_interval = update_interval
 
-    def initialize_agent_status_flags(self) -> None:
-        """Initializes the state flags required for the model.
+    def initialize_agent_attributes(self) -> None:
+        """Initializes the attributes required for the model.
         """
         pass
 
@@ -151,30 +151,30 @@ class FixedIncrementalCellCycle(CellFunctionModel):
         """
         return self._current_time
 
-    def initialize_agent_status_flags(self) -> None:
-        """Initializes the status flags required for the model. The model uses
-        two flags: ``division_pending`` and ``division_completed``. For a
+    def initialize_agent_attributes(self) -> None:
+        """Initializes the attributes required for the model. The model uses
+        two attributes: ``division_pending`` and ``division_completed``. For a
         detailed description, refer to the :class:`FixedIncrementalCellCycle`
         documentation.
         """
-        if not self._agent.has_status_flag('division_pending'):
-            self._agent.initialize_status_flag('division_pending', False)
-        if not self._agent.has_status_flag('division_completed'):
-            self._agent.initialize_status_flag('division_completed', False)
+        if not self._agent.has_attribute('division_pending'):
+            self._agent.initialize_attribute('division_pending', False)
+        if not self._agent.has_attribute('division_completed'):
+            self._agent.initialize_attribute('division_completed', False)
 
     def _reset(self) -> None:
         """Resets the model to its initial state by setting the current time
         to zero and resetting the related state flags.
         """
         self._current_time = 0
-        self._agent.set_status_flag('division_pending', False)
-        self._agent.set_status_flag('division_completed', False)
+        self._agent.set_attribute('division_pending', False)
+        self._agent.set_attribute('division_completed', False)
 
     def _update(self) -> None:
         """Performs the actual update of the model's state.
         """
-        if self._agent.get_status_flag('division_completed'):
+        if self._agent.get_attribute('division_completed'):
             self._reset()
         self._current_time += self._time_since_last_update
         if self._length <= self._current_time:
-            self._agent.set_status_flag('division_pending', True)
+            self._agent.set_attribute('division_pending', True)

@@ -102,7 +102,7 @@ class UnstructuredSimulationDomain(SimulationDomain):
             warnings.warn('The number of agents exceeded the capacity '
                           'of the domain.')
         self._agents.append(agent)
-        self.initialize_agent_status_flags(agent)
+        self.initialize_agent_attributes(agent)
 
     def remove_agent(self, agent: Agent) -> None:
         """Removes the specified agent from the internal list of the agents.
@@ -125,26 +125,26 @@ class UnstructuredSimulationDomain(SimulationDomain):
             The time elapsed since the last update call, in milliseconds
         """
         for a in self._agents:
-            if a.get_status_flag('division_pending'):
+            if a.get_attribute('division_pending'):
                 self._perform_cell_division(a, dt)
 
-    def initialize_agent_status_flags(self, agent) -> None:
-        """Initializes the status flags used by the domain. The domain tracks
-        two flags: ``division_pending`` and ``division_completed``. The
-        ``division_pending`` flag can be set by cell-level functions to indicate
-        that an agent is ready to divide and that the domain should handle the
-        division event. Once division has occurred, the ``division_completed``
-        flag is set to ``True``.
+    def initialize_agent_attributes(self, agent) -> None:
+        """Initializes the attributes used by the domain. The domain tracks
+        two attributes: ``division_pending`` and ``division_completed``. The
+        ``division_pending`` attribute can be set by cell-level functions to
+        indicate that an agent is ready to divide and that the domain should
+        handle the division event. Once division has occurred, the
+        ``division_completed`` attribute is set to ``True``.
         """
-        if not agent.has_status_flag('division_pending'):
-            agent.initialize_status_flag('division_pending', False)
-        if not agent.has_status_flag('division_completed'):
-            agent.initialize_status_flag('division_completed', False)
+        if not agent.has_attribute('division_pending'):
+            agent.initialize_attribute('division_pending', False)
+        if not agent.has_attribute('division_completed'):
+            agent.initialize_attribute('division_completed', False)
 
     def _perform_cell_division(self, agent: Agent, dt: int) -> None:
         if len(self._agents) < self._capacity:
-            agent.set_status_flag('division_pending', False)
-            agent.set_status_flag('division_completed', True)
+            agent.set_attribute('division_pending', False)
+            agent.set_attribute('division_completed', True)
             new_agent = agent.clone()
             self._simulation.add_agent(new_agent)
 
@@ -209,13 +209,13 @@ class Structured2DSimulationDomain(SimulationDomain):
         if not self.is_empty_position(position):
             warnings.warn(f'Position {position} already occupied, existing '
                           'agent overwritten by new agent.')
-        self.initialize_agent_status_flags(agent)
+        self.initialize_agent_attributes(agent)
         self._agents.append(agent)
         self._agent_layer[tuple(position)] = agent
-        agent.set_status_flag('position', position)
-        agent.set_status_flag('motility', motility)
-        agent.set_status_flag('binding_affinity', binding_affinity)
-        agent.set_status_flag('displacement_limit', displacement_limit)
+        agent.set_attribute('position', position)
+        agent.set_attribute('motility', motility)
+        agent.set_attribute('binding_affinity', binding_affinity)
+        agent.set_attribute('displacement_limit', displacement_limit)
 
     def remove_agent(self, agent: Agent) -> None:
         """Removes the specified agent from the internal list of the agents.
@@ -240,8 +240,8 @@ class Structured2DSimulationDomain(SimulationDomain):
         self._displacement_trials(dt)
         self._cell_division_trials(dt)
 
-    def initialize_agent_status_flags(self, agent) -> None:
-        """Initializes the status flags used by the domain. The domain uses
+    def initialize_agent_attributes(self, agent) -> None:
+        """Initializes the attributes used by the domain. The domain uses
         the following attributes: ``division_pending``, ``division_completed``,
         ``motility``, ``binding_affinity``, and ``displacement_limit``. Agents
         are displaced to adjacent grid points based on their ``motility`` and
@@ -251,18 +251,18 @@ class Structured2DSimulationDomain(SimulationDomain):
         to create space for a daughter cell. Once division has occurred, the
         ``division_completed`` attribute is set to ``True``.
         """
-        if not agent.has_status_flag('division_pending'):
-            agent.initialize_status_flag('division_pending', False)
-        if not agent.has_status_flag('division_completed'):
-            agent.initialize_status_flag('division_completed', False)
-        if not agent.has_status_flag('position'):
-            agent.initialize_status_flag('position', (None, None))
-        if not agent.has_status_flag('motility'):
-            agent.initialize_status_flag('motility', None)
-        if not agent.has_status_flag('binding_affinity'):
-            agent.initialize_status_flag('binding_affinity', None)
-        if not agent.has_status_flag('displacement_limit'):
-            agent.initialize_status_flag('displacement_limit', None)
+        if not agent.has_attribute('division_pending'):
+            agent.initialize_attribute('division_pending', False)
+        if not agent.has_attribute('division_completed'):
+            agent.initialize_attribute('division_completed', False)
+        if not agent.has_attribute('position'):
+            agent.initialize_attribute('position', (None, None))
+        if not agent.has_attribute('motility'):
+            agent.initialize_attribute('motility', None)
+        if not agent.has_attribute('binding_affinity'):
+            agent.initialize_attribute('binding_affinity', None)
+        if not agent.has_attribute('displacement_limit'):
+            agent.initialize_attribute('displacement_limit', None)
 
     def is_valid_position(self, position: tuple[int, int]) -> bool:
         """Indicates whether the given position lies within the bounds
@@ -300,13 +300,13 @@ class Structured2DSimulationDomain(SimulationDomain):
         if self._agents:
             agents = copy.copy(self._agents)
             np.random.shuffle(agents)
-            positions = np.array([a.get_status_flag('position') for a in agents], dtype='int32')
-            disp_probs = np.array([a.get_status_flag('motility') * dt / self._dx for a in agents], dtype='float32')
-            binding_affs = np.array([a.get_status_flag('binding_affinity') for a in agents], dtype='float32')
+            positions = np.array([a.get_attribute('position') for a in agents], dtype='int32')
+            disp_probs = np.array([a.get_attribute('motility') * dt / self._dx for a in agents], dtype='float32')
+            binding_affs = np.array([a.get_attribute('binding_affinity') for a in agents], dtype='float32')
             # 3D array containing identifiers (idx) at those elements occupied by agents
             idx_array = np.full((self._agent_layer.shape[0], self._agent_layer.shape[1]), -1, dtype='int32')
             for i, a in enumerate(agents):
-                position = a.get_status_flag('position')
+                position = a.get_attribute('position')
                 idx_array[tuple(position)] = np.int32(i)
             # Indicates whether a certain agent changed its position during the MC trial
             change_flags = np.full(len(agents), False, dtype='bool8')
@@ -319,26 +319,26 @@ class Structured2DSimulationDomain(SimulationDomain):
             for i, cflag in enumerate(change_flags):
                 if cflag:
                     pos_new = positions[i]
-                    pos_old = agents[i].get_status_flag('position')
+                    pos_old = agents[i].get_attribute('position')
                     agent_new = self._agent_layer[pos_new[0], pos_new[1]]
                     agent_old = self._agent_layer[pos_old[0], pos_old[1]]
                     self._agent_layer[tuple(pos_new)] = agent_old
                     self._agent_layer[tuple(pos_old)] = agent_new
                     if agent_new:
-                        agent_new.set_status_flag('position', pos_old)
+                        agent_new.set_attribute('position', pos_old)
                     if agent_old:
-                        agent_old.set_status_flag('position', pos_new)
+                        agent_old.set_attribute('position', pos_new)
 
     def _cell_division_trials(self, dt: int) -> None:
         agents_temp = copy.copy(self._agents)
         np.random.shuffle(agents_temp)
         for a in agents_temp:
-            if a.get_status_flag('division_pending'):
+            if a.get_attribute('division_pending'):
                 self._perform_cell_division(a, dt)
 
     def _perform_cell_division(self, agent: Agent, dt: int) -> None:
-        current_position = agent.get_status_flag('position')
-        displacement_limit = agent.get_status_flag('displacement_limit')
+        current_position = agent.get_attribute('position')
+        displacement_limit = agent.get_attribute('displacement_limit')
         coverage_mask = np.where(self._agent_layer, float('inf'), 0)
         if np.any(coverage_mask == 0):
             source_map = np.ones(self._agent_layer.shape)
@@ -358,12 +358,12 @@ class Structured2DSimulationDomain(SimulationDomain):
                         a_new_x, a_new_y = path[i + 1, :2]
                         agent_to_move = self._agent_layer[a_old_x, a_old_y]
                         self._agent_layer[a_new_x, a_new_y] = agent_to_move
-                        agent_to_move.set_status_flag('position', path[i + 1])
+                        agent_to_move.set_attribute('position', path[i + 1])
                 clone_position = path[1]
                 self._agent_layer[tuple(clone_position)] = None
-                agent.set_status_flag('division_pending', False)
-                agent.set_status_flag('division_completed', True)
+                agent.set_attribute('division_pending', False)
+                agent.set_attribute('division_completed', True)
                 new_agent = agent.clone()
-                gen = agent.get_status_flag('generation')
-                new_agent.set_status_flag('generation', gen + 1)
+                gen = agent.get_attribute('generation')
+                new_agent.set_attribute('generation', gen + 1)
                 self._simulation.add_agent(new_agent, position=clone_position)

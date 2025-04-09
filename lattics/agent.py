@@ -13,7 +13,7 @@ class Agent:
         """Constructor method.
         """
         self._simulation = simulation
-        self._status_flags = dict()
+        self._attributes = dict()
         self._cell_function_models = list()
 
     @property
@@ -38,109 +38,111 @@ class Agent:
 
         cloned = Agent()
         cloned._simulation = self._simulation
-        cloned._status_flags = copy.deepcopy(self._status_flags)
+        cloned._attributes = copy.deepcopy(self._attributes)
         cloned._cell_function_models = copy.deepcopy(self._cell_function_models)
         for m in cloned._cell_function_models:
             m.set_agent(cloned)
         return cloned
 
-    def initialize_status_flag(self, identifier: str, value: Any = None) -> None:
-        """Initialize a new status flag for the agent instance with the
-        specified identifier.
+    def initialize_attribute(self, name: str, value: Any = None) -> None:
+        """Initialize a new attribute for the agent instance with the
+        specified name.
 
         Parameters
         ----------
-        identifier : str
-            The name of the status flag
+        name : str
+            The identifier of the status flag
         value : Any, optional
             The initial value to be set, by default None
 
         Examples
         --------
         >>> a = Agent()
-        >>> a.initialize_status_flag('my_flag_1')
-        >>> a.initialize_status_flag('my_flag_2', 0)
+        >>> a.initialize_attribute('my_attribute_1')
+        >>> a.initialize_attribute('my_attribute_2', 0)
+        >>> a.initialize_attribute('my_attribute_3', 'foo')
         """
-        if identifier not in self._status_flags:
-            self._status_flags[identifier] = value
+        if name not in self._attributes:
+            self._attributes[name] = value
         else:
-            warnings.warn(f'Status flag \'{identifier}\' already in use.')
+            warnings.warn(f'Attribute name \'{name}\' already in use.')
 
-    def has_status_flag(self, identifier: str) -> bool:
-        """Returns whether the agent instance has a specific status flag initialized.
+    def has_attribute(self, name: str) -> bool:
+        """Returns whether the agent instance has a specific attribute initialized.
 
         Parameters
         ----------
-        identifier : str
-            The name of the status flag
+        name : str
+            The identifier of the attribute
 
         Returns
         -------
         bool
-            True if the agent has the status flag, otherwise false
+            True if the agent has the attribute, otherwise false
 
         Examples
         --------
-        >>> a.initialize_status_flag('my_flag')
-        >>> a.has_status_flag('my_flag')
+        >>> a.initialize_attribute('my_attribute')
+        >>> a.has_attribute('my_attribute')
         True
-        >>> a.has_status_flag('nonexisting_flag')
+        >>> a.has_attribute('nonexisting_attribute')
         False
         """
-        return identifier in self._status_flags
+        return name in self._attributes
 
-    def set_status_flag(self, identifier: str, value: Any) -> None:
-        """Set the value of the specified status flag.
+    def set_attribute(self, name: str, value: Any) -> None:
+        """Set the value of the specified attribute.
 
         Parameters
         ----------
-        identifier : str
-            The name of the status flag
+        name : str
+            The identifier of the attribute
         value : Any
             The new value to be set
 
         Raises
         ------
         ValueError
-            If the specified identifier does not exist
+            If the specified attribute does not exist
 
         Examples
         --------
-        >>> a.initialize_status_flag('my_flag_1')
-        >>> a.set_status_flag('my_flag_1', True)
+        >>> a.initialize_attribute('my_attribute')
+        >>> a.set_attribute('my_attribute', True)
         """
-        if identifier in self._status_flags:
-            self._status_flags[identifier] = value
+        if name in self._attributes:
+            self._attributes[name] = value
         else:
-            raise ValueError(f'Status flag \'{identifier}\' not available.')
+            raise ValueError(f'Attribute \'{name}\' not available.')
 
-    def get_status_flag(self, identifier: str) -> Any:
-        """Returns the value of the specified status flag.
+    def get_attribute(self, name: str) -> Any:
+        """Returns the value of the specified attribute.
 
         Parameters
         ----------
-        identifier : str
-            The name of the status flag
+        name : str
+            The identifier of the attribute
 
         Returns
         -------
         any type
-            The current value of the status flag
+            The current value of the attribute
 
         Raises
         ------
         ValueError
-            If the specified identifier does not exist
+            If the specified attribute does not exist
 
         Examples
         --------
-        >>> print(a.get_status_flag('my_flag_1'))
-        True
+        >>> a.initialize_attribute('my_attribute', 0)
+        >>> print(a.get_attribute(''my_attribute''))
+        0
         """
-        if identifier in self._status_flags:
-            return self._status_flags[identifier]
+        if name in self._attributes:
+            return self._attributes[name]
         else:
-            raise ValueError(f'Status flag \'{identifier}\' not available.')
+            raise ValueError(f'Attribute name \'{name}\' not available.')
 
     def add_model(self, model: 'cellfunction.CellFunctionModel') -> None:
         """Adds the provided model instance to the agent's collection of cell
@@ -152,7 +154,7 @@ class Agent:
             A subclass of the ``CellFunctionModel`` abstract base class.
         """
         self._cell_function_models.append(model)
-        model.initialize_agent_status_flags()
+        model.initialize_agent_attributes()
 
     def update_models(self, dt: int) -> None:
         """Sequentially updates all models associated with the agent. If
