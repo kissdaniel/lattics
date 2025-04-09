@@ -54,7 +54,7 @@ class Simulation:
 
         return self._time
 
-    def add_agent(self, agent: Agent) -> None:
+    def add_agent(self, agent: Agent, **kwargs) -> None:
         """Adds the specified agent to the simulation. The agent will be added
         to the collection of all agents and, if a simulation domain is defined,
         will also be placed within the simulation domain.
@@ -66,7 +66,7 @@ class Simulation:
         """
         self._agents.append(agent)
         if self._simulation_domain:
-            self._simulation_domain.add_agent(agent)
+            self._simulation_domain.add_agent(agent, **kwargs)
         else:
             warnings.warn('No simulation domain has been defined. '
                           'You can proceed without one, but this may '
