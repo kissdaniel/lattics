@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Installation &mdash; LattiCS 0.post57+g9873a4e documentation</title>
+  <title>Installation &mdash; LattiCS 0.post57.dev0+g9873a4e documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="_static/plot_directive.css?v=7f9a90b1" />
@@ -15,7 +15,7 @@
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="_static/documentation_options.js?v=d6e8995e"></script>
+        <script src="_static/documentation_options.js?v=bd36e45a"></script>
         <script src="_static/doctools.js?v=9a2dae69"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
         <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -40,7 +40,7 @@
               <img src="_static/lattics_logo_s.png" class="logo" alt="Logo"/>
           </a>
               <div class="version">
-                0.post57+g9873a4e
+                0.post57.dev0+g9873a4e
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -82,10 +82,29 @@
              
   <section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h1>
-<p>At the command line:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install lattics
+<p>We recommend using LattiCS in a separate virtual environment to avoid potential issues caused by conflicting package versions.</p>
+<p>First, create a new virtual environment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python -m venv lattics
 </pre></div>
 </div>
+<p>Activate the environment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ source myenv/bin/activate
+</pre></div>
+</div>
+<p>On Windows, you may need to use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ lattics\Scripts\activate.bat
+</pre></div>
+</div>
+<p>Next, install the LattiCS package from the Git repository:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install git+https://github.com/kissdaniel/lattics.git
+</pre></div>
+</div>
+<p>Start a Python shell and verify that the package can be successfully imported:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python
+&gt;&gt;&gt; import lattics
+</pre></div>
+</div>
+<p>If no error messages appear, the installation was successful.</p>
 </section>
 
 
