@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lattics.numba_functions &mdash; LattiCS 0.post56+gc7bd082 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/documentation_options.js?v=4aafa30e"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            LattiCS
+          </a>
+              <div class="version">
+                0.post56+gc7bd082
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../release-history.html">Release History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../min_versions.html">Minimum Version of Python and NumPy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">LattiCS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">lattics.numba_functions</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for lattics.numba_functions</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numba</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">void</span><span class="p">,</span> <span class="n">float32</span><span class="p">,</span> <span class="n">int32</span><span class="p">,</span> <span class="n">boolean</span><span class="p">,</span> <span class="n">types</span>
+
+
+<div class="viewcode-block" id="bresenham_2d">
+<a class="viewcode-back" href="../../lattics.html#lattics.numba_functions.bresenham_2d">[docs]</a>
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">int32</span><span class="p">[:,</span> <span class="p">:](</span><span class="n">int32</span><span class="p">,</span> <span class="n">int32</span><span class="p">,</span> <span class="n">int32</span><span class="p">,</span> <span class="n">int32</span><span class="p">),</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">bresenham_2d</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">):</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span><span class="p">)</span>
+    <span class="n">dy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y2</span> <span class="o">-</span> <span class="n">y1</span><span class="p">)</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">size</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x1</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">y1</span>
+
+    <span class="n">sx</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">x1</span> <span class="o">&lt;</span> <span class="n">x2</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">sy</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">y1</span> <span class="o">&lt;</span> <span class="n">y2</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">dy</span> <span class="o">&lt;</span> <span class="n">dx</span><span class="p">:</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">dx</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="k">while</span> <span class="n">x</span> <span class="o">!=</span> <span class="n">x2</span><span class="p">:</span>
+            <span class="n">path</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span>
+            <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">error</span> <span class="o">-</span> <span class="n">dy</span>
+            <span class="k">if</span> <span class="n">error</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="n">sy</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="n">error</span> <span class="o">+</span> <span class="n">dx</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">sx</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">dy</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="k">while</span> <span class="n">y</span> <span class="o">!=</span> <span class="n">y2</span><span class="p">:</span>
+            <span class="n">path</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span>
+            <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">error</span> <span class="o">-</span> <span class="n">dx</span>
+            <span class="k">if</span> <span class="n">error</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">sx</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="n">error</span> <span class="o">+</span> <span class="n">dy</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="n">sy</span>
+    <span class="n">path</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">path</span></div>
+
+
+
+<div class="viewcode-block" id="get_neighborhood_2d">
+<a class="viewcode-back" href="../../lattics.html#lattics.numba_functions.get_neighborhood_2d">[docs]</a>
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">int32</span><span class="p">[:,</span> <span class="p">:](</span><span class="n">types</span><span class="o">.</span><span class="n">unicode_type</span><span class="p">),</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_neighborhood_2d</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;von_neumann&#39;</span><span class="p">:</span>
+        <span class="n">neighborhood</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="p">],</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">neighborhood</span>
+    <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;moore&#39;</span><span class="p">:</span>
+        <span class="n">neighborhood</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="p">],</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">neighborhood</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Argument must be either </span><span class="se">\&#39;</span><span class="s1">von_neumann</span><span class="se">\&#39;</span><span class="s1"> or </span><span class="se">\&#39;</span><span class="s1">moore</span><span class="se">\&#39;</span><span class="s1">.&#39;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_neighborhood_3d">
+<a class="viewcode-back" href="../../lattics.html#lattics.numba_functions.get_neighborhood_3d">[docs]</a>
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">int32</span><span class="p">[:,</span> <span class="p">:](</span><span class="n">types</span><span class="o">.</span><span class="n">unicode_type</span><span class="p">),</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_neighborhood_3d</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;von_neumann&#39;</span><span class="p">:</span>
+        <span class="n">neighborhood</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                <span class="p">[</span> <span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                <span class="p">[</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="p">],</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">neighborhood</span>
+    <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;moore&#39;</span><span class="p">:</span>
+        <span class="n">neighborhood</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="p">[</span> <span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span> <span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span> <span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="p">[</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>             <span class="p">[</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="p">[</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="p">[</span> <span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="p">],</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">neighborhood</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Argument must be either </span><span class="se">\&#39;</span><span class="s1">von_neumann</span><span class="se">\&#39;</span><span class="s1"> or </span><span class="se">\&#39;</span><span class="s1">moore</span><span class="se">\&#39;</span><span class="s1">.&#39;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="displace_agent_2d">
+<a class="viewcode-back" href="../../lattics.html#lattics.numba_functions.displace_agent_2d">[docs]</a>
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">void</span><span class="p">(</span><span class="n">int32</span><span class="p">[:,</span> <span class="p">:],</span> <span class="n">int32</span><span class="p">,</span> <span class="n">int32</span><span class="p">[:],</span> <span class="n">int32</span><span class="p">[:,</span> <span class="p">:]),</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">displace_agent_2d</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">new_position</span><span class="p">,</span> <span class="n">agent_idx_array</span><span class="p">):</span>
+    <span class="n">old_position</span> <span class="o">=</span> <span class="n">positions</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+    <span class="n">agent_idx_array</span><span class="p">[</span><span class="n">old_position</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">old_position</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">agent_idx_array</span><span class="p">[</span><span class="n">new_position</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">new_position</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">idx</span>
+    <span class="n">positions</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_position</span></div>
+
+
+
+<div class="viewcode-block" id="pairwise_interaction_energy_2d">
+<a class="viewcode-back" href="../../lattics.html#lattics.numba_functions.pairwise_interaction_energy_2d">[docs]</a>
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">float32</span><span class="p">(</span><span class="n">int32</span><span class="p">[:],</span> <span class="n">float32</span><span class="p">,</span> <span class="n">int32</span><span class="p">[:],</span> <span class="n">float32</span><span class="p">),</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">pairwise_interaction_energy_2d</span><span class="p">(</span><span class="n">position_one</span><span class="p">,</span> <span class="n">bindig_aff_one</span><span class="p">,</span> <span class="n">position_two</span><span class="p">,</span> <span class="n">binding_aff_two</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes pairwise interaction energies of two agents.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        position_one (array of ints): the coordinates of agent one</span>
+<span class="sd">        bindig_aff_one (float): the binding affinity of agent one</span>
+<span class="sd">        position_two (array of ints): the coordinates of agent two</span>
+<span class="sd">        binding_aff_two (float): the binding affinity of agent two</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        float: the interaction energy</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">distance</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">position_one</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">position_two</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">position_one</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">position_two</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">distance</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">Inf</span>
+    <span class="k">elif</span> <span class="n">distance</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">bindig_aff_one</span> <span class="o">*</span> <span class="n">binding_aff_two</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="total_interaction_energy_2d">
+<a class="viewcode-back" href="../../lattics.html#lattics.numba_functions.total_interaction_energy_2d">[docs]</a>
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">float32</span><span class="p">(</span><span class="n">int32</span><span class="p">,</span> <span class="n">int32</span><span class="p">[:],</span> <span class="n">float32</span><span class="p">[:],</span> <span class="n">int32</span><span class="p">[:,</span> <span class="p">:]),</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">total_interaction_energy_2d</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">agent_pos</span><span class="p">,</span> <span class="n">bind_affs</span><span class="p">,</span> <span class="n">agent_idx_array</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes the sum of pairwise interaction energies of a given agent.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        idx (int): identifier (index) of the selected agent</span>
+<span class="sd">        agent_pos (array of ints): the position of the selected agent</span>
+<span class="sd">        bind_affs (array of floats): 1D array of agent binding affinities</span>
+<span class="sd">        agent_idx_array (array of ints): 2D array containing identifiers (indexes)</span>
+<span class="sd">            of the agents based on their positions</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        float: the total interaction energy of the agent</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">neighborhood</span> <span class="o">=</span> <span class="n">get_neighborhood_2d</span><span class="p">(</span><span class="s1">&#39;moore&#39;</span><span class="p">)</span>
+    <span class="n">n_size</span> <span class="o">=</span> <span class="n">neighborhood</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">agent_bind</span> <span class="o">=</span> <span class="n">bind_affs</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+    <span class="n">size_x</span> <span class="o">=</span> <span class="n">agent_idx_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">size_y</span> <span class="o">=</span> <span class="n">agent_idx_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">energy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_size</span><span class="p">):</span>
+        <span class="n">neighbor_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">agent_pos</span><span class="p">,</span> <span class="n">neighborhood</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">nx</span> <span class="o">=</span> <span class="n">neighbor_pos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ny</span> <span class="o">=</span> <span class="n">neighbor_pos</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># Avoid positions outside the boundaries of the array</span>
+        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">nx</span> <span class="o">&lt;</span> <span class="n">size_x</span> <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">ny</span> <span class="o">&lt;</span> <span class="n">size_y</span><span class="p">:</span>
+            <span class="c1"># Check if the position is occupied by an agent</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">agent_idx_array</span><span class="p">[</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">nidx</span> <span class="o">=</span> <span class="n">agent_idx_array</span><span class="p">[</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">]</span>
+                <span class="n">neighbor_bind</span> <span class="o">=</span> <span class="n">bind_affs</span><span class="p">[</span><span class="n">nidx</span><span class="p">]</span>
+                <span class="n">energy</span> <span class="o">+=</span> <span class="n">pairwise_interaction_energy_2d</span><span class="p">(</span><span class="n">agent_pos</span><span class="p">,</span> <span class="n">agent_bind</span><span class="p">,</span> <span class="n">neighbor_pos</span><span class="p">,</span> <span class="n">neighbor_bind</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">energy</span></div>
+
+
+
+<div class="viewcode-block" id="displacement_trial_2d">
+<a class="viewcode-back" href="../../lattics.html#lattics.numba_functions.displacement_trial_2d">[docs]</a>
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">void</span><span class="p">(</span><span class="n">int32</span><span class="p">,</span> <span class="n">int32</span><span class="p">[:,</span> <span class="p">:],</span> <span class="n">float32</span><span class="p">[:],</span> <span class="n">int32</span><span class="p">[:,</span> <span class="p">:],</span> <span class="n">boolean</span><span class="p">[:]),</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">displacement_trial_2d</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">positions</span><span class="p">,</span> <span class="n">binding_affs</span><span class="p">,</span> <span class="n">agent_idx_array</span><span class="p">,</span> <span class="n">change_flags</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Performs a displacement trial with a given agent assuming 2D coordinates.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        idx (int):</span>
+<span class="sd">        positions (array of ints): 2D array of the positions of all agents</span>
+<span class="sd">        binding_affs (array of float): the binding affinities of all agents</span>
+<span class="sd">        agent_idx_array (2D array of ints): identifiers (indexes) of the agents</span>
+<span class="sd">            based on their positions</span>
+<span class="sd">        change_flags (array of bools): indicating whether an agent was</span>
+<span class="sd">            relocated during the trial</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">current_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+    <span class="n">current_energy</span> <span class="o">=</span> <span class="n">total_interaction_energy_2d</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">current_pos</span><span class="p">,</span> <span class="n">binding_affs</span><span class="p">,</span> <span class="n">agent_idx_array</span><span class="p">)</span>
+    <span class="n">neighborhood</span> <span class="o">=</span> <span class="n">get_neighborhood_2d</span><span class="p">(</span><span class="s1">&#39;von_neumann&#39;</span><span class="p">)</span>
+    <span class="n">n_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">neighborhood</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">target_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">neighborhood</span><span class="p">[</span><span class="n">n_idx</span><span class="p">])</span>
+    <span class="n">tx</span> <span class="o">=</span> <span class="n">target_pos</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">ty</span> <span class="o">=</span> <span class="n">target_pos</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">size_x</span> <span class="o">=</span> <span class="n">agent_idx_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">size_y</span> <span class="o">=</span> <span class="n">agent_idx_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">tx</span> <span class="o">&lt;</span> <span class="n">size_x</span> <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">ty</span> <span class="o">&lt;</span> <span class="n">size_y</span><span class="p">:</span>
+        <span class="n">target_idx</span> <span class="o">=</span> <span class="n">agent_idx_array</span><span class="p">[</span><span class="n">tx</span><span class="p">,</span> <span class="n">ty</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">target_idx</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">displace_agent_2d</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">target_pos</span><span class="p">,</span> <span class="n">agent_idx_array</span><span class="p">)</span>
+            <span class="n">target_energy</span> <span class="o">=</span> <span class="n">total_interaction_energy_2d</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">target_pos</span><span class="p">,</span> <span class="n">binding_affs</span><span class="p">,</span> <span class="n">agent_idx_array</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">target_energy</span> <span class="o">-</span> <span class="n">current_energy</span><span class="p">)):</span>
+                <span class="n">displace_agent_2d</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">current_pos</span><span class="p">,</span> <span class="n">agent_idx_array</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">change_flags</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bool8</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Daniel Kiss.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

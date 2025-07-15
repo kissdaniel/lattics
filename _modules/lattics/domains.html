@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lattics.domains &mdash; LattiCS 0.post56+gc7bd082 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/documentation_options.js?v=4aafa30e"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            LattiCS
+          </a>
+              <div class="version">
+                0.post56+gc7bd082
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../release-history.html">Release History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../min_versions.html">Minimum Version of Python and NumPy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">LattiCS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">lattics.domains</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for lattics.domains</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">from</span> <span class="nn">.agent</span> <span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span> <span class="nn">.simulation</span> <span class="kn">import</span> <span class="n">Simulation</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">numba_functions</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy.typing</span> <span class="k">as</span> <span class="nn">npt</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">ndimage</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+
+<div class="viewcode-block" id="SimulationDomain">
+<a class="viewcode-back" href="../../lattics.html#lattics.domains.SimulationDomain">[docs]</a>
+<span class="k">class</span> <span class="nc">SimulationDomain</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for different simulation domains.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">simulation</span><span class="p">:</span> <span class="n">Simulation</span>
+                 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructor method.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        simulation : Simulation</span>
+<span class="sd">            The Simulation instance containing the domain</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_simulation</span> <span class="o">=</span> <span class="n">simulation</span>
+
+<div class="viewcode-block" id="SimulationDomain.initialize">
+<a class="viewcode-back" href="../../lattics.html#lattics.domains.SimulationDomain.initialize">[docs]</a>
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the domain.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="SimulationDomain.add_agent">
+<a class="viewcode-back" href="../../lattics.html#lattics.domains.SimulationDomain.add_agent">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds the specified agent to the structure representing the internal</span>
+<span class="sd">        storage of the domain.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        agent : Agent</span>
+<span class="sd">            The agent to be added</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="SimulationDomain.remove_agent">
+<a class="viewcode-back" href="../../lattics.html#lattics.domains.SimulationDomain.remove_agent">[docs]</a>
+    <span class="k">def</span> <span class="nf">remove_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Removes the specified agent from the internal storage of the domain.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        agent : Agent</span>
+<span class="sd">            The agent to be removed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="SimulationDomain.update">
+<a class="viewcode-back" href="../../lattics.html#lattics.domains.SimulationDomain.update">[docs]</a>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Updates the domain according to the specified time duration.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dt : int</span>
+<span class="sd">            The time elapsed since the last update call, in milliseconds</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="UnstructuredSimulationDomain">
+<a class="viewcode-back" href="../../lattics.html#lattics.domains.UnstructuredSimulationDomain">[docs]</a>
+<span class="k">class</span> <span class="nc">UnstructuredSimulationDomain</span><span class="p">(</span><span class="n">SimulationDomain</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents a perfectly mixed simulation domain with no spatial structure</span>
+<span class="sd">    or localized interactions, where each agent has an equal probability of</span>
+<span class="sd">    interacting with any other agent in the population. Agents are stored in a</span>
+<span class="sd">    list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">simulation</span><span class="p">:</span> <span class="n">Simulation</span><span class="p">,</span>
+                 <span class="n">capacity</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
+                 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructor method.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        simulation : Simulation</span>
+<span class="sd">            The Simulation instance containing the domain</span>
+<span class="sd">        capacity : int, optional</span>
+<span class="sd">            The maximum number of agents in the population. Defaults to None,</span>
+<span class="sd">            meaning no limit (infinite population).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">simulation</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_capacity</span> <span class="o">=</span> <span class="n">capacity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_agents</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+<div class="viewcode-block" id="UnstructuredSimulationDomain.initialize">
+<a class="viewcode-back" href="../../lattics.html#lattics.domains.UnstructuredSimulationDomain.initialize">[docs]</a>
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the domain.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="UnstructuredSimulationDomain.add_agent">
+<a class="viewcode-back" href="../../lattics.html#lattics.domains.UnstructuredSimulationDomain.add_agent">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds the specified agent to the internal list of the agents.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        agent : Agent</span>
+<span class="sd">            The agent to be added</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_capacity</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_agents</span><span class="p">):</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;The number of agents exceeded the capacity &#39;</span>
+                          <span class="s1">&#39;of the domain.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_agents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize_agent_attributes</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UnstructuredSimulationDomain.remove_agent">
+<a class="viewcode-back" href="../../lattics.html#lattics.domains.UnstructuredSimulationDomain.remove_agent">[docs]</a>
+    <span class="k">def</span> <span class="nf">remove_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Removes the specified agent from the internal list of the agents.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        agent : Agent</span>
+<span class="sd">            The agent to be removed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_agents</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UnstructuredSimulationDomain.update">
+<a class="viewcode-back" href="../../lattics.html#lattics.domains.UnstructuredSimulationDomain.update">[docs]</a>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Updates the domain according to the specified time duration. Agents</span>
+<span class="sd">        labeled as ``division_pending`` are duplicated based on the available</span>
+<span class="sd">        space in the domain, constrained by ``capacity``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dt : int</span>
+<span class="sd">            The time elapsed since the last update call, in milliseconds</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agents</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s1">&#39;division_pending&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_perform_cell_division</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UnstructuredSimulationDomain.initialize_agent_attributes">
+<a class="viewcode-back" href="../../lattics.html#lattics.domains.UnstructuredSimulationDomain.initialize_agent_attributes">[docs]</a>
+    <span class="k">def</span> <span class="nf">initialize_agent_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the attributes used by the domain. The domain tracks</span>
+<span class="sd">        two attributes: ``division_pending`` and ``division_completed``. The</span>
+<span class="sd">        ``division_pending`` attribute can be set by cell-level functions to</span>
+<span class="sd">        indicate that an agent is ready to divide and that the domain should</span>
+<span class="sd">        handle the division event. Once division has occurred, the</span>
+<span class="sd">        ``division_completed`` attribute is set to ``True``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">agent</span><span class="o">.</span><span class="n">has_attribute</span><span class="p">(</span><span class="s1">&#39;division_pending&#39;</span><span class="p">):</span>
+            <span class="n">agent</span><span class="o">.</span><span class="n">initialize_attribute</span><span class="p">(</span><span class="s1">&#39;division_pending&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">agent</span><span class="o">.</span><span class="n">has_attribute</span><span class="p">(</span><span class="s1">&#39;division_completed&#39;</span><span class="p">):</span>
+            <span class="n">agent</span><span class="o">.</span><span class="n">initialize_attribute</span><span class="p">(</span><span class="s1">&#39;division_completed&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_perform_cell_division</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_agents</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_capacity</span><span class="p">:</span>
+            <span class="n">agent</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="s1">&#39;division_pending&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="n">agent</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="s1">&#39;division_completed&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="n">new_agent</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_simulation</span><span class="o">.</span><span class="n">add_agent</span><span class="p">(</span><span class="n">new_agent</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Structured2DSimulationDomain">
+<a class="viewcode-back" href="../../lattics.html#lattics.domains.Structured2DSimulationDomain">[docs]</a>
+<span class="k">class</span> <span class="nc">Structured2DSimulationDomain</span><span class="p">(</span><span class="n">SimulationDomain</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">simulation</span><span class="p">:</span> <span class="n">Simulation</span><span class="p">,</span>
+                 <span class="n">dimensions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+                 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructor method.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        simulation : Simulation</span>
+<span class="sd">            The Simulation instance containing the domain</span>
+<span class="sd">        dimensions : tuple[int, int]</span>
+<span class="sd">            Width and height of the lattice on which agents are located, given</span>
+<span class="sd">            as the number of columns and rows</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">simulation</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_agents</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_agent_layer</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dimensions</span> <span class="o">=</span> <span class="n">dimensions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dx</span> <span class="o">=</span> <span class="mi">1</span>    <span class="c1"># TODO</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Structured2DSimulationDomain.initialize">
+<a class="viewcode-back" href="../../lattics.html#lattics.domains.Structured2DSimulationDomain.initialize">[docs]</a>
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the domain.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_agents</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_agent_layer</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dimensions</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;object&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Structured2DSimulationDomain.add_agent">
+<a class="viewcode-back" href="../../lattics.html#lattics.domains.Structured2DSimulationDomain.add_agent">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                  <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">,</span>
+                  <span class="n">position</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+                  <span class="n">motility</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                  <span class="n">binding_affinity</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                  <span class="n">displacement_limit</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds the specified agent to the specified index of the internal</span>
+<span class="sd">        array of the agents.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        agent : Agent</span>
+<span class="sd">            The agent to be added</span>
+<span class="sd">        position : tuple[int, int]</span>
+<span class="sd">            The column and row index describing the agent&#39;s position</span>
+<span class="sd">        motility : int, optional</span>
+<span class="sd">            Characteristic velocity of the agent, expressed in</span>
+<span class="sd">            micrometers per millisecond, by default 0</span>
+<span class="sd">        binding_affinity : int, optional</span>
+<span class="sd">            Scale factor that determines the binding strength between</span>
+<span class="sd">            the agent and other agents, by default 0</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the position of the agent is out of the bounds of the domain</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_valid_position</span><span class="p">(</span><span class="n">position</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Position </span><span class="si">{</span><span class="n">position</span><span class="si">}</span><span class="s1"> is out of the bounds of the domain.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_empty_position</span><span class="p">(</span><span class="n">position</span><span class="p">):</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Position </span><span class="si">{</span><span class="n">position</span><span class="si">}</span><span class="s1"> already occupied, existing &#39;</span>
+                          <span class="s1">&#39;agent overwritten by new agent.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize_agent_attributes</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_agents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_agent_layer</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">position</span><span class="p">)]</span> <span class="o">=</span> <span class="n">agent</span>
+        <span class="n">agent</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="s1">&#39;position&#39;</span><span class="p">,</span> <span class="n">position</span><span class="p">)</span>
+        <span class="n">agent</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="s1">&#39;motility&#39;</span><span class="p">,</span> <span class="n">motility</span><span class="p">)</span>
+        <span class="n">agent</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="s1">&#39;binding_affinity&#39;</span><span class="p">,</span> <span class="n">binding_affinity</span><span class="p">)</span>
+        <span class="n">agent</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="s1">&#39;displacement_limit&#39;</span><span class="p">,</span> <span class="n">displacement_limit</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Structured2DSimulationDomain.remove_agent">
+<a class="viewcode-back" href="../../lattics.html#lattics.domains.Structured2DSimulationDomain.remove_agent">[docs]</a>
+    <span class="k">def</span> <span class="nf">remove_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Removes the specified agent from the internal list of the agents.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        agent : Agent</span>
+<span class="sd">            The agent to be removed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">position</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">get_status_flag</span><span class="p">(</span><span class="s1">&#39;position&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_agents</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">agent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_agent_layer</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">position</span><span class="p">)]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="Structured2DSimulationDomain.update">
+<a class="viewcode-back" href="../../lattics.html#lattics.domains.Structured2DSimulationDomain.update">[docs]</a>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Updates the domain according to the specified time duration.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dt : int</span>
+<span class="sd">            The time elapsed since the last update call, in milliseconds</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_displacement_trials</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cell_division_trials</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Structured2DSimulationDomain.initialize_agent_attributes">
+<a class="viewcode-back" href="../../lattics.html#lattics.domains.Structured2DSimulationDomain.initialize_agent_attributes">[docs]</a>
+    <span class="k">def</span> <span class="nf">initialize_agent_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the attributes used by the domain. The domain uses</span>
+<span class="sd">        the following attributes: ``division_pending``, ``division_completed``,</span>
+<span class="sd">        ``motility``, ``binding_affinity``, and ``displacement_limit``. Agents</span>
+<span class="sd">        are displaced to adjacent grid points based on their ``motility`` and</span>
+<span class="sd">        ``binding_affinity`` values. Agents labeled as ``division_pending``</span>
+<span class="sd">        are duplicated depending on the number of available grid points and the</span>
+<span class="sd">        ``displacement_limit``, which specifies how far an agent can push others</span>
+<span class="sd">        to create space for a daughter cell. Once division has occurred, the</span>
+<span class="sd">        ``division_completed`` attribute is set to ``True``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">agent</span><span class="o">.</span><span class="n">has_attribute</span><span class="p">(</span><span class="s1">&#39;division_pending&#39;</span><span class="p">):</span>
+            <span class="n">agent</span><span class="o">.</span><span class="n">initialize_attribute</span><span class="p">(</span><span class="s1">&#39;division_pending&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">agent</span><span class="o">.</span><span class="n">has_attribute</span><span class="p">(</span><span class="s1">&#39;division_completed&#39;</span><span class="p">):</span>
+            <span class="n">agent</span><span class="o">.</span><span class="n">initialize_attribute</span><span class="p">(</span><span class="s1">&#39;division_completed&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">agent</span><span class="o">.</span><span class="n">has_attribute</span><span class="p">(</span><span class="s1">&#39;position&#39;</span><span class="p">):</span>
+            <span class="n">agent</span><span class="o">.</span><span class="n">initialize_attribute</span><span class="p">(</span><span class="s1">&#39;position&#39;</span><span class="p">,</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">agent</span><span class="o">.</span><span class="n">has_attribute</span><span class="p">(</span><span class="s1">&#39;motility&#39;</span><span class="p">):</span>
+            <span class="n">agent</span><span class="o">.</span><span class="n">initialize_attribute</span><span class="p">(</span><span class="s1">&#39;motility&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">agent</span><span class="o">.</span><span class="n">has_attribute</span><span class="p">(</span><span class="s1">&#39;binding_affinity&#39;</span><span class="p">):</span>
+            <span class="n">agent</span><span class="o">.</span><span class="n">initialize_attribute</span><span class="p">(</span><span class="s1">&#39;binding_affinity&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">agent</span><span class="o">.</span><span class="n">has_attribute</span><span class="p">(</span><span class="s1">&#39;displacement_limit&#39;</span><span class="p">):</span>
+            <span class="n">agent</span><span class="o">.</span><span class="n">initialize_attribute</span><span class="p">(</span><span class="s1">&#39;displacement_limit&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Structured2DSimulationDomain.is_valid_position">
+<a class="viewcode-back" href="../../lattics.html#lattics.domains.Structured2DSimulationDomain.is_valid_position">[docs]</a>
+    <span class="k">def</span> <span class="nf">is_valid_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">position</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Indicates whether the given position lies within the bounds</span>
+<span class="sd">        of the domain.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        position : tuple[int, int]</span>
+<span class="sd">            The column and row index describing the position</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            ``True`` if the position exists within the domain, ``False`` otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">position</span><span class="p">))</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">position</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent_layer</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Structured2DSimulationDomain.is_empty_position">
+<a class="viewcode-back" href="../../lattics.html#lattics.domains.Structured2DSimulationDomain.is_empty_position">[docs]</a>
+    <span class="k">def</span> <span class="nf">is_empty_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">position</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Indicates whether the specified lattice point is unoccupied</span>
+<span class="sd">        (i.e., not containing any agent instance).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        position : tuple[int, int]</span>
+<span class="sd">            The column and row index describing the position</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            ``True`` if the lattice point is empty, ``False`` otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent_layer</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">position</span><span class="p">)]</span> <span class="ow">is</span> <span class="kc">None</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_displacement_trials</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agents</span><span class="p">:</span>
+            <span class="n">agents</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_agents</span><span class="p">)</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">agents</span><span class="p">)</span>
+            <span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s1">&#39;position&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">agents</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
+            <span class="n">disp_probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s1">&#39;motility&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="n">dt</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dx</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">agents</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+            <span class="n">binding_affs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s1">&#39;binding_affinity&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">agents</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+            <span class="c1"># 3D array containing identifiers (idx) at those elements occupied by agents</span>
+            <span class="n">idx_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_agent_layer</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent_layer</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int32&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">agents</span><span class="p">):</span>
+                <span class="n">position</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s1">&#39;position&#39;</span><span class="p">)</span>
+                <span class="n">idx_array</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">position</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="c1"># Indicates whether a certain agent changed its position during the MC trial</span>
+            <span class="n">change_flags</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">agents</span><span class="p">),</span> <span class="kc">False</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;bool8&#39;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">dprob</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">disp_probs</span><span class="p">):</span>
+                <span class="c1"># Check if trial is needed based on the displacement probability</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">dprob</span><span class="p">:</span>
+                    <span class="n">numba_functions</span><span class="o">.</span><span class="n">displacement_trial_2d</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">positions</span><span class="p">,</span> <span class="n">binding_affs</span><span class="p">,</span> <span class="n">idx_array</span><span class="p">,</span> <span class="n">change_flags</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cflag</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">change_flags</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">cflag</span><span class="p">:</span>
+                    <span class="n">pos_new</span> <span class="o">=</span> <span class="n">positions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">pos_old</span> <span class="o">=</span> <span class="n">agents</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s1">&#39;position&#39;</span><span class="p">)</span>
+                    <span class="n">agent_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent_layer</span><span class="p">[</span><span class="n">pos_new</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pos_new</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+                    <span class="n">agent_old</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent_layer</span><span class="p">[</span><span class="n">pos_old</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pos_old</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_agent_layer</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">pos_new</span><span class="p">)]</span> <span class="o">=</span> <span class="n">agent_old</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_agent_layer</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">pos_old</span><span class="p">)]</span> <span class="o">=</span> <span class="n">agent_new</span>
+                    <span class="k">if</span> <span class="n">agent_new</span><span class="p">:</span>
+                        <span class="n">agent_new</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="s1">&#39;position&#39;</span><span class="p">,</span> <span class="n">pos_old</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">agent_old</span><span class="p">:</span>
+                        <span class="n">agent_old</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="s1">&#39;position&#39;</span><span class="p">,</span> <span class="n">pos_new</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_cell_division_trials</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">agents_temp</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_agents</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">agents_temp</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">agents_temp</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s1">&#39;division_pending&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_perform_cell_division</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_perform_cell_division</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">current_position</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s1">&#39;position&#39;</span><span class="p">)</span>
+        <span class="n">displacement_limit</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s1">&#39;displacement_limit&#39;</span><span class="p">)</span>
+        <span class="n">coverage_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_agent_layer</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">coverage_mask</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">source_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_agent_layer</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">source_map</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">current_position</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">distance_map</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">distance_transform_edt</span><span class="p">(</span><span class="n">source_map</span><span class="p">)</span>
+            <span class="n">distance_map</span> <span class="o">=</span> <span class="n">distance_map</span> <span class="o">+</span> <span class="n">coverage_mask</span>
+            <span class="n">min_distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">distance_map</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">min_distance</span> <span class="o">&lt;=</span> <span class="n">displacement_limit</span><span class="p">:</span>
+                <span class="n">target_sites</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">distance_map</span> <span class="o">==</span> <span class="n">min_distance</span><span class="p">)</span>
+                <span class="n">target_position</span> <span class="o">=</span> <span class="n">target_sites</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">target_sites</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+                <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">current_position</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">target_position</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="n">numba_functions</span><span class="o">.</span><span class="n">bresenham_2d</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                        <span class="n">a_old_x</span><span class="p">,</span> <span class="n">a_old_y</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+                        <span class="n">a_new_x</span><span class="p">,</span> <span class="n">a_new_y</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+                        <span class="n">agent_to_move</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent_layer</span><span class="p">[</span><span class="n">a_old_x</span><span class="p">,</span> <span class="n">a_old_y</span><span class="p">]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_agent_layer</span><span class="p">[</span><span class="n">a_new_x</span><span class="p">,</span> <span class="n">a_new_y</span><span class="p">]</span> <span class="o">=</span> <span class="n">agent_to_move</span>
+                        <span class="n">agent_to_move</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="s1">&#39;position&#39;</span><span class="p">,</span> <span class="n">path</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+                <span class="n">clone_position</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_agent_layer</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">clone_position</span><span class="p">)]</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">agent</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="s1">&#39;division_pending&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+                <span class="n">agent</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="s1">&#39;division_completed&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+                <span class="n">new_agent</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+                <span class="n">gen</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s1">&#39;generation&#39;</span><span class="p">)</span>
+                <span class="n">new_agent</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="s1">&#39;generation&#39;</span><span class="p">,</span> <span class="n">gen</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_simulation</span><span class="o">.</span><span class="n">add_agent</span><span class="p">(</span><span class="n">new_agent</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="n">clone_position</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Daniel Kiss.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

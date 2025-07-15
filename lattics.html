@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lattics package &mdash; LattiCS 0.post56+gc7bd082 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/documentation_options.js?v=4aafa30e"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            LattiCS
+          </a>
+              <div class="version">
+                0.post56+gc7bd082
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release-history.html">Release History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="min_versions.html">Minimum Version of Python and NumPy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LattiCS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">lattics package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/lattics.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="lattics-package">
+<h1>lattics package<a class="headerlink" href="#lattics-package" title="Link to this heading">¶</a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="lattics.tests.html">lattics.tests package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="lattics.tests.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lattics.tests.html#module-lattics.tests.conftest">lattics.tests.conftest module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lattics.tests.html#module-lattics.tests.test_agent_functions">lattics.tests.test_agent_functions module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="lattics.tests.html#lattics.tests.test_agent_functions.test_default_instantiation"><code class="docutils literal notranslate"><span class="pre">test_default_instantiation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="lattics.tests.html#lattics.tests.test_agent_functions.test_status_flag_initialization_get_set_bool"><code class="docutils literal notranslate"><span class="pre">test_status_flag_initialization_get_set_bool()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="lattics.tests.html#lattics.tests.test_agent_functions.test_status_flag_initialization_get_set_str"><code class="docutils literal notranslate"><span class="pre">test_status_flag_initialization_get_set_str()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="lattics.tests.html#module-lattics.tests.test_cell_function_models">lattics.tests.test_cell_function_models module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lattics.tests.html#module-lattics.tests.test_simulation_fundamentals">lattics.tests.test_simulation_fundamentals module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="lattics.tests.html#lattics.tests.test_simulation_fundamentals.test_agent_addition_no_space"><code class="docutils literal notranslate"><span class="pre">test_agent_addition_no_space()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="lattics.tests.html#lattics.tests.test_simulation_fundamentals.test_agent_addition_no_space_gives_warning"><code class="docutils literal notranslate"><span class="pre">test_agent_addition_no_space_gives_warning()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="lattics.tests.html#lattics.tests.test_simulation_fundamentals.test_agent_removal_no_space"><code class="docutils literal notranslate"><span class="pre">test_agent_removal_no_space()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="lattics.tests.html#lattics.tests.test_simulation_fundamentals.test_default_instantiation"><code class="docutils literal notranslate"><span class="pre">test_default_instantiation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="lattics.tests.html#lattics.tests.test_simulation_fundamentals.test_simulation_run_elapsed_time"><code class="docutils literal notranslate"><span class="pre">test_simulation_run_elapsed_time()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="lattics.tests.html#module-lattics.tests">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-lattics.agent">
+<span id="lattics-agent-module"></span><h2>lattics.agent module<a class="headerlink" href="#module-lattics.agent" title="Link to this heading">¶</a></h2>
+<p>Basic unit of the LattiCS framework representing a single biological cell.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lattics.agent.Agent">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lattics.agent.</span></span><span class="sig-name descname"><span class="pre">Agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lattics.simulation.Simulation" title="lattics.simulation.Simulation"><span class="pre">simulation.Simulation</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lattics/agent.html#Agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.agent.Agent" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.agent.Agent.add_model">
+<span class="sig-name descname"><span class="pre">add_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">cellfunction.CellFunctionModel</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/agent.html#Agent.add_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.agent.Agent.add_model" title="Link to this definition">¶</a></dt>
+<dd><p>Adds the provided model instance to the agent’s collection of cell
+function models and invokes the model’s initialization method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>model</strong><span class="classifier">CellFunctionModel</span></dt><dd><p>A subclass of the <code class="docutils literal notranslate"><span class="pre">CellFunctionModel</span></code> abstract base class.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.agent.Agent.clone">
+<span class="sig-name descname"><span class="pre">clone</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#lattics.agent.Agent" title="lattics.agent.Agent"><span class="pre">Agent</span></a></span></span><a class="reference internal" href="_modules/lattics/agent.html#Agent.clone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.agent.Agent.clone" title="Link to this definition">¶</a></dt>
+<dd><p>Returns a deep copy instance of the agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Agent</dt><dd><p>The cloned agent instance</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.agent.Agent.get_attribute">
+<span class="sig-name descname"><span class="pre">get_attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><span class="pre">Any</span></a></span></span><a class="reference internal" href="_modules/lattics/agent.html#Agent.get_attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.agent.Agent.get_attribute" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the value of the specified attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>name</strong><span class="classifier">str</span></dt><dd><p>The identifier of the attribute</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>any type</dt><dd><p>The current value of the attribute</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If the specified attribute does not exist</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">initialize_attribute</span><span class="p">(</span><span class="s1">&#39;my_attribute&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="n">my_attribute</span><span class="s1">&#39;&#39;</span><span class="p">))</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.agent.Agent.has_attribute">
+<span class="sig-name descname"><span class="pre">has_attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="_modules/lattics/agent.html#Agent.has_attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.agent.Agent.has_attribute" title="Link to this definition">¶</a></dt>
+<dd><p>Returns whether the agent instance has a specific attribute initialized.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>name</strong><span class="classifier">str</span></dt><dd><p>The identifier of the attribute</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>bool</dt><dd><p>True if the agent has the attribute, otherwise false</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">initialize_attribute</span><span class="p">(</span><span class="s1">&#39;my_attribute&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">has_attribute</span><span class="p">(</span><span class="s1">&#39;my_attribute&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">has_attribute</span><span class="p">(</span><span class="s1">&#39;nonexisting_attribute&#39;</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.agent.Agent.initialize_attribute">
+<span class="sig-name descname"><span class="pre">initialize_attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><span class="pre">Any</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/agent.html#Agent.initialize_attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.agent.Agent.initialize_attribute" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize a new attribute for the agent instance with the
+specified name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>name</strong><span class="classifier">str</span></dt><dd><p>The identifier of the status flag</p>
+</dd>
+<dt><strong>value</strong><span class="classifier">Any, optional</span></dt><dd><p>The initial value to be set, by default None</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">initialize_attribute</span><span class="p">(</span><span class="s1">&#39;my_attribute_1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">initialize_attribute</span><span class="p">(</span><span class="s1">&#39;my_attribute_2&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">initialize_attribute</span><span class="p">(</span><span class="s1">&#39;my_attribute_3&#39;</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.agent.Agent.set_attribute">
+<span class="sig-name descname"><span class="pre">set_attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><span class="pre">Any</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/agent.html#Agent.set_attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.agent.Agent.set_attribute" title="Link to this definition">¶</a></dt>
+<dd><p>Set the value of the specified attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>name</strong><span class="classifier">str</span></dt><dd><p>The identifier of the attribute</p>
+</dd>
+<dt><strong>value</strong><span class="classifier">Any</span></dt><dd><p>The new value to be set</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError</dt><dd><p>If the specified attribute does not exist</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">initialize_attribute</span><span class="p">(</span><span class="s1">&#39;my_attribute&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="s1">&#39;my_attribute&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="lattics.agent.Agent.simulation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">simulation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#lattics.simulation.Simulation" title="lattics.simulation.Simulation"><span class="pre">simulation.Simulation</span></a></em><a class="headerlink" href="#lattics.agent.Agent.simulation" title="Link to this definition">¶</a></dt>
+<dd><p>Get the simulation instance associated with the agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Simulation</dt><dd><p>An instance representing the simulation</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.agent.Agent.update_models">
+<span class="sig-name descname"><span class="pre">update_models</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/agent.html#Agent.update_models"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.agent.Agent.update_models" title="Link to this definition">¶</a></dt>
+<dd><p>Sequentially updates all models associated with the agent. If
+multiple sub-models exist within the same category, they are updated
+in the order they appear in their respective collection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>dt</strong><span class="classifier">int</span></dt><dd><p>The time elapsed since the last update, in milliseconds</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lattics.cellfunctions">
+<span id="lattics-cellfunctions-module"></span><h2>lattics.cellfunctions module<a class="headerlink" href="#module-lattics.cellfunctions" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lattics.cellfunctions.CellFunctionModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lattics.cellfunctions.</span></span><span class="sig-name descname"><span class="pre">CellFunctionModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lattics.agent.Agent" title="lattics.agent.Agent"><span class="pre">Agent</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_interval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lattics/cellfunctions.html#CellFunctionModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.cellfunctions.CellFunctionModel" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Acts as a base class for all cellular function models, such as
+metabolism, cell cycle regulation, and other regulatory processes.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.cellfunctions.CellFunctionModel.initialize_agent_attributes">
+<span class="sig-name descname"><span class="pre">initialize_agent_attributes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/cellfunctions.html#CellFunctionModel.initialize_agent_attributes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.cellfunctions.CellFunctionModel.initialize_agent_attributes" title="Link to this definition">¶</a></dt>
+<dd><p>Initializes the attributes required for the model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.cellfunctions.CellFunctionModel.set_agent">
+<span class="sig-name descname"><span class="pre">set_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lattics.agent.Agent" title="lattics.agent.Agent"><span class="pre">Agent</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/cellfunctions.html#CellFunctionModel.set_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.cellfunctions.CellFunctionModel.set_agent" title="Link to this definition">¶</a></dt>
+<dd><p>Sets the model’s reference to the Agent to which it is attached.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>agent</strong><span class="classifier">Agent</span></dt><dd><p>The containing agent</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.cellfunctions.CellFunctionModel.set_update_interval">
+<span class="sig-name descname"><span class="pre">set_update_interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">update_interval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/cellfunctions.html#CellFunctionModel.set_update_interval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.cellfunctions.CellFunctionModel.set_update_interval" title="Link to this definition">¶</a></dt>
+<dd><p>Sets the time interval that passes between two update steps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>update_interval</strong><span class="classifier">int</span></dt><dd><p>Time between two update steps, in milliseconds</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.cellfunctions.CellFunctionModel.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/cellfunctions.html#CellFunctionModel.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.cellfunctions.CellFunctionModel.update" title="Link to this definition">¶</a></dt>
+<dd><p>Determines whether an update step is needed based on the time
+elapsed since the last update. If the elapsed time meets or exceeds
+the <code class="docutils literal notranslate"><span class="pre">update_interval</span></code> parameter, the update is performed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>dt</strong><span class="classifier">int</span></dt><dd><p>The time elapsed since the last update call, in milliseconds</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lattics.cellfunctions.FixedIncrementalCellCycle">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lattics.cellfunctions.</span></span><span class="sig-name descname"><span class="pre">FixedIncrementalCellCycle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lattics.agent.Agent" title="lattics.agent.Agent"><span class="pre">Agent</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_interval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_initial</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lattics/cellfunctions.html#FixedIncrementalCellCycle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.cellfunctions.FixedIncrementalCellCycle" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lattics.cellfunctions.CellFunctionModel" title="lattics.cellfunctions.CellFunctionModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CellFunctionModel</span></code></a></p>
+<p>A cell function model that implements a simple fixed-length cell cycle.
+When the internal time counter reaches the specified length, the agent is
+marked as <code class="docutils literal notranslate"><span class="pre">division_pending</span></code>. If the simulation environment handles the
+division and sets the agent’s status to <code class="docutils literal notranslate"><span class="pre">division_completed</span></code>, the
+internal time counter resets, and the cell cycle begins again.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="lattics.cellfunctions.FixedIncrementalCellCycle.current_time">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></em><a class="headerlink" href="#lattics.cellfunctions.FixedIncrementalCellCycle.current_time" title="Link to this definition">¶</a></dt>
+<dd><p>Get the current internal time of the model, which represents the
+elapsed time since the last division.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>int</dt><dd><p>Current internal time, in milliseconds</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.cellfunctions.FixedIncrementalCellCycle.initialize_agent_attributes">
+<span class="sig-name descname"><span class="pre">initialize_agent_attributes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/cellfunctions.html#FixedIncrementalCellCycle.initialize_agent_attributes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.cellfunctions.FixedIncrementalCellCycle.initialize_agent_attributes" title="Link to this definition">¶</a></dt>
+<dd><p>Initializes the attributes required for the model. The model uses
+two attributes: <code class="docutils literal notranslate"><span class="pre">division_pending</span></code> and <code class="docutils literal notranslate"><span class="pre">division_completed</span></code>. For a
+detailed description, refer to the <a class="reference internal" href="#lattics.cellfunctions.FixedIncrementalCellCycle" title="lattics.cellfunctions.FixedIncrementalCellCycle"><code class="xref py py-class docutils literal notranslate"><span class="pre">FixedIncrementalCellCycle</span></code></a>
+documentation.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lattics.domains">
+<span id="lattics-domains-module"></span><h2>lattics.domains module<a class="headerlink" href="#module-lattics.domains" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lattics.domains.SimulationDomain">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lattics.domains.</span></span><span class="sig-name descname"><span class="pre">SimulationDomain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lattics.simulation.Simulation" title="lattics.simulation.Simulation"><span class="pre">Simulation</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lattics/domains.html#SimulationDomain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.domains.SimulationDomain" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Base class for different simulation domains.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.domains.SimulationDomain.add_agent">
+<span class="sig-name descname"><span class="pre">add_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lattics.agent.Agent" title="lattics.agent.Agent"><span class="pre">Agent</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/domains.html#SimulationDomain.add_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.domains.SimulationDomain.add_agent" title="Link to this definition">¶</a></dt>
+<dd><p>Adds the specified agent to the structure representing the internal
+storage of the domain.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>agent</strong><span class="classifier">Agent</span></dt><dd><p>The agent to be added</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.domains.SimulationDomain.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/domains.html#SimulationDomain.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.domains.SimulationDomain.initialize" title="Link to this definition">¶</a></dt>
+<dd><p>Initializes the domain.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.domains.SimulationDomain.remove_agent">
+<span class="sig-name descname"><span class="pre">remove_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lattics.agent.Agent" title="lattics.agent.Agent"><span class="pre">Agent</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/domains.html#SimulationDomain.remove_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.domains.SimulationDomain.remove_agent" title="Link to this definition">¶</a></dt>
+<dd><p>Removes the specified agent from the internal storage of the domain.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>agent</strong><span class="classifier">Agent</span></dt><dd><p>The agent to be removed</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.domains.SimulationDomain.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/domains.html#SimulationDomain.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.domains.SimulationDomain.update" title="Link to this definition">¶</a></dt>
+<dd><p>Updates the domain according to the specified time duration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>dt</strong><span class="classifier">int</span></dt><dd><p>The time elapsed since the last update call, in milliseconds</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lattics.domains.Structured2DSimulationDomain">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lattics.domains.</span></span><span class="sig-name descname"><span class="pre">Structured2DSimulationDomain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lattics.simulation.Simulation" title="lattics.simulation.Simulation"><span class="pre">Simulation</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimensions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lattics/domains.html#Structured2DSimulationDomain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.domains.Structured2DSimulationDomain" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lattics.domains.SimulationDomain" title="lattics.domains.SimulationDomain"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationDomain</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.domains.Structured2DSimulationDomain.add_agent">
+<span class="sig-name descname"><span class="pre">add_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lattics.agent.Agent" title="lattics.agent.Agent"><span class="pre">Agent</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">position</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">motility</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binding_affinity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">displacement_limit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/domains.html#Structured2DSimulationDomain.add_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.domains.Structured2DSimulationDomain.add_agent" title="Link to this definition">¶</a></dt>
+<dd><p>Adds the specified agent to the specified index of the internal
+array of the agents.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>agent</strong><span class="classifier">Agent</span></dt><dd><p>The agent to be added</p>
+</dd>
+<dt><strong>position</strong><span class="classifier">tuple[int, int]</span></dt><dd><p>The column and row index describing the agent’s position</p>
+</dd>
+<dt><strong>motility</strong><span class="classifier">int, optional</span></dt><dd><p>Characteristic velocity of the agent, expressed in
+micrometers per millisecond, by default 0</p>
+</dd>
+<dt><strong>binding_affinity</strong><span class="classifier">int, optional</span></dt><dd><p>Scale factor that determines the binding strength between
+the agent and other agents, by default 0</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError</dt><dd><p>If the position of the agent is out of the bounds of the domain</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.domains.Structured2DSimulationDomain.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/domains.html#Structured2DSimulationDomain.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.domains.Structured2DSimulationDomain.initialize" title="Link to this definition">¶</a></dt>
+<dd><p>Initializes the domain.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.domains.Structured2DSimulationDomain.initialize_agent_attributes">
+<span class="sig-name descname"><span class="pre">initialize_agent_attributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/domains.html#Structured2DSimulationDomain.initialize_agent_attributes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.domains.Structured2DSimulationDomain.initialize_agent_attributes" title="Link to this definition">¶</a></dt>
+<dd><p>Initializes the attributes used by the domain. The domain uses
+the following attributes: <code class="docutils literal notranslate"><span class="pre">division_pending</span></code>, <code class="docutils literal notranslate"><span class="pre">division_completed</span></code>,
+<code class="docutils literal notranslate"><span class="pre">motility</span></code>, <code class="docutils literal notranslate"><span class="pre">binding_affinity</span></code>, and <code class="docutils literal notranslate"><span class="pre">displacement_limit</span></code>. Agents
+are displaced to adjacent grid points based on their <code class="docutils literal notranslate"><span class="pre">motility</span></code> and
+<code class="docutils literal notranslate"><span class="pre">binding_affinity</span></code> values. Agents labeled as <code class="docutils literal notranslate"><span class="pre">division_pending</span></code>
+are duplicated depending on the number of available grid points and the
+<code class="docutils literal notranslate"><span class="pre">displacement_limit</span></code>, which specifies how far an agent can push others
+to create space for a daughter cell. Once division has occurred, the
+<code class="docutils literal notranslate"><span class="pre">division_completed</span></code> attribute is set to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.domains.Structured2DSimulationDomain.is_empty_position">
+<span class="sig-name descname"><span class="pre">is_empty_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">position</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="_modules/lattics/domains.html#Structured2DSimulationDomain.is_empty_position"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.domains.Structured2DSimulationDomain.is_empty_position" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates whether the specified lattice point is unoccupied
+(i.e., not containing any agent instance).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>position</strong><span class="classifier">tuple[int, int]</span></dt><dd><p>The column and row index describing the position</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>bool</dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if the lattice point is empty, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.domains.Structured2DSimulationDomain.is_valid_position">
+<span class="sig-name descname"><span class="pre">is_valid_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">position</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="_modules/lattics/domains.html#Structured2DSimulationDomain.is_valid_position"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.domains.Structured2DSimulationDomain.is_valid_position" title="Link to this definition">¶</a></dt>
+<dd><p>Indicates whether the given position lies within the bounds
+of the domain.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>position</strong><span class="classifier">tuple[int, int]</span></dt><dd><p>The column and row index describing the position</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>bool</dt><dd><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if the position exists within the domain, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.domains.Structured2DSimulationDomain.remove_agent">
+<span class="sig-name descname"><span class="pre">remove_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lattics.agent.Agent" title="lattics.agent.Agent"><span class="pre">Agent</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/domains.html#Structured2DSimulationDomain.remove_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.domains.Structured2DSimulationDomain.remove_agent" title="Link to this definition">¶</a></dt>
+<dd><p>Removes the specified agent from the internal list of the agents.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>agent</strong><span class="classifier">Agent</span></dt><dd><p>The agent to be removed</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.domains.Structured2DSimulationDomain.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/domains.html#Structured2DSimulationDomain.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.domains.Structured2DSimulationDomain.update" title="Link to this definition">¶</a></dt>
+<dd><p>Updates the domain according to the specified time duration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>dt</strong><span class="classifier">int</span></dt><dd><p>The time elapsed since the last update call, in milliseconds</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lattics.domains.UnstructuredSimulationDomain">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lattics.domains.</span></span><span class="sig-name descname"><span class="pre">UnstructuredSimulationDomain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simulation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lattics.simulation.Simulation" title="lattics.simulation.Simulation"><span class="pre">Simulation</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">capacity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lattics/domains.html#UnstructuredSimulationDomain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.domains.UnstructuredSimulationDomain" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#lattics.domains.SimulationDomain" title="lattics.domains.SimulationDomain"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationDomain</span></code></a></p>
+<p>Represents a perfectly mixed simulation domain with no spatial structure
+or localized interactions, where each agent has an equal probability of
+interacting with any other agent in the population. Agents are stored in a
+list.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.domains.UnstructuredSimulationDomain.add_agent">
+<span class="sig-name descname"><span class="pre">add_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lattics.agent.Agent" title="lattics.agent.Agent"><span class="pre">Agent</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/domains.html#UnstructuredSimulationDomain.add_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.domains.UnstructuredSimulationDomain.add_agent" title="Link to this definition">¶</a></dt>
+<dd><p>Adds the specified agent to the internal list of the agents.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>agent</strong><span class="classifier">Agent</span></dt><dd><p>The agent to be added</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.domains.UnstructuredSimulationDomain.initialize">
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/domains.html#UnstructuredSimulationDomain.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.domains.UnstructuredSimulationDomain.initialize" title="Link to this definition">¶</a></dt>
+<dd><p>Initializes the domain.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.domains.UnstructuredSimulationDomain.initialize_agent_attributes">
+<span class="sig-name descname"><span class="pre">initialize_agent_attributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/domains.html#UnstructuredSimulationDomain.initialize_agent_attributes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.domains.UnstructuredSimulationDomain.initialize_agent_attributes" title="Link to this definition">¶</a></dt>
+<dd><p>Initializes the attributes used by the domain. The domain tracks
+two attributes: <code class="docutils literal notranslate"><span class="pre">division_pending</span></code> and <code class="docutils literal notranslate"><span class="pre">division_completed</span></code>. The
+<code class="docutils literal notranslate"><span class="pre">division_pending</span></code> attribute can be set by cell-level functions to
+indicate that an agent is ready to divide and that the domain should
+handle the division event. Once division has occurred, the
+<code class="docutils literal notranslate"><span class="pre">division_completed</span></code> attribute is set to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.domains.UnstructuredSimulationDomain.remove_agent">
+<span class="sig-name descname"><span class="pre">remove_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lattics.agent.Agent" title="lattics.agent.Agent"><span class="pre">Agent</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/domains.html#UnstructuredSimulationDomain.remove_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.domains.UnstructuredSimulationDomain.remove_agent" title="Link to this definition">¶</a></dt>
+<dd><p>Removes the specified agent from the internal list of the agents.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>agent</strong><span class="classifier">Agent</span></dt><dd><p>The agent to be removed</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.domains.UnstructuredSimulationDomain.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/domains.html#UnstructuredSimulationDomain.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.domains.UnstructuredSimulationDomain.update" title="Link to this definition">¶</a></dt>
+<dd><p>Updates the domain according to the specified time duration. Agents
+labeled as <code class="docutils literal notranslate"><span class="pre">division_pending</span></code> are duplicated based on the available
+space in the domain, constrained by <code class="docutils literal notranslate"><span class="pre">capacity</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>dt</strong><span class="classifier">int</span></dt><dd><p>The time elapsed since the last update call, in milliseconds</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lattics.numba_functions">
+<span id="lattics-numba-functions-module"></span><h2>lattics.numba_functions module<a class="headerlink" href="#module-lattics.numba_functions" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="lattics.numba_functions.bresenham_2d">
+<span class="sig-prename descclassname"><span class="pre">lattics.numba_functions.</span></span><span class="sig-name descname"><span class="pre">bresenham_2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lattics/numba_functions.html#bresenham_2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.numba_functions.bresenham_2d" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lattics.numba_functions.displace_agent_2d">
+<span class="sig-prename descclassname"><span class="pre">lattics.numba_functions.</span></span><span class="sig-name descname"><span class="pre">displace_agent_2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">positions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_position</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_idx_array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lattics/numba_functions.html#displace_agent_2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.numba_functions.displace_agent_2d" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lattics.numba_functions.displacement_trial_2d">
+<span class="sig-prename descclassname"><span class="pre">lattics.numba_functions.</span></span><span class="sig-name descname"><span class="pre">displacement_trial_2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">positions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binding_affs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_idx_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">change_flags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lattics/numba_functions.html#displacement_trial_2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.numba_functions.displacement_trial_2d" title="Link to this definition">¶</a></dt>
+<dd><p>Performs a displacement trial with a given agent assuming 2D coordinates.</p>
+<dl>
+<dt>Args:</dt><dd><p>idx (int):
+positions (array of ints): 2D array of the positions of all agents
+binding_affs (array of float): the binding affinities of all agents
+agent_idx_array (2D array of ints): identifiers (indexes) of the agents</p>
+<blockquote>
+<div><p>based on their positions</p>
+</div></blockquote>
+<dl class="simple">
+<dt>change_flags (array of bools): indicating whether an agent was</dt><dd><p>relocated during the trial</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lattics.numba_functions.get_neighborhood_2d">
+<span class="sig-prename descclassname"><span class="pre">lattics.numba_functions.</span></span><span class="sig-name descname"><span class="pre">get_neighborhood_2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lattics/numba_functions.html#get_neighborhood_2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.numba_functions.get_neighborhood_2d" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lattics.numba_functions.get_neighborhood_3d">
+<span class="sig-prename descclassname"><span class="pre">lattics.numba_functions.</span></span><span class="sig-name descname"><span class="pre">get_neighborhood_3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lattics/numba_functions.html#get_neighborhood_3d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.numba_functions.get_neighborhood_3d" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lattics.numba_functions.pairwise_interaction_energy_2d">
+<span class="sig-prename descclassname"><span class="pre">lattics.numba_functions.</span></span><span class="sig-name descname"><span class="pre">pairwise_interaction_energy_2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">position_one</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bindig_aff_one</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position_two</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binding_aff_two</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lattics/numba_functions.html#pairwise_interaction_energy_2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.numba_functions.pairwise_interaction_energy_2d" title="Link to this definition">¶</a></dt>
+<dd><p>Computes pairwise interaction energies of two agents.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>position_one (array of ints): the coordinates of agent one
+bindig_aff_one (float): the binding affinity of agent one
+position_two (array of ints): the coordinates of agent two
+binding_aff_two (float): the binding affinity of agent two</p>
+</dd>
+<dt>Returns:</dt><dd><p>float: the interaction energy</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lattics.numba_functions.total_interaction_energy_2d">
+<span class="sig-prename descclassname"><span class="pre">lattics.numba_functions.</span></span><span class="sig-name descname"><span class="pre">total_interaction_energy_2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bind_affs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_idx_array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lattics/numba_functions.html#total_interaction_energy_2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.numba_functions.total_interaction_energy_2d" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the sum of pairwise interaction energies of a given agent.</p>
+<dl>
+<dt>Args:</dt><dd><p>idx (int): identifier (index) of the selected agent
+agent_pos (array of ints): the position of the selected agent
+bind_affs (array of floats): 1D array of agent binding affinities
+agent_idx_array (array of ints): 2D array containing identifiers (indexes)</p>
+<blockquote>
+<div><p>of the agents based on their positions</p>
+</div></blockquote>
+</dd>
+<dt>Returns:</dt><dd><p>float: the total interaction energy of the agent</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-lattics.simulation">
+<span id="lattics-simulation-module"></span><h2>lattics.simulation module<a class="headerlink" href="#module-lattics.simulation" title="Link to this heading">¶</a></h2>
+<p>The main component of the LattiCS framework containing functionalities to
+set up and execute a simulation.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lattics.simulation.Simulation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lattics.simulation.</span></span><span class="sig-name descname"><span class="pre">Simulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lattics/simulation.html#Simulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.simulation.Simulation" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Represents a simulation instance. This object manages the participating
+agents (<code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code>), the environment (<code class="xref py py-class docutils literal notranslate"><span class="pre">SimulationDomain</span></code>), and
+the various chemical substances (<code class="xref py py-class docutils literal notranslate"><span class="pre">Substrate</span></code>) present within it.
+The class provides high-level access to configure and execute a simulation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.simulation.Simulation.add_agent">
+<span class="sig-name descname"><span class="pre">add_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lattics.agent.Agent" title="lattics.agent.Agent"><span class="pre">Agent</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/simulation.html#Simulation.add_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.simulation.Simulation.add_agent" title="Link to this definition">¶</a></dt>
+<dd><p>Adds the specified agent to the simulation. The agent will be added
+to the collection of all agents and, if a simulation domain is defined,
+will also be placed within the simulation domain.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>agent</strong><span class="classifier">Agent</span></dt><dd><p>The agent to be added</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.simulation.Simulation.add_simulation_domain">
+<span class="sig-name descname"><span class="pre">add_simulation_domain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">domain</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lattics.domains.SimulationDomain" title="lattics.domains.SimulationDomain"><span class="pre">domains.SimulationDomain</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/simulation.html#Simulation.add_simulation_domain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.simulation.Simulation.add_simulation_domain" title="Link to this definition">¶</a></dt>
+<dd><p>Sets the simulation domain to the instance passed as a parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>domain</strong><span class="classifier">SimulationDomain</span></dt><dd><p>The simulation domain instance to be used</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="lattics.simulation.Simulation.agents">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">agents</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#lattics.agent.Agent" title="lattics.agent.Agent"><span class="pre">Agent</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#lattics.simulation.Simulation.agents" title="Link to this definition">¶</a></dt>
+<dd><p>Get the collection of agents currently present in the simulation.
+The order of agents in this collection is maintained throughout the
+simulation, with new agent instances always being added at the end.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>list[Agent]</dt><dd><p>Collection of the agents</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.simulation.Simulation.remove_agent">
+<span class="sig-name descname"><span class="pre">remove_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lattics.agent.Agent" title="lattics.agent.Agent"><span class="pre">Agent</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/simulation.html#Simulation.remove_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.simulation.Simulation.remove_agent" title="Link to this definition">¶</a></dt>
+<dd><p>Removes the specified agent from the simulation. The agent will be
+removed from the collection of all agents and, if applicable, will also
+be removed from the simulation domain.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>agent</strong><span class="classifier">Agent</span></dt><dd><p>The agent to be removed</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lattics.simulation.Simulation.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/lattics/simulation.html#Simulation.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lattics.simulation.Simulation.run" title="Link to this definition">¶</a></dt>
+<dd><p>Runs the simulation from the current state for the specified
+duration using the given time step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>time</strong><span class="classifier">int</span></dt><dd><p>The duration to be simulated, in milliseconds</p>
+</dd>
+<dt><strong>dt</strong><span class="classifier">_type_</span></dt><dd><p>Time step, in milliseconds</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="lattics.simulation.Simulation.time">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></em><a class="headerlink" href="#lattics.simulation.Simulation.time" title="Link to this definition">¶</a></dt>
+<dd><p>Get the current internal time of the simulation, representing the
+elapsed time since the simulation started.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>int</dt><dd><p>Internal time of the simulation, in milliseconds.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-lattics">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-lattics" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Daniel Kiss.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
