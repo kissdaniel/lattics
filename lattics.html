@@ -4,10 +4,10 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>lattics package &mdash; LattiCS 0.post56+gc7bd082 documentation</title>
+  <title>lattics package &mdash; LattiCS 0.post56.dev0+gc7bd082 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
-      <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+      <link rel="stylesheet" type="text/css" href="_static/plot_directive.css?v=7f9a90b1" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
 
   
@@ -15,14 +15,16 @@
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="_static/documentation_options.js?v=4aafa30e"></script>
+        <script src="_static/documentation_options.js?v=60bcded9"></script>
         <script src="_static/doctools.js?v=9a2dae69"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
         <script src="_static/clipboard.min.js?v=a7894cd8"></script>
         <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="lattics.tests package" href="lattics.tests.html" />
+    <link rel="prev" title="Tutorials" href="tutorials.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -37,7 +39,7 @@
             LattiCS
           </a>
               <div class="version">
-                0.post56+gc7bd082
+                0.post56.dev0+gc7bd082
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -47,11 +49,97 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="release-history.html">Release History</a></li>
-<li class="toctree-l1"><a class="reference internal" href="min_versions.html">Minimum Version of Python and NumPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">lattics package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="lattics.tests.html">lattics.tests package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-lattics.agent">lattics.agent module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#lattics.agent.Agent"><code class="docutils literal notranslate"><span class="pre">Agent</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.agent.Agent.add_model"><code class="docutils literal notranslate"><span class="pre">Agent.add_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.agent.Agent.clone"><code class="docutils literal notranslate"><span class="pre">Agent.clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.agent.Agent.get_attribute"><code class="docutils literal notranslate"><span class="pre">Agent.get_attribute()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.agent.Agent.has_attribute"><code class="docutils literal notranslate"><span class="pre">Agent.has_attribute()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.agent.Agent.initialize_attribute"><code class="docutils literal notranslate"><span class="pre">Agent.initialize_attribute()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.agent.Agent.set_attribute"><code class="docutils literal notranslate"><span class="pre">Agent.set_attribute()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.agent.Agent.simulation"><code class="docutils literal notranslate"><span class="pre">Agent.simulation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.agent.Agent.update_models"><code class="docutils literal notranslate"><span class="pre">Agent.update_models()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-lattics.cellfunctions">lattics.cellfunctions module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#lattics.cellfunctions.CellFunctionModel"><code class="docutils literal notranslate"><span class="pre">CellFunctionModel</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.cellfunctions.CellFunctionModel.initialize_agent_attributes"><code class="docutils literal notranslate"><span class="pre">CellFunctionModel.initialize_agent_attributes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.cellfunctions.CellFunctionModel.set_agent"><code class="docutils literal notranslate"><span class="pre">CellFunctionModel.set_agent()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.cellfunctions.CellFunctionModel.set_update_interval"><code class="docutils literal notranslate"><span class="pre">CellFunctionModel.set_update_interval()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.cellfunctions.CellFunctionModel.update"><code class="docutils literal notranslate"><span class="pre">CellFunctionModel.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#lattics.cellfunctions.FixedIncrementalCellCycle"><code class="docutils literal notranslate"><span class="pre">FixedIncrementalCellCycle</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.cellfunctions.FixedIncrementalCellCycle.current_time"><code class="docutils literal notranslate"><span class="pre">FixedIncrementalCellCycle.current_time</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.cellfunctions.FixedIncrementalCellCycle.initialize_agent_attributes"><code class="docutils literal notranslate"><span class="pre">FixedIncrementalCellCycle.initialize_agent_attributes()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-lattics.domains">lattics.domains module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#lattics.domains.SimulationDomain"><code class="docutils literal notranslate"><span class="pre">SimulationDomain</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.domains.SimulationDomain.add_agent"><code class="docutils literal notranslate"><span class="pre">SimulationDomain.add_agent()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.domains.SimulationDomain.initialize"><code class="docutils literal notranslate"><span class="pre">SimulationDomain.initialize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.domains.SimulationDomain.remove_agent"><code class="docutils literal notranslate"><span class="pre">SimulationDomain.remove_agent()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.domains.SimulationDomain.update"><code class="docutils literal notranslate"><span class="pre">SimulationDomain.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#lattics.domains.Structured2DSimulationDomain"><code class="docutils literal notranslate"><span class="pre">Structured2DSimulationDomain</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.domains.Structured2DSimulationDomain.add_agent"><code class="docutils literal notranslate"><span class="pre">Structured2DSimulationDomain.add_agent()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.domains.Structured2DSimulationDomain.initialize"><code class="docutils literal notranslate"><span class="pre">Structured2DSimulationDomain.initialize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.domains.Structured2DSimulationDomain.initialize_agent_attributes"><code class="docutils literal notranslate"><span class="pre">Structured2DSimulationDomain.initialize_agent_attributes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.domains.Structured2DSimulationDomain.is_empty_position"><code class="docutils literal notranslate"><span class="pre">Structured2DSimulationDomain.is_empty_position()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.domains.Structured2DSimulationDomain.is_valid_position"><code class="docutils literal notranslate"><span class="pre">Structured2DSimulationDomain.is_valid_position()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.domains.Structured2DSimulationDomain.remove_agent"><code class="docutils literal notranslate"><span class="pre">Structured2DSimulationDomain.remove_agent()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.domains.Structured2DSimulationDomain.update"><code class="docutils literal notranslate"><span class="pre">Structured2DSimulationDomain.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#lattics.domains.UnstructuredSimulationDomain"><code class="docutils literal notranslate"><span class="pre">UnstructuredSimulationDomain</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.domains.UnstructuredSimulationDomain.add_agent"><code class="docutils literal notranslate"><span class="pre">UnstructuredSimulationDomain.add_agent()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.domains.UnstructuredSimulationDomain.initialize"><code class="docutils literal notranslate"><span class="pre">UnstructuredSimulationDomain.initialize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.domains.UnstructuredSimulationDomain.initialize_agent_attributes"><code class="docutils literal notranslate"><span class="pre">UnstructuredSimulationDomain.initialize_agent_attributes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.domains.UnstructuredSimulationDomain.remove_agent"><code class="docutils literal notranslate"><span class="pre">UnstructuredSimulationDomain.remove_agent()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.domains.UnstructuredSimulationDomain.update"><code class="docutils literal notranslate"><span class="pre">UnstructuredSimulationDomain.update()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-lattics.numba_functions">lattics.numba_functions module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#lattics.numba_functions.bresenham_2d"><code class="docutils literal notranslate"><span class="pre">bresenham_2d()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lattics.numba_functions.displace_agent_2d"><code class="docutils literal notranslate"><span class="pre">displace_agent_2d()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lattics.numba_functions.displacement_trial_2d"><code class="docutils literal notranslate"><span class="pre">displacement_trial_2d()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lattics.numba_functions.get_neighborhood_2d"><code class="docutils literal notranslate"><span class="pre">get_neighborhood_2d()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lattics.numba_functions.get_neighborhood_3d"><code class="docutils literal notranslate"><span class="pre">get_neighborhood_3d()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lattics.numba_functions.pairwise_interaction_energy_2d"><code class="docutils literal notranslate"><span class="pre">pairwise_interaction_energy_2d()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lattics.numba_functions.total_interaction_energy_2d"><code class="docutils literal notranslate"><span class="pre">total_interaction_energy_2d()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-lattics.simulation">lattics.simulation module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#lattics.simulation.Simulation"><code class="docutils literal notranslate"><span class="pre">Simulation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.simulation.Simulation.add_agent"><code class="docutils literal notranslate"><span class="pre">Simulation.add_agent()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.simulation.Simulation.add_simulation_domain"><code class="docutils literal notranslate"><span class="pre">Simulation.add_simulation_domain()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.simulation.Simulation.agents"><code class="docutils literal notranslate"><span class="pre">Simulation.agents</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.simulation.Simulation.remove_agent"><code class="docutils literal notranslate"><span class="pre">Simulation.remove_agent()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.simulation.Simulation.run"><code class="docutils literal notranslate"><span class="pre">Simulation.run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#lattics.simulation.Simulation.time"><code class="docutils literal notranslate"><span class="pre">Simulation.time</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-lattics">Module contents</a></li>
+</ul>
+</li>
 </ul>
 
         </div>
@@ -835,7 +923,10 @@ elapsed time since the simulation started.</p>
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tutorials.html" class="btn btn-neutral float-left" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="lattics.tests.html" class="btn btn-neutral float-right" title="lattics.tests package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 
