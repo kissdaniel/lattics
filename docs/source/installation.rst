@@ -10,7 +10,7 @@ First, create a new virtual environment::
 
 Activate the environment::
 
-    $ source myenv/bin/activate
+    $ source lattics/bin/activate
 
 On Windows, you may need to use::
 
