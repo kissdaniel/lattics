@@ -1,16 +1,41 @@
-LattiCS Documentation
-=====================
+.. raw:: html
 
-.. image:: _static/lattics_logo.png
+    <style>h1:first-of-type { display: none; }</style>
 
-LattiCS (Lattice-based Cellular Simulator) is a flexible agent-based simulation framework designed to help you model the collective behavior of cellular systems and to support experimental biology. It's easy to use, even if you don't have advanced programming skills. With LattiCS, you can define and customize key biological properties for individual cell agents, such as cell cycle dynamics, cell-cell adhesion, motility, and phenotype changes. You can simulate the secretion, uptake, and transport of chemical substances, such as nutrients or drugs, and their effects on cells. Additionally, LattiCS makes it easy to define custom events, like treatments or other experiment-specific changes, during the simulation.
+Home
+====
 
-Contents
+.. image:: _static/logo-light.png
+    :align: center
+    :class: only-light
+
+.. image:: _static/logo-dark.png
+    :align: center
+    :class: only-dark
+
+
+LattiCS (Lattice-based Cellular Simulator) is a flexible agent-based simulation framework designed to help you model the collective behavior of cellular systems and to support experimental biology.
+
+Features
 --------
-.. toctree::
-   :maxdepth: 2
 
-   installation
-   documentation
-   tutorials
-   about
+* **Simple.** Customize key biological properties of individual cell agents, including cell cycle dynamics, cell-cell adhesion, motility, and phenotype changes. Simulate the transport of nutrients or drugs and their effects on cells. Define custom events during the simulation, such as treatments.
+* **Ready-to-use.** Launch virtual experiments with minimal coding, using built-in tools tailored for common tasks.
+* **Accessible.** Build your own models in Python without needing expert-level programming knowledge.
+
+Example
+-------
+
+Coming soon.
+
+Getting started
+---------------
+
+.. toctree::
+   :maxdepth: 1   
+   
+   Installation <installation>
+   Examples <examples/main>
+   Learn <learn/main>
+   API <api/main>
+   About <about>

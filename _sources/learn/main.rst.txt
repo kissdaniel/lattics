@@ -1,0 +1,7 @@
+Learn about the methods behind LattiCS
+======================================
+
+.. toctree::
+   :maxdepth: 1   
+
+   transport
