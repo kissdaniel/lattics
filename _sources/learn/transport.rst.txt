@@ -1,4 +1,4 @@
-Cell–Environment Interactions and Transport
+Cell–environment interactions and transport
 ===========================================
 
 During a simulation, we may want to model the transport of various chemical substances, such as nutrients, signaling factors, or drugs, that are taken up from or secreted into the environment by cells. This section explains the model used in LattiCS to simulate these processes.
@@ -26,41 +26,45 @@ In the case of a fixed-type node, the concentration value of the field at the no
 Flux-type nodes
 ^^^^^^^^^^^^^^^
 
-In the case of a flux-type node, the concentration in the field at the node's location and the concentration within the node itself evolve according to the following model. Consider the node and the field as two compartments, denoted *N* and *F*, respectively (see the figure below). *F* may represent the entire domain or just the chunk of the domain associated with the node’s position.
+In the case of a flux-type node, the concentration in the field at the node's location and the concentration within the node itself evolve according to the following model. Consider the node and the field as two separate compartments, denoted by *N* and *F*, respectively (see the figure below). *F* may represent either the entire field or just the chunk of the field corresponding to the node's position.
 
 .. image:: transport_fig1.png
     :width: 300
     :align: center
 
+|
+
 The following types of concentration exchange can be defined between the compartments:
 
 * **Passive transport**: the concentrations in the two compartments change based on the difference between their concentrations and a rate constant. In the case of cells, gases, hydrophobic molecules, and small polar molecules typically cross the membrane via this mechanism. The rate of concentration change is governed by the coefficient :math:`k_p`. Due to passive transport, the concentrations of the two compartments gradually equalize over a sufficiently long time.
 
-* **Active secretion**: the node releases a substance into the field. The change depends on the concentration in compartment *N* and the rate constant :math:`k_r`. In the case of cells, this process can model the function of certain transporter proteins (e.g., ABC transporters), which are capable of exporting chemical substances from inside the cell even against a concentration gradient.
+* **Active secretion**: the node releases a substance into the field. The change depends on the concentration :math:`c_N` in compartment *N* and the rate constant :math:`k_r`. In the case of cells, this process can model the function of certain transporter proteins (e.g., ABC transporters), which are capable of pumping chemical substances from inside the cell even against a concentration gradient.
 
-* **Active uptake**: the node takes up a substance from the field. The change depends on the concentration in compartment *F* and the rate constant :math:`k_u`. In cells, this process also models the activity of transporter proteins (e.g., glucose uptake), and it is typically significantly faster than passive transport.
+* **Active uptake**: the node takes up a substance from the field. The change depends on the concentration :math:`c_F` in compartment *F*, the node's maximum (or saturation) concentration :math:`c_N^s`, and the uptake rate constant :math:`k_u`. If the substance is available in unlimited supply, the value of :math:`c_N` approaches its steady-state value, :math:`c_N^s`. In cells, this process also models the activity of transporter proteins (e.g., glucose uptake), and it is typically significantly faster than passive transport. 
 
-The concentration changes in the compartments can be described by the following differential equations.
+According to the principle of mass conservation and Fick's first law, the mass changes in the compartments can be described by the following differential equations.
 
 .. math::
 
     \begin{align*}
-    \frac{\mathrm{d} N}{\mathrm{d} t} &= k_p \left( F - N \right) + k_u F - k_r N \\
-    \frac{\mathrm{d} F}{\mathrm{d} t} &= k_p \left( N - F \right) + k_r N - k_u F \\    
+    \frac{\mathrm{d} n_N}{\mathrm{d} t} &= k_p \left( c_F - c_N \right) + k_u c_F \left(c_N^s - c_N \right) - k_r c_N \\[0.5em]
+    \frac{\mathrm{d} n_F}{\mathrm{d} t} &= k_p \left( c_N - c_F \right) - k_u c_f \left(c_N^s - c_N \right) + k_r c_N \\
     \end{align*}
 
-The solution of the differential equations is approximated at each step using the following explicit finite difference scheme.
+Here, :math:`n_N` and :math:`n_F` denote the time-dependent amounts (or masses) of the substance in the respective compartments, :math:`c_N` and :math:`c_F` are the corresponding concentrations, :math:`c_N^s` is the saturation concentration in the node, and :math:`k_p`, :math:`k_r`, and :math:`k_u` are the rate constants defined previously. Given the compartment volumes :math:`v_N` and :math:`v_F`, the changes in concentration can be directly computed from the corresponding changes in mass.
+
+The concentration obtained from the solution of the differential equations is approximated at each time step using the following explicit finite difference scheme.
 
 .. math::
 
     \begin{align*}
-    N_{t+\Delta t} & = N_t + \left( k_p \left( F_t - N_t \right) + k_u F_t - k_r N_t \right) \Delta t \\
-    F_{t+\Delta t} & = F_t + \left( k_p \left( N_t - F_t \right) + k_r N_t - k_u F_t \right) \Delta t
+    c_{N, t+\Delta t} & = c_{N, t} + \frac{1}{v_N} \Bigl( k_p \left( c_{F, t} - c_{N, t} \right) + k_u c_{F, t} \left(c_N^s - c_{N, t} \right) - k_r c_{N, t} \Bigr) \Delta t \\[0.5em]
+    c_{F, t+\Delta t} & = c_{F, t} + \frac{1}{v_F} \Bigl( k_p \left( c_{N, t} - c_{F, t} \right) - k_u c_{F, t} \left(c_N^s - c_{N, t} \right) + k_r c_{N, t} \Bigr) \Delta t
     \end{align*}
 
 .. note::
 
-    Due to the use of an explicit scheme, care must be taken to ensure that the update time steps assigned to the SubstrateField object are sufficiently small, depending on the values of the rate constants (:math:`k_p`, :math:`k_u`, :math:`k_r`), to prevent numerical instability (e.g., negative concentrations or oscillations).
+    Since the current implementation of LattiCS uses an explicit scheme, we need to carefully choose the time steps assigned to the SubstrateField object to ensure numerical stability. These time steps must be sufficiently small, depending on the values of the rate constants (:math:`k_p`, :math:`k_u`, :math:`k_r`), to avoid issues such as negative concentrations or oscillatory behavior.
 
 
 References
