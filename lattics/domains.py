@@ -364,6 +364,6 @@ class Structured2DSimulationDomain(SimulationDomain):
                 agent.set_attribute('division_pending', False)
                 agent.set_attribute('division_completed', True)
                 new_agent = agent.clone()
-                gen = agent.get_attribute('generation')
-                new_agent.set_attribute('generation', gen + 1)
+                # gen = agent.get_attribute('generation')
+                # new_agent.set_attribute('generation', gen + 1)
                 self._simulation.add_agent(new_agent, position=clone_position)

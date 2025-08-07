@@ -26,6 +26,7 @@ class Simulation:
         self._simulation_domain = None
         self._agents = list()
         self._substrates = list()
+        self._models = list()
         self._time = 0
 
     @property
@@ -65,6 +66,8 @@ class Simulation:
             The agent to be added
         """
         self._agents.append(agent)
+        for m in self._models:
+            m.initialize_attributes(agent)
         if self._simulation_domain:
             self._simulation_domain.add_agent(agent, **kwargs)
         else:
@@ -99,6 +102,34 @@ class Simulation:
         self._simulation_domain = domain
         self._simulation_domain.initialize()
 
+    def add_model(self, model: 'cellfunction.CellFunctionModel') -> None:
+        """Adds the provided model instance to the agent's collection of cell
+        function models and invokes the model's initialization method.
+
+        Parameters
+        ----------
+        model : CellFunctionModel
+            A subclass of the ``CellFunctionModel`` abstract base class.
+        """
+        self._models.append(model)
+        for a in self._agents:
+            model.initialize_agent_attributes(a)
+
+    def update_models(self, agent: Agent, dt: int) -> None:
+        """Sequentially updates all models associated with the agent. If
+        multiple sub-models exist within the same category, they are updated
+        in the order they appear in their respective collection.
+
+        Parameters
+        ----------
+        dt : int
+            The time elapsed since the last update, in milliseconds
+        agent : Agent
+            TODO
+        """
+        for m in self._cell_function_models:
+            m.update(dt)
+
     def run(self, time, dt) -> None:
         """Runs the simulation from the current state for the specified
         duration using the given time step.
@@ -112,8 +143,12 @@ class Simulation:
         """
         steps = int(math.ceil(time / dt))
         for t in range(steps):
-            for a in self._agents:
-                a.update_models(dt)
+            for m in self._models:
+                if m.update_needed():
+                    for a in self._agents:
+                        m.update_attributes(a, dt)
+                    m.reset_time()
+                m.increase_time(dt)
             if self._simulation_domain:
                 self._simulation_domain.update(dt)
             self._time += dt

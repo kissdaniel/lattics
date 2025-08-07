@@ -14,7 +14,6 @@ class Agent:
         """
         self._simulation = simulation
         self._attributes = dict()
-        self._cell_function_models = list()
 
     @property
     def simulation(self) -> 'simulation.Simulation':
@@ -39,9 +38,6 @@ class Agent:
         cloned = Agent()
         cloned._simulation = self._simulation
         cloned._attributes = copy.deepcopy(self._attributes)
-        cloned._cell_function_models = copy.deepcopy(self._cell_function_models)
-        for m in cloned._cell_function_models:
-            m.set_agent(cloned)
         return cloned
 
     def initialize_attribute(self, name: str, value: Any = None) -> None:
@@ -143,28 +139,3 @@ class Agent:
             return self._attributes[name]
         else:
             raise ValueError(f'Attribute name \'{name}\' not available.')
-
-    def add_model(self, model: 'cellfunction.CellFunctionModel') -> None:
-        """Adds the provided model instance to the agent's collection of cell
-        function models and invokes the model's initialization method.
-
-        Parameters
-        ----------
-        model : CellFunctionModel
-            A subclass of the ``CellFunctionModel`` abstract base class.
-        """
-        self._cell_function_models.append(model)
-        model.initialize_agent_attributes()
-
-    def update_models(self, dt: int) -> None:
-        """Sequentially updates all models associated with the agent. If
-        multiple sub-models exist within the same category, they are updated
-        in the order they appear in their respective collection.
-
-        Parameters
-        ----------
-        dt : int
-            The time elapsed since the last update, in milliseconds
-        """
-        for m in self._cell_function_models:
-            m.update(dt)
