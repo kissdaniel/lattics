@@ -96,20 +96,12 @@ class Agent:
         value : Any
             The new value to be set
 
-        Raises
-        ------
-        ValueError
-            If the specified attribute does not exist
-
         Examples
         --------
         >>> a.initialize_attribute('my_attribute')
         >>> a.set_attribute('my_attribute', True)
         """
-        if name in self._attributes:
-            self._attributes[name] = value
-        else:
-            raise ValueError(f'Attribute \'{name}\' not available.')
+        self._attributes[name] = value
 
     def get_attribute(self, name: str) -> Any:
         """Returns the value of the specified attribute.
@@ -124,18 +116,10 @@ class Agent:
         any type
             The current value of the attribute
 
-        Raises
-        ------
-        ValueError
-            If the specified attribute does not exist
-
         Examples
         --------
         >>> a.initialize_attribute('my_attribute', 0)
         >>> print(a.get_attribute(''my_attribute''))
         0
         """
-        if name in self._attributes:
-            return self._attributes[name]
-        else:
-            raise ValueError(f'Attribute name \'{name}\' not available.')
+        return self._attributes[name]
