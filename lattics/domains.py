@@ -69,7 +69,7 @@ class UnstructuredSimulationDomain(SimulationDomain):
     """
     def __init__(self,
                  simulation: Simulation,
-                 capacity: int = None
+                 volume: int = None
                  ) -> None:
         """Constructor method.
 
@@ -77,12 +77,12 @@ class UnstructuredSimulationDomain(SimulationDomain):
         ----------
         simulation : Simulation
             The Simulation instance containing the domain
-        capacity : int, optional
-            The maximum number of agents in the population. Defaults to None,
+        volume : int, optional
+            TODO: The maximum number of agents in the population. Defaults to None,
             meaning no limit (infinite population).
         """
         super().__init__(simulation)
-        self._capacity = capacity
+        self._volume = volume
         self._agents = list()
 
     def initialize(self) -> None:
@@ -90,7 +90,7 @@ class UnstructuredSimulationDomain(SimulationDomain):
         """
         pass
 
-    def add_agent(self, agent: Agent, **kwargs) -> None:
+    def add_agent(self, agent: Agent, volume: int = 0, **params) -> None:
         """Adds the specified agent to the internal list of the agents.
 
         Parameters
@@ -98,11 +98,15 @@ class UnstructuredSimulationDomain(SimulationDomain):
         agent : Agent
             The agent to be added
         """
-        if self._capacity < len(self._agents):
+        sum_volumes = self._get_total_agent_volume()
+        if self._volume < sum_volumes + volume:
             warnings.warn('The number of agents exceeded the capacity '
                           'of the domain.')
         self._agents.append(agent)
+
+    def initialize_agent(self, agent: Agent, volume: int = 0, **params) -> None:
         self.initialize_agent_attributes(agent)
+        agent.set_attribute('volume', volume)
 
     def remove_agent(self, agent: Agent) -> None:
         """Removes the specified agent from the internal list of the agents.
@@ -135,24 +139,33 @@ class UnstructuredSimulationDomain(SimulationDomain):
         indicate that an agent is ready to divide and that the domain should
         handle the division event. Once division has occurred, the
         ``division_completed`` attribute is set to ``True``.
+        TODO: volume
         """
         if not agent.has_attribute('division_pending'):
             agent.initialize_attribute('division_pending', False)
         if not agent.has_attribute('division_completed'):
             agent.initialize_attribute('division_completed', False)
+        if not agent.has_attribute('volume'):
+            agent.initialize_attribute('volume', None)
 
     def _perform_cell_division(self, agent: Agent, dt: int) -> None:
-        if len(self._agents) < self._capacity:
+        sum_volumes = self._get_total_agent_volume()
+        agent_volume = agent.get_attribute('volume')
+        if sum_volumes + agent_volume <= self._volume:
             agent.set_attribute('division_pending', False)
             agent.set_attribute('division_completed', True)
             new_agent = agent.clone()
             self._simulation.add_agent(new_agent)
 
+    def _get_total_agent_volume(self) -> int:
+        return sum([a.get_attribute('volume') for a in self._agents])
+
 
 class Structured2DSimulationDomain(SimulationDomain):
     def __init__(self,
                  simulation: Simulation,
-                 dimensions: tuple[int, int]
+                 dimensions: tuple[int, int],
+                 grid_spacing: int,
                  ) -> None:
         """Constructor method.
 
@@ -168,7 +181,7 @@ class Structured2DSimulationDomain(SimulationDomain):
         self._agents = None
         self._agent_layer = None
         self._dimensions = dimensions
-        self._dx = 1    # TODO
+        self._grid_spacing = grid_spacing
         self.initialize()
 
     def initialize(self) -> None:
@@ -180,9 +193,8 @@ class Structured2DSimulationDomain(SimulationDomain):
     def add_agent(self,
                   agent: Agent,
                   position: tuple[int, int],
-                  motility: int = 0,
-                  binding_affinity: int = 0,
-                  displacement_limit: int = 1) -> None:
+                  volume: int = 0,
+                  **params) -> None:
         """Adds the specified agent to the specified index of the internal
         array of the agents.
 
@@ -190,6 +202,8 @@ class Structured2DSimulationDomain(SimulationDomain):
         ----------
         agent : Agent
             The agent to be added
+        volume: int
+            TODO
         position : tuple[int, int]
             The column and row index describing the agent's position
         motility : int, optional
@@ -207,11 +221,23 @@ class Structured2DSimulationDomain(SimulationDomain):
         if not self.is_valid_position(position):
             raise ValueError(f'Position {position} is out of the bounds of the domain.')
         if not self.is_empty_position(position):
-            warnings.warn(f'Position {position} already occupied, existing '
-                          'agent overwritten by new agent.')
-        self.initialize_agent_attributes(agent)
+            raise ValueError(f'Position {position} already occupied.')
+        if self.get_remaining_volume(position) < volume:
+            warnings.warn('The agent\'s volume is larger than the volume assigned to '
+                          'the domain chunks. This may lead to unexpected behavior.')
         self._agents.append(agent)
         self._agent_layer[tuple(position)] = agent
+
+    def initialize_agent(self,
+                         agent: Agent,
+                         volume: int,
+                         position: tuple[int, int],
+                         motility: int = 0,
+                         binding_affinity: int = 0,
+                         displacement_limit: int = 1,
+                         **params) -> None:
+        self.initialize_agent_attributes(agent)
+        agent.set_attribute('volume', volume)
         agent.set_attribute('position', position)
         agent.set_attribute('motility', motility)
         agent.set_attribute('binding_affinity', binding_affinity)
@@ -255,6 +281,8 @@ class Structured2DSimulationDomain(SimulationDomain):
             agent.initialize_attribute('division_pending', False)
         if not agent.has_attribute('division_completed'):
             agent.initialize_attribute('division_completed', False)
+        if not agent.has_attribute('volume'):
+            agent.initialize_attribute('volume', None)
         if not agent.has_attribute('position'):
             agent.initialize_attribute('position', (None, None))
         if not agent.has_attribute('motility'):
@@ -296,12 +324,17 @@ class Structured2DSimulationDomain(SimulationDomain):
         """
         return self._agent_layer[tuple(position)] is None
 
+    def get_remaining_volume(self, position: tuple[int, int]) -> int:
+        if self.is_empty_position(position):
+            return self._grid_spacing**2
+        return self._grid_spacing**2 - self._agent_layer[tuple(position)].get_attribute('volume')
+
     def _displacement_trials(self, dt: int) -> None:
         if self._agents:
             agents = copy.copy(self._agents)
             np.random.shuffle(agents)
             positions = np.array([a.get_attribute('position') for a in agents], dtype='int32')
-            disp_probs = np.array([a.get_attribute('motility') * dt / self._dx for a in agents], dtype='float32')
+            disp_probs = np.array([a.get_attribute('motility') * dt / self._grid_spacing for a in agents], dtype='float32')
             binding_affs = np.array([a.get_attribute('binding_affinity') for a in agents], dtype='float32')
             # 3D array containing identifiers (idx) at those elements occupied by agents
             idx_array = np.full((self._agent_layer.shape[0], self._agent_layer.shape[1]), -1, dtype='int32')
@@ -364,6 +397,5 @@ class Structured2DSimulationDomain(SimulationDomain):
                 agent.set_attribute('division_pending', False)
                 agent.set_attribute('division_completed', True)
                 new_agent = agent.clone()
-                # gen = agent.get_attribute('generation')
-                # new_agent.set_attribute('generation', gen + 1)
+                new_agent.set_attribute('position', clone_position)
                 self._simulation.add_agent(new_agent, position=clone_position)
