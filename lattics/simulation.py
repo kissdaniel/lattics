@@ -106,6 +106,11 @@ class Simulation:
         self._simulation_domain = domain
         self._simulation_domain.initialize()
 
+    def add_substrate_field(self, substrate_field) -> None:
+        self._substrates.append(substrate_field)
+        if self._simulation_domain:
+            self._simulation_domain.add_substrate_field(substrate_field)
+
     def add_model(self, model: 'cellfunction.CellFunctionModel') -> None:
         """Adds the provided model instance to the agent's collection of cell
         function models and invokes the model's initialization method.
@@ -133,6 +138,7 @@ class Simulation:
         steps = int(math.ceil(time / dt))
         for t in range(steps):
             self._update_models(dt)
+            self._update_substrates(dt)
             if self._simulation_domain:
                 self._simulation_domain.update(dt)
             self._time += dt
@@ -156,3 +162,7 @@ class Simulation:
                     m.update_attributes(a, dt)
                 m.reset_time()
             m.increase_time(dt)
+
+    def _update_substrates(self, dt: int) -> None:
+        for s in self._substrates:
+            s.update(dt)

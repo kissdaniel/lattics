@@ -84,6 +84,7 @@ class UnstructuredSimulationDomain(SimulationDomain):
         super().__init__(simulation)
         self._volume = volume
         self._agents = list()
+        self._substrates = list()
 
     def initialize(self) -> None:
         """Initializes the domain.
@@ -118,6 +119,9 @@ class UnstructuredSimulationDomain(SimulationDomain):
         """
         self._agents.remove(agent)
 
+    def add_substrate_field(self, substrate_field) -> None:
+        self._substrates.append(substrate_field)
+
     def update(self, dt: int) -> None:
         """Updates the domain according to the specified time duration. Agents
         labeled as ``division_pending`` are duplicated based on the available
@@ -131,6 +135,14 @@ class UnstructuredSimulationDomain(SimulationDomain):
         for a in self._agents:
             if a.get_attribute('division_pending'):
                 self._perform_cell_division(a, dt)
+
+        for s in self._substrates:
+            s._substrate_nodes = list()
+            for a in self._agents:
+                subst_list = a.get_attribute('substrate_data')
+                for sa in subst_list:
+                    if sa['name'] == s._substrate_data['name']:
+                        s.add_node(sa['values'])
 
     def initialize_agent_attributes(self, agent) -> None:
         """Initializes the attributes used by the domain. The domain tracks
@@ -154,6 +166,10 @@ class UnstructuredSimulationDomain(SimulationDomain):
         if sum_volumes + agent_volume <= self._volume:
             agent.set_attribute('division_pending', False)
             agent.set_attribute('division_completed', True)
+            if self._substrates:
+                for s in agent.get_attribute('substrate_data'):
+                    c_curr = s['values']['concentration']
+                    s['values']['concentration'] = c_curr / 2
             new_agent = agent.clone()
             self._simulation.add_agent(new_agent)
 

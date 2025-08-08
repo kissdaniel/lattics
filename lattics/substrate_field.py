@@ -20,7 +20,7 @@ class SubstrateField:
     def add_node(self, node) -> None:
         self._substrate_nodes.append(node)
 
-    def get_concentration(self, position) -> float:
+    def get_concentration(self, position=None) -> float:
         pass
 
     def update(self, dt: int) -> None:
@@ -36,7 +36,7 @@ class SubstrateFieldNoDimension(SubstrateField):
     def initialize(self) -> None:
         self._concentration_layer = 0
 
-    def get_concentration(self, position) -> float:
+    def get_concentration(self, position=None) -> float:
         return self._concentration_layer
 
     def update(self, dt: int) -> None:
