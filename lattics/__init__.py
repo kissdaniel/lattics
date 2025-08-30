@@ -1,6 +1,6 @@
 from ._version import get_versions
 
-from .core import Agent, Simulation
+from .core import Agent, Event, Simulation
 from .spaces import HomogeneousSpace, Lattice2DSpace
 from .substrates import SubstrateInfo
 

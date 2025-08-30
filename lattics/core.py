@@ -89,6 +89,23 @@ class Agent:
         return self._attributes[name]
 
 
+class Event:
+    def __init__(self,
+                 time: int,
+                 handler: Any,
+                 **params: dict
+                 ) -> None:
+        self._time = time
+        self._handler = handler
+        self._params = params
+
+    def is_ready(self, current_time: int) -> bool:
+        return self._time <= current_time
+
+    def execute(self, simulation):
+        self._handler(simulation, **self._params)
+
+
 class Simulation:
     """Represents a simulation instance. This object manages the participating
     agents (:class:`Agent`), the environment (:class:`SimulationDomain`), and
@@ -170,7 +187,7 @@ class Simulation:
         self._space = space
 
     def add_event(self, event) -> None:
-        pass
+        self._events.append(event)
 
     def add_model(self, model: 'cellfunction.CellFunctionModel') -> None:
         """Adds the provided model instance to the agent's collection of cell
@@ -201,6 +218,7 @@ class Simulation:
         """
         steps = int(math.ceil(time / dt))
         for t in range(steps):
+            self._update_events(self.time)
             self._update_models(dt)
             if self._space:
                 self._space.update(dt)
@@ -208,6 +226,12 @@ class Simulation:
 
     def _get_id(self, identifier):
         return identifier if identifier else id(self)
+
+    def _update_events(self, time: int) -> None:
+        for e in list(self._events):
+            if e.is_ready(time):
+                e.execute(self)
+                self._events.remove(e)
 
     def _update_models(self, dt: int) -> None:
         """Sequentially updates all models associated with the agent. If
