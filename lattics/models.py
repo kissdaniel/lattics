@@ -49,8 +49,7 @@ class FixedIncrementalCellCycleModel(BaseModel):
             self.reset_attributes(agent)
         if agent.get_attribute('cellcycle_is_active'):
             current_time = agent.get_attribute('cellcycle_current_time')
-            time_since_last_update = self.update_info._time_since_last_update
-            updated_time = current_time + time_since_last_update
+            updated_time = current_time + self.update_info.elapsed_time
             agent.set_attribute('cellcycle_current_time', updated_time)
             if agent.get_attribute('cellcycle_length') <= updated_time:
                 agent.set_attribute('division_pending', True)

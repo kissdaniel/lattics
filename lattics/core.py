@@ -256,21 +256,21 @@ class UpdateInfo:
                  update_interval: int
                  ) -> None:
         self._update_interval = update_interval
-        self._time_since_last_update = 0
+        self._elapsed_time = 0
 
     @property
     def update_interval(self) -> int:
         return self._update_interval
 
     @property
-    def time_since_last_update(self) -> int:
-        return self._time_since_last_update
+    def elapsed_time(self) -> int:
+        return self._elapsed_time
 
     def update_needed(self) -> bool:
-        return self._update_interval <= self._time_since_last_update
+        return self._update_interval <= self._elapsed_time
 
     def increase_time(self, dt) -> None:
-        self._time_since_last_update += dt
+        self._elapsed_time += dt
 
     def reset_time(self) -> None:
-        self._time_since_last_update = 0
+        self._elapsed_time = 0

@@ -158,7 +158,7 @@ class HomogeneousSpace(BaseSpace):
             self._clear_substrate_dynamic_nodes()
             for a in self._agents:
                 if a.get_attribute('division_pending'):
-                    self._process_agent_division(a, agent_ui._time_since_last_update)
+                    self._process_agent_division(a, agent_ui.elapsed_time)
 
                 info = a.get_attribute('substrate_info')
                 for i in info.keys():
@@ -167,7 +167,7 @@ class HomogeneousSpace(BaseSpace):
 
         if substrate_ui.update_needed():
             for s in self._substrates.values():
-                s.update(substrate_ui._time_since_last_update)
+                s.update(substrate_ui.elapsed_time)
             substrate_ui.reset_time()
 
     def _initialize_attributes(self, agent, volume) -> None:
@@ -331,8 +331,8 @@ class Lattice2DSpace(BaseSpace):
         substrate_ui.increase_time(dt)
 
         if agent_ui.update_needed():
-            self._displacement_trials(agent_ui._time_since_last_update)
-            self._cell_division_trials(agent_ui._time_since_last_update)
+            self._displacement_trials(agent_ui.elapsed_time)
+            self._cell_division_trials(agent_ui.elapsed_time)
 
             self._clear_substrate_dynamic_nodes()
             for a in self._agents:
@@ -343,7 +343,7 @@ class Lattice2DSpace(BaseSpace):
 
         if substrate_ui.update_needed():
             for s in self._substrates.values():
-                s.update(substrate_ui._time_since_last_update)
+                s.update(substrate_ui.elapsed_time)
             substrate_ui.reset_time()
 
     def is_valid_position(self, position: tuple[int, int]) -> bool:
