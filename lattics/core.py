@@ -205,6 +205,11 @@ class Simulation:
             raise AttributeError('A simulation domain has to be set to add substrates.')
         # self._domain.add_substrate_field(substrate)
 
+    def remove_agent(self, agent: Agent) -> None:
+        self._agents.remove(agent)
+        if self._space:
+            self._space.remove_agent(agent)
+
     def run(self, time, dt) -> None:
         """Runs the simulation from the current state for the specified
         duration using the given time step.
