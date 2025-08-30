@@ -300,7 +300,7 @@ class Lattice2DSpace(BaseSpace):
         agent : Agent
             The agent to be removed
         """
-        position = agent.get_status_flag('position')
+        position = agent.get_attribute('position')
         self._agents.remove(agent)
         self._agent_layer[tuple(position)] = None
 
