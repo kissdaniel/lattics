@@ -1,4 +1,5 @@
 from .core import Agent, UpdateInfo
+from .utils import UnitConverter
 import numpy as np
 
 
@@ -36,12 +37,14 @@ class FixedIncrementalCellCycleModel(BaseModel):
         if not agent.has_attribute('division_completed'):
             agent.set_attribute('division_completed', False)
         if 'cellcycle_length' in params:
-            agent.set_attribute('cellcycle_length', params['cellcycle_length'])
+            value = UnitConverter.time_to_ms(params['cellcycle_length'])
+            agent.set_attribute('cellcycle_length', value)
         if 'cellcycle_current_time' in params:
             agent.set_attribute('cellcycle_current_time', params['cellcycle_current_time'])
         if 'cellcycle_random_initial' in params:
             if params['cellcycle_random_initial']:
-                cc_time = np.random.uniform(low=0, high=params['cellcycle_length'])
+                value = UnitConverter.time_to_ms(params['cellcycle_length'])
+                cc_time = np.random.uniform(low=0, high=value)
                 agent.set_attribute('cellcycle_current_time', cc_time)
 
     def update_attributes(self, agent: Agent) -> None:

@@ -9,7 +9,7 @@ class UnitConverter:
     }
 
     @staticmethod
-    def time(expression: tuple[float, str]) -> int:
+    def time_to_ms(expression: tuple[float, str]) -> int:
         value = expression[0]
         unit = expression[1]
         if unit in UnitConverter.TIME_UNITS:
