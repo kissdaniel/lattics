@@ -1,0 +1,252 @@
+"""The main component of the LattiCS framework containing functionalities to
+set up and execute a simulation.
+"""
+
+import copy
+import math
+import warnings
+from typing import Any
+
+
+class Agent:
+    def __init__(self) -> None:
+        """Constructor method.
+        """
+        self._attributes = dict()
+
+    def clone(self) -> 'Agent':
+        """Returns a deep copy instance of the agent.
+
+        Returns
+        -------
+        Agent
+            The cloned agent instance
+        """
+
+        cloned = Agent()
+        cloned._attributes = copy.deepcopy(self._attributes)
+        return cloned
+
+    def has_attribute(self, name: str) -> bool:
+        """Returns whether the agent instance has a specific attribute initialized.
+
+        Parameters
+        ----------
+        name : str
+            The identifier of the attribute
+
+        Returns
+        -------
+        bool
+            True if the agent has the attribute, otherwise false
+
+        Examples
+        --------
+        >>> a.initialize_attribute('my_attribute')
+        >>> a.has_attribute('my_attribute')
+        True
+        >>> a.has_attribute('nonexisting_attribute')
+        False
+        """
+        return name in self._attributes
+
+    def set_attribute(self, name: str, value: Any) -> None:
+        """Set the value of the specified attribute.
+
+        Parameters
+        ----------
+        name : str
+            The identifier of the attribute
+        value : Any
+            The new value to be set
+
+        Examples
+        --------
+        >>> a.initialize_attribute('my_attribute')
+        >>> a.set_attribute('my_attribute', True)
+        """
+        self._attributes[name] = value
+
+    def get_attribute(self, name: str) -> Any:
+        """Returns the value of the specified attribute.
+
+        Parameters
+        ----------
+        name : str
+            The identifier of the attribute
+
+        Returns
+        -------
+        any type
+            The current value of the attribute
+
+        Examples
+        --------
+        >>> a.initialize_attribute('my_attribute', 0)
+        >>> print(a.get_attribute(''my_attribute''))
+        0
+        """
+        return self._attributes[name]
+
+
+class Simulation:
+    """Represents a simulation instance. This object manages the participating
+    agents (:class:`Agent`), the environment (:class:`SimulationDomain`), and
+    the various chemical substances (:class:`Substrate`) present within it.
+    The class provides high-level access to configure and execute a simulation.
+    """
+    def __init__(self, id=None) -> None:
+        """Constructor method.
+
+        Parameters
+        ----------
+        id : str
+            The identifier for the simulation instance. If not provided, a
+            random identifier will be generated.
+        """
+        self._id = self._get_id(id)
+        self._agents = list()
+        self._space = None
+        self._events = list()
+        self._models = list()
+        self._time = 0
+
+    @property
+    def agents(self) -> list[Agent]:
+        """Get the collection of agents currently present in the simulation.
+        The order of agents in this collection is maintained throughout the
+        simulation, with new agent instances always being added at the end.
+
+        Returns
+        -------
+        list[Agent]
+            Collection of the agents
+        """
+        return self._agents
+
+    @property
+    def time(self) -> int:
+        """Get the current internal time of the simulation, representing the
+        elapsed time since the simulation started.
+
+        Returns
+        -------
+        int
+            Internal time of the simulation, in milliseconds.
+        """
+
+        return self._time
+
+    def add_agent(self, agent: Agent, **params) -> None:
+        """Adds the specified agent to the simulation. The agent will be added
+        to the collection of all agents and, if a simulation domain is defined,
+        will also be placed within the simulation domain.
+
+        Parameters
+        ----------
+        agent : Agent
+            The agent to be added
+        """
+        self._agents.append(agent)
+        if self._space:
+            self._space.add_agent(agent, **params)
+        else:
+            warnings.warn('No simulation domain has been defined. '
+                          'You can proceed without one, but this may '
+                          'lead to unexpected consequences.')
+        for m in self._models:
+            m.initialize_attributes(agent, **params)
+
+    def add_space(self, space: 'spaces.BaseSpace') -> None:
+        """Sets the simulation space to the instance passed as a parameter.
+
+        Parameters
+        ----------
+        space : BaseSpace
+            The simulation space instance to be used
+        """
+        if self._space:
+            raise AttributeError('Simulation space is already set and cannot be modified.')
+        self._space = space
+
+    def add_event(self, event) -> None:
+        pass
+
+    def add_model(self, model: 'cellfunction.CellFunctionModel') -> None:
+        """Adds the provided model instance to the agent's collection of cell
+        function models and invokes the model's initialization method.
+
+        Parameters
+        ----------
+        model : CellFunctionModel
+            A subclass of the ``CellFunctionModel`` abstract base class.
+        """
+        self._models.append(model)
+
+    def add_substrate(self, name: str, substrate) -> None:
+        if not self._space:
+            raise AttributeError('A simulation domain has to be set to add substrates.')
+        # self._domain.add_substrate_field(substrate)
+
+    def run(self, time, dt) -> None:
+        """Runs the simulation from the current state for the specified
+        duration using the given time step.
+
+        Parameters
+        ----------
+        time : int
+            The duration to be simulated, in milliseconds
+        dt : _type_
+            Time step, in milliseconds
+        """
+        steps = int(math.ceil(time / dt))
+        for t in range(steps):
+            self._update_models(dt)
+            if self._space:
+                self._space.update(dt)
+            self._time += dt
+
+    def _get_id(self, identifier):
+        return identifier if identifier else id(self)
+
+    def _update_models(self, dt: int) -> None:
+        """Sequentially updates all models associated with the agent. If
+        multiple sub-models exist within the same category, they are updated
+        in the order they appear in their respective collection.
+
+        Parameters
+        ----------
+        dt : int
+            The time elapsed since the last update, in milliseconds
+        """
+        for m in self._models:
+            if m.update_info.update_needed():
+                for a in self._agents:
+                    m.update_attributes(a)
+                m.update_info.reset_time()
+            m.update_info.increase_time(dt)
+
+
+class UpdateInfo:
+    def __init__(self,
+                 update_interval: int
+                 ) -> None:
+        self._update_interval = update_interval
+        self._time_since_last_update = 0
+
+    @property
+    def update_interval(self) -> int:
+        return self._update_interval
+
+    @property
+    def time_since_last_update(self) -> int:
+        return self._time_since_last_update
+
+    def update_needed(self) -> bool:
+        return self._update_interval <= self._time_since_last_update
+
+    def increase_time(self, dt) -> None:
+        self._time_since_last_update += dt
+
+    def reset_time(self) -> None:
+        self._time_since_last_update = 0
