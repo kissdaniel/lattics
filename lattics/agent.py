@@ -7,24 +7,10 @@ import warnings
 
 
 class Agent:
-    def __init__(self,
-                 simulation: 'simulation.Simulation' = None
-                 ) -> None:
+    def __init__(self) -> None:
         """Constructor method.
         """
-        self._simulation = simulation
         self._attributes = dict()
-
-    @property
-    def simulation(self) -> 'simulation.Simulation':
-        """Get the simulation instance associated with the agent.
-
-        Returns
-        -------
-        Simulation
-            An instance representing the simulation
-        """
-        return self._simulation
 
     def clone(self) -> 'Agent':
         """Returns a deep copy instance of the agent.
@@ -36,32 +22,8 @@ class Agent:
         """
 
         cloned = Agent()
-        cloned._simulation = self._simulation
         cloned._attributes = copy.deepcopy(self._attributes)
         return cloned
-
-    def initialize_attribute(self, name: str, value: Any = None) -> None:
-        """Initialize a new attribute for the agent instance with the
-        specified name.
-
-        Parameters
-        ----------
-        name : str
-            The identifier of the status flag
-        value : Any, optional
-            The initial value to be set, by default None
-
-        Examples
-        --------
-        >>> a = Agent()
-        >>> a.initialize_attribute('my_attribute_1')
-        >>> a.initialize_attribute('my_attribute_2', 0)
-        >>> a.initialize_attribute('my_attribute_3', 'foo')
-        """
-        if name not in self._attributes:
-            self._attributes[name] = value
-        else:
-            warnings.warn(f'Attribute name \'{name}\' already in use.')
 
     def has_attribute(self, name: str) -> bool:
         """Returns whether the agent instance has a specific attribute initialized.

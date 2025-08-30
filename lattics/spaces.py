@@ -1,7 +1,10 @@
+from .core import Agent
+from .core import Simulation
+from .core import UpdateInfo
+from .numba_functions import bresenham_2d, displacement_trial_2d
+from .substrates import HomogeneousSubstrateField, Lattice2DSubstrateField
 
-from .agent import Agent
-from .simulation import Simulation
-from . import numba_functions
+from abc import ABC, abstractmethod
 import copy
 import numpy as np
 import numpy.typing as npt
@@ -9,7 +12,7 @@ from scipy import ndimage
 import warnings
 
 
-class SimulationDomain:
+class BaseSpace(ABC):
     """Base class for different simulation domains.
     """
     def __init__(self,
@@ -23,12 +26,9 @@ class SimulationDomain:
             The Simulation instance containing the domain
         """
         self._simulation = simulation
+        self._update_infos = dict()
 
-    def initialize(self) -> None:
-        """Initializes the domain.
-        """
-        pass
-
+    @abstractmethod
     def add_agent(self, agent: Agent, **kwargs) -> None:
         """Adds the specified agent to the structure representing the internal
         storage of the domain.
@@ -40,6 +40,7 @@ class SimulationDomain:
         """
         pass
 
+    @abstractmethod
     def remove_agent(self, agent: Agent) -> None:
         """Removes the specified agent from the internal storage of the domain.
 
@@ -50,6 +51,15 @@ class SimulationDomain:
         """
         pass
 
+    @abstractmethod
+    def add_substrate(self,
+                      name: str,
+                      diffusion_coefficient: float = 0.0,
+                      decay_coefficient: float = 0.0
+                      ) -> None:
+        pass
+
+    @abstractmethod
     def update(self, dt: int) -> None:
         """Updates the domain according to the specified time duration.
 
@@ -61,7 +71,7 @@ class SimulationDomain:
         pass
 
 
-class UnstructuredSimulationDomain(SimulationDomain):
+class HomogeneousSpace(BaseSpace):
     """Represents a perfectly mixed simulation domain with no spatial structure
     or localized interactions, where each agent has an equal probability of
     interacting with any other agent in the population. Agents are stored in a
@@ -69,6 +79,8 @@ class UnstructuredSimulationDomain(SimulationDomain):
     """
     def __init__(self,
                  simulation: Simulation,
+                 dt_agent: int,
+                 dt_substrate: int,
                  volume: int = None
                  ) -> None:
         """Constructor method.
@@ -84,12 +96,10 @@ class UnstructuredSimulationDomain(SimulationDomain):
         super().__init__(simulation)
         self._volume = volume
         self._agents = list()
-        self._substrates = list()
-
-    def initialize(self) -> None:
-        """Initializes the domain.
-        """
-        pass
+        self._substrates = dict()
+        self._update_infos['agent'] = UpdateInfo(dt_agent)
+        self._update_infos['substrate'] = UpdateInfo(dt_substrate)
+        self._has_free_volume = True
 
     def add_agent(self, agent: Agent, volume: int = 0, **params) -> None:
         """Adds the specified agent to the internal list of the agents.
@@ -101,13 +111,10 @@ class UnstructuredSimulationDomain(SimulationDomain):
         """
         sum_volumes = self._get_total_agent_volume()
         if self._volume < sum_volumes + volume:
-            warnings.warn('The number of agents exceeded the capacity '
+            warnings.warn('The total volume of agents exceeded the capacity '
                           'of the domain.')
         self._agents.append(agent)
-
-    def initialize_agent(self, agent: Agent, volume: int = 0, **params) -> None:
-        self.initialize_agent_attributes(agent)
-        agent.set_attribute('volume', volume)
+        self._initialize_attributes(agent, volume)
 
     def remove_agent(self, agent: Agent) -> None:
         """Removes the specified agent from the internal list of the agents.
@@ -119,8 +126,17 @@ class UnstructuredSimulationDomain(SimulationDomain):
         """
         self._agents.remove(agent)
 
-    def add_substrate_field(self, substrate_field) -> None:
-        self._substrates.append(substrate_field)
+    def add_substrate(self,
+                      name: str,
+                      diffusion_coefficient: float = 0.0,
+                      decay_coefficient: float = 0.0
+                      ) -> None:
+        substrate = HomogeneousSubstrateField(domain=self,
+                                              substrate_name=name,
+                                              diffusion_coefficient=diffusion_coefficient,
+                                              decay_coefficient=decay_coefficient
+                                              )
+        self._substrates[name] = substrate
 
     def update(self, dt: int) -> None:
         """Updates the domain according to the specified time duration. Agents
@@ -132,19 +148,29 @@ class UnstructuredSimulationDomain(SimulationDomain):
         dt : int
             The time elapsed since the last update call, in milliseconds
         """
-        for a in self._agents:
-            if a.get_attribute('division_pending'):
-                self._perform_cell_division(a, dt)
+        agent_ui = self._update_infos['agent']
+        substrate_ui = self._update_infos['substrate']
 
-        for s in self._substrates:
-            s._substrate_nodes = list()
+        agent_ui.increase_time(dt)
+        substrate_ui.increase_time(dt)
+
+        if agent_ui.update_needed():
+            self._clear_substrate_dynamic_nodes()
             for a in self._agents:
-                subst_list = a.get_attribute('substrate_data')
-                for sa in subst_list:
-                    if sa['name'] == s._substrate_data['name']:
-                        s.add_node(sa['values'])
+                if a.get_attribute('division_pending'):
+                    self._process_agent_division(a, agent_ui._time_since_last_update)
 
-    def initialize_agent_attributes(self, agent) -> None:
+                info = a.get_attribute('substrate_info')
+                for i in info.keys():
+                    self._substrates[i].add_dynamic_substrate_node(a)
+            agent_ui.reset_time()
+
+        if substrate_ui.update_needed():
+            for s in self._substrates.values():
+                s.update(substrate_ui._time_since_last_update)
+            substrate_ui.reset_time()
+
+    def _initialize_attributes(self, agent, volume) -> None:
         """Initializes the attributes used by the domain. The domain tracks
         two attributes: ``division_pending`` and ``division_completed``. The
         ``division_pending`` attribute can be set by cell-level functions to
@@ -154,57 +180,55 @@ class UnstructuredSimulationDomain(SimulationDomain):
         TODO: volume
         """
         if not agent.has_attribute('division_pending'):
-            agent.initialize_attribute('division_pending', False)
+            agent.set_attribute('division_pending', False)
         if not agent.has_attribute('division_completed'):
-            agent.initialize_attribute('division_completed', False)
+            agent.set_attribute('division_completed', False)
         if not agent.has_attribute('volume'):
-            agent.initialize_attribute('volume', None)
+            agent.set_attribute('volume', volume)
 
-    def _perform_cell_division(self, agent: Agent, dt: int) -> None:
+    def _process_substrates(self, dt) -> None:
+        pass
+
+    def _clear_substrate_dynamic_nodes(self):
+        for s in self._substrates.values():
+            s.clear_dynamic_nodes()
+
+    def _process_agent_division(self, agent: Agent, dt: int) -> None:
+        if not self._has_free_volume:
+            return
         sum_volumes = self._get_total_agent_volume()
         agent_volume = agent.get_attribute('volume')
         if sum_volumes + agent_volume <= self._volume:
             agent.set_attribute('division_pending', False)
             agent.set_attribute('division_completed', True)
-            if self._substrates:
-                for s in agent.get_attribute('substrate_data'):
-                    c_curr = s['values']['concentration']
-                    s['values']['concentration'] = c_curr / 2
             new_agent = agent.clone()
             self._simulation.add_agent(new_agent)
+        else:
+            self._has_free_volume = False
+
+    def _process_agent_removal(self) -> None:
+        pass
 
     def _get_total_agent_volume(self) -> int:
         return sum([a.get_attribute('volume') for a in self._agents])
 
 
-class Structured2DSimulationDomain(SimulationDomain):
+class Lattice2DSpace(BaseSpace):
     def __init__(self,
                  simulation: Simulation,
+                 dt_agent: int,
+                 dt_substrate: int,
                  dimensions: tuple[int, int],
-                 grid_spacing: int,
+                 grid_spacing: int
                  ) -> None:
-        """Constructor method.
-
-        Parameters
-        ----------
-        simulation : Simulation
-            The Simulation instance containing the domain
-        dimensions : tuple[int, int]
-            Width and height of the lattice on which agents are located, given
-            as the number of columns and rows
-        """
         super().__init__(simulation)
-        self._agents = None
-        self._agent_layer = None
         self._dimensions = dimensions
         self._grid_spacing = grid_spacing
-        self.initialize()
-
-    def initialize(self) -> None:
-        """Initializes the domain.
-        """
         self._agents = list()
         self._agent_layer = np.empty(self._dimensions, dtype='object')
+        self._substrates = dict()
+        self._update_infos['agent'] = UpdateInfo(dt_agent)
+        self._update_infos['substrate'] = UpdateInfo(dt_substrate)
 
     def add_agent(self,
                   agent: Agent,
@@ -243,21 +267,30 @@ class Structured2DSimulationDomain(SimulationDomain):
                           'the domain chunks. This may lead to unexpected behavior.')
         self._agents.append(agent)
         self._agent_layer[tuple(position)] = agent
+        self._initialize_attributes(agent, position, volume, **params)
 
-    def initialize_agent(self,
-                         agent: Agent,
-                         volume: int,
-                         position: tuple[int, int],
-                         motility: int = 0,
-                         binding_affinity: int = 0,
-                         displacement_limit: int = 1,
-                         **params) -> None:
-        self.initialize_agent_attributes(agent)
-        agent.set_attribute('volume', volume)
-        agent.set_attribute('position', position)
-        agent.set_attribute('motility', motility)
-        agent.set_attribute('binding_affinity', binding_affinity)
-        agent.set_attribute('displacement_limit', displacement_limit)
+    def _initialize_attributes(self,
+                               agent: Agent,
+                               position: tuple[int, int],
+                               volume: int,
+                               motility: int = 0,
+                               binding_affinity: int = 0,
+                               displacement_limit: int = 1,
+                               **params) -> None:
+        if not agent.has_attribute('division_pending'):
+            agent.set_attribute('division_pending', False)
+        if not agent.has_attribute('division_completed'):
+            agent.set_attribute('division_completed', False)
+        if not agent.has_attribute('volume'):
+            agent.set_attribute('volume', volume)
+        if not agent.has_attribute('position'):
+            agent.set_attribute('position', position)
+        if not agent.has_attribute('motility'):
+            agent.set_attribute('motility', motility)
+        if not agent.has_attribute('binding_affinity'):
+            agent.set_attribute('binding_affinity', binding_affinity)
+        if not agent.has_attribute('displacement_limit'):
+            agent.set_attribute('displacement_limit', displacement_limit)
 
     def remove_agent(self, agent: Agent) -> None:
         """Removes the specified agent from the internal list of the agents.
@@ -271,6 +304,18 @@ class Structured2DSimulationDomain(SimulationDomain):
         self._agents.remove(agent)
         self._agent_layer[tuple(position)] = None
 
+    def add_substrate(self,
+                      name: str,
+                      diffusion_coefficient: float = 0.0,
+                      decay_coefficient: float = 0.0
+                      ) -> None:
+        substrate = Lattice2DSubstrateField(domain=self,
+                                            substrate_name=name,
+                                            diffusion_coefficient=diffusion_coefficient,
+                                            decay_coefficient=decay_coefficient
+                                            )
+        self._substrates[name] = substrate
+
     def update(self, dt: int) -> None:
         """Updates the domain according to the specified time duration.
 
@@ -279,34 +324,27 @@ class Structured2DSimulationDomain(SimulationDomain):
         dt : int
             The time elapsed since the last update call, in milliseconds
         """
-        self._displacement_trials(dt)
-        self._cell_division_trials(dt)
+        agent_ui = self._update_infos['agent']
+        substrate_ui = self._update_infos['substrate']
 
-    def initialize_agent_attributes(self, agent) -> None:
-        """Initializes the attributes used by the domain. The domain uses
-        the following attributes: ``division_pending``, ``division_completed``,
-        ``motility``, ``binding_affinity``, and ``displacement_limit``. Agents
-        are displaced to adjacent grid points based on their ``motility`` and
-        ``binding_affinity`` values. Agents labeled as ``division_pending``
-        are duplicated depending on the number of available grid points and the
-        ``displacement_limit``, which specifies how far an agent can push others
-        to create space for a daughter cell. Once division has occurred, the
-        ``division_completed`` attribute is set to ``True``.
-        """
-        if not agent.has_attribute('division_pending'):
-            agent.initialize_attribute('division_pending', False)
-        if not agent.has_attribute('division_completed'):
-            agent.initialize_attribute('division_completed', False)
-        if not agent.has_attribute('volume'):
-            agent.initialize_attribute('volume', None)
-        if not agent.has_attribute('position'):
-            agent.initialize_attribute('position', (None, None))
-        if not agent.has_attribute('motility'):
-            agent.initialize_attribute('motility', None)
-        if not agent.has_attribute('binding_affinity'):
-            agent.initialize_attribute('binding_affinity', None)
-        if not agent.has_attribute('displacement_limit'):
-            agent.initialize_attribute('displacement_limit', None)
+        agent_ui.increase_time(dt)
+        substrate_ui.increase_time(dt)
+
+        if agent_ui.update_needed():
+            self._displacement_trials(agent_ui._time_since_last_update)
+            self._cell_division_trials(agent_ui._time_since_last_update)
+
+            self._clear_substrate_dynamic_nodes()
+            for a in self._agents:
+                info = a.get_attribute('substrate_info')
+                for i in info.keys():
+                    self._substrates[i].add_dynamic_substrate_node(a)
+            agent_ui.reset_time()
+
+        if substrate_ui.update_needed():
+            for s in self._substrates.values():
+                s.update(substrate_ui._time_since_last_update)
+            substrate_ui.reset_time()
 
     def is_valid_position(self, position: tuple[int, int]) -> bool:
         """Indicates whether the given position lies within the bounds
@@ -363,7 +401,7 @@ class Structured2DSimulationDomain(SimulationDomain):
             for i, dprob in enumerate(disp_probs):
                 # Check if trial is needed based on the displacement probability
                 if np.random.random() < dprob:
-                    numba_functions.displacement_trial_2d(i, positions, binding_affs, idx_array, change_flags)
+                    displacement_trial_2d(i, positions, binding_affs, idx_array, change_flags)
 
             for i, cflag in enumerate(change_flags):
                 if cflag:
@@ -400,7 +438,7 @@ class Structured2DSimulationDomain(SimulationDomain):
                 target_position = target_sites[np.random.randint(target_sites.shape[0])]
                 x1, y1 = current_position[:2]
                 x2, y2 = target_position[:2]
-                path = numba_functions.bresenham_2d(x1, y1, x2, y2)
+                path = bresenham_2d(x1, y1, x2, y2)
                 if path.shape[0] > 2:
                     for i in range(path.shape[0] - 2, 0, -1):
                         a_old_x, a_old_y = path[i, :2]
@@ -415,3 +453,7 @@ class Structured2DSimulationDomain(SimulationDomain):
                 new_agent = agent.clone()
                 new_agent.set_attribute('position', clone_position)
                 self._simulation.add_agent(new_agent, position=clone_position)
+
+    def _clear_substrate_dynamic_nodes(self):
+        for s in self._substrates.values():
+            s.clear_dynamic_nodes()
