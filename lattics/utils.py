@@ -16,3 +16,7 @@ class UnitConverter:
             return value * UnitConverter.TIME_UNITS[unit]
         else:
             raise ValueError(f"Invalid time unit: '{unit}'. Supported units are: 'ms', 'sec', 'min', 'hour', 'day', 'week'.")
+
+    @staticmethod
+    def ms_to_days(value: int) -> float:
+        return value / (24 * 60 * 60 * 1000)

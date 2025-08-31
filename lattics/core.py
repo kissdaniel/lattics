@@ -5,6 +5,9 @@ set up and execute a simulation.
 import copy
 import math
 import warnings
+import pickle
+import tqdm
+import uuid
 from typing import Any
 from .utils import UnitConverter
 
@@ -127,7 +130,21 @@ class Simulation:
         self._space = None
         self._events = list()
         self._models = list()
+        self._history = list()
         self._time = 0
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['_events']
+        del state['_models']
+        del state['_history']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._events = list()
+        self._models = list()
+        self._history = list()
 
     @property
     def agents(self) -> list[Agent]:
@@ -211,7 +228,7 @@ class Simulation:
         if self._space:
             self._space.remove_agent(agent)
 
-    def run(self, time: tuple[float, str] , dt: tuple[float, str]) -> None:
+    def run(self, time: tuple[float, str] , dt: tuple[float, str], dt_history: tuple[float, str] = None, save_mode: str = 'always') -> None:
         """Runs the simulation from the current state for the specified
         duration using the given time step.
 
@@ -224,16 +241,47 @@ class Simulation:
         """
         time_ms = UnitConverter.time_to_ms(time)
         dt_ms = UnitConverter.time_to_ms(dt)
+        if dt_history:
+            history_ui = UpdateInfo(update_interval=dt_history)
         steps = int(math.ceil(time_ms / dt_ms))
-        for t in range(steps):
+
+        progressbar_format = "{l_bar}{bar}| [{elapsed}<{remaining}{postfix}]"
+        progressbar = tqdm.tqdm(total=steps, mininterval=1.0, colour='#d2de32', bar_format=progressbar_format)
+        progressbar.set_description(f'ID={self._id}')
+        PROGRESSBAR_SCALER = 100
+
+        for i in range(steps):
             self._update_events(self._time)
             self._update_models(dt_ms)
             if self._space:
                 self._space.update(dt_ms)
             self._time += dt_ms
+            if dt_history:
+                if history_ui.update_needed():
+                    self._make_history_entry(save_mode)
+                    history_ui.reset_time()
+                history_ui.increase_time(dt_ms)
+            if i % PROGRESSBAR_SCALER == 0:
+                days = UnitConverter.ms_to_days(self.time)
+                progressbar.set_postfix(T=f'{days:.2f}', N=f'{len(self.agents)}')
+                progressbar.update(PROGRESSBAR_SCALER)
+
+        if save_mode == 'on_completion':
+            self._save_history()
+
+    def _make_history_entry(self, save_mode):
+        state = pickle.dumps(self)
+        self._history.append(state)
+        if save_mode == 'always':
+            self._save_history()
+
+    def _save_history(self):
+        filename = f'{self._id}.lsd'
+        with open(filename, 'wb') as f:
+            pickle.dump(self._history, f)
 
     def _get_id(self, identifier):
-        return identifier if identifier else id(self)
+        return identifier if identifier else str(uuid.uuid4())
 
     def _update_events(self, time: int) -> None:
         for e in list(self._events):
