@@ -16,7 +16,9 @@ class BaseSpace(ABC):
     """Base class for different simulation domains.
     """
     def __init__(self,
-                 simulation: Simulation
+                 simulation: Simulation,
+                 dt_agent: tuple[float, str] = None,
+                 dt_substrate: tuple[float, str] = None,
                  ) -> None:
         """Constructor method.
 
@@ -27,6 +29,10 @@ class BaseSpace(ABC):
         """
         self._simulation = simulation
         self._update_infos = dict()
+        if dt_agent:
+            self._update_infos['agent'] = UpdateInfo(dt_agent)
+        if dt_substrate:
+            self._update_infos['substrate'] = UpdateInfo(dt_substrate)
 
     @abstractmethod
     def add_agent(self, agent: Agent, **kwargs) -> None:
@@ -79,8 +85,8 @@ class HomogeneousSpace(BaseSpace):
     """
     def __init__(self,
                  simulation: Simulation,
-                 dt_agent: int,
-                 dt_substrate: int,
+                 dt_agent: tuple[float, str],
+                 dt_substrate: tuple[float, str],
                  volume: int = None
                  ) -> None:
         """Constructor method.
@@ -93,12 +99,10 @@ class HomogeneousSpace(BaseSpace):
             TODO: The maximum number of agents in the population. Defaults to None,
             meaning no limit (infinite population).
         """
-        super().__init__(simulation)
+        super().__init__(simulation=simulation, dt_agent=dt_agent, dt_substrate=dt_substrate)
         self._volume = volume
         self._agents = list()
         self._substrates = dict()
-        self._update_infos['agent'] = UpdateInfo(dt_agent)
-        self._update_infos['substrate'] = UpdateInfo(dt_substrate)
         self._has_free_volume = True
 
     def add_agent(self, agent: Agent, volume: int = 0, **params) -> None:
@@ -158,7 +162,7 @@ class HomogeneousSpace(BaseSpace):
             self._clear_substrate_dynamic_nodes()
             for a in self._agents:
                 if a.get_attribute('division_pending'):
-                    self._process_agent_division(a, agent_ui._time_since_last_update)
+                    self._process_agent_division(a)
 
                 info = a.get_attribute('substrate_info')
                 for i in info.keys():
@@ -167,7 +171,7 @@ class HomogeneousSpace(BaseSpace):
 
         if substrate_ui.update_needed():
             for s in self._substrates.values():
-                s.update(substrate_ui._time_since_last_update)
+                s.update(substrate_ui.elapsed_time)
             substrate_ui.reset_time()
 
     def _initialize_attributes(self, agent, volume) -> None:
@@ -193,7 +197,7 @@ class HomogeneousSpace(BaseSpace):
         for s in self._substrates.values():
             s.clear_dynamic_nodes()
 
-    def _process_agent_division(self, agent: Agent, dt: int) -> None:
+    def _process_agent_division(self, agent: Agent) -> None:
         if not self._has_free_volume:
             return
         sum_volumes = self._get_total_agent_volume()
@@ -214,21 +218,22 @@ class HomogeneousSpace(BaseSpace):
 
 
 class Lattice2DSpace(BaseSpace):
-    def __init__(self,
-                 simulation: Simulation,
-                 dt_agent: int,
-                 dt_substrate: int,
-                 dimensions: tuple[int, int],
-                 grid_spacing: int
-                 ) -> None:
-        super().__init__(simulation)
+    def __init__(
+            self,
+            simulation: Simulation,
+            dt_agent: tuple[float, str],
+            dt_substrate: tuple[float, str],
+            dimensions: tuple[int, int],
+            grid_spacing: int) -> None:
+        super().__init__(
+            simulation=simulation,
+            dt_agent=dt_agent,
+            dt_substrate=dt_substrate)
         self._dimensions = dimensions
         self._grid_spacing = grid_spacing
         self._agents = list()
         self._agent_layer = np.empty(self._dimensions, dtype='object')
         self._substrates = dict()
-        self._update_infos['agent'] = UpdateInfo(dt_agent)
-        self._update_infos['substrate'] = UpdateInfo(dt_substrate)
 
     def add_agent(self,
                   agent: Agent,
@@ -300,7 +305,7 @@ class Lattice2DSpace(BaseSpace):
         agent : Agent
             The agent to be removed
         """
-        position = agent.get_status_flag('position')
+        position = agent.get_attribute('position')
         self._agents.remove(agent)
         self._agent_layer[tuple(position)] = None
 
@@ -331,8 +336,8 @@ class Lattice2DSpace(BaseSpace):
         substrate_ui.increase_time(dt)
 
         if agent_ui.update_needed():
-            self._displacement_trials(agent_ui._time_since_last_update)
-            self._cell_division_trials(agent_ui._time_since_last_update)
+            self._displacement_trials(agent_ui.elapsed_time)
+            self._cell_division_trials(agent_ui.elapsed_time)
 
             self._clear_substrate_dynamic_nodes()
             for a in self._agents:
@@ -343,7 +348,7 @@ class Lattice2DSpace(BaseSpace):
 
         if substrate_ui.update_needed():
             for s in self._substrates.values():
-                s.update(substrate_ui._time_since_last_update)
+                s.update(substrate_ui.elapsed_time)
             substrate_ui.reset_time()
 
     def is_valid_position(self, position: tuple[int, int]) -> bool:

@@ -5,7 +5,11 @@ set up and execute a simulation.
 import copy
 import math
 import warnings
+import pickle
+import tqdm
+import uuid
 from typing import Any
+from .utils import UnitConverter
 
 
 class Agent:
@@ -89,6 +93,23 @@ class Agent:
         return self._attributes[name]
 
 
+class Event:
+    def __init__(self,
+                 time: tuple[float, str],
+                 handler: Any,
+                 **params: dict
+                 ) -> None:
+        self._time = UnitConverter.time_to_ms(time)
+        self._handler = handler
+        self._params = params
+
+    def is_ready(self, current_time: int) -> bool:
+        return self._time <= current_time
+
+    def execute(self, simulation):
+        self._handler(simulation, **self._params)
+
+
 class Simulation:
     """Represents a simulation instance. This object manages the participating
     agents (:class:`Agent`), the environment (:class:`SimulationDomain`), and
@@ -109,7 +130,21 @@ class Simulation:
         self._space = None
         self._events = list()
         self._models = list()
+        self._history = list()
         self._time = 0
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['_events']
+        del state['_models']
+        del state['_history']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._events = list()
+        self._models = list()
+        self._history = list()
 
     @property
     def agents(self) -> list[Agent]:
@@ -170,7 +205,7 @@ class Simulation:
         self._space = space
 
     def add_event(self, event) -> None:
-        pass
+        self._events.append(event)
 
     def add_model(self, model: 'cellfunction.CellFunctionModel') -> None:
         """Adds the provided model instance to the agent's collection of cell
@@ -188,7 +223,12 @@ class Simulation:
             raise AttributeError('A simulation domain has to be set to add substrates.')
         # self._domain.add_substrate_field(substrate)
 
-    def run(self, time, dt) -> None:
+    def remove_agent(self, agent: Agent) -> None:
+        self._agents.remove(agent)
+        if self._space:
+            self._space.remove_agent(agent)
+
+    def run(self, time: tuple[float, str] , dt: tuple[float, str], dt_history: tuple[float, str] = None, save_mode: str = 'always') -> None:
         """Runs the simulation from the current state for the specified
         duration using the given time step.
 
@@ -199,15 +239,55 @@ class Simulation:
         dt : _type_
             Time step, in milliseconds
         """
-        steps = int(math.ceil(time / dt))
-        for t in range(steps):
-            self._update_models(dt)
+        time_ms = UnitConverter.time_to_ms(time)
+        dt_ms = UnitConverter.time_to_ms(dt)
+        if dt_history:
+            history_ui = UpdateInfo(update_interval=dt_history)
+        steps = int(math.ceil(time_ms / dt_ms))
+
+        progressbar_format = "{l_bar}{bar}| [{elapsed}<{remaining}{postfix}]"
+        progressbar = tqdm.tqdm(total=steps, mininterval=1.0, colour='#d2de32', bar_format=progressbar_format)
+        progressbar.set_description(f'ID={self._id}')
+        PROGRESSBAR_SCALER = 100
+
+        for i in range(steps):
+            self._update_events(self._time)
+            self._update_models(dt_ms)
             if self._space:
-                self._space.update(dt)
-            self._time += dt
+                self._space.update(dt_ms)
+            self._time += dt_ms
+            if dt_history:
+                if history_ui.update_needed():
+                    self._make_history_entry(save_mode)
+                    history_ui.reset_time()
+                history_ui.increase_time(dt_ms)
+            if i % PROGRESSBAR_SCALER == 0:
+                days = UnitConverter.ms_to_days(self.time)
+                progressbar.set_postfix(T=f'{days:.2f}', N=f'{len(self.agents)}')
+                progressbar.update(PROGRESSBAR_SCALER)
+
+        if save_mode == 'on_completion':
+            self._save_history()
+
+    def _make_history_entry(self, save_mode):
+        state = pickle.dumps(self)
+        self._history.append(state)
+        if save_mode == 'always':
+            self._save_history()
+
+    def _save_history(self):
+        filename = f'{self._id}.lsd'
+        with open(filename, 'wb') as f:
+            pickle.dump(self._history, f)
 
     def _get_id(self, identifier):
-        return identifier if identifier else id(self)
+        return identifier if identifier else str(uuid.uuid4())
+
+    def _update_events(self, time: int) -> None:
+        for e in list(self._events):
+            if e.is_ready(time):
+                e.execute(self)
+                self._events.remove(e)
 
     def _update_models(self, dt: int) -> None:
         """Sequentially updates all models associated with the agent. If
@@ -229,24 +309,24 @@ class Simulation:
 
 class UpdateInfo:
     def __init__(self,
-                 update_interval: int
+                 update_interval: tuple[float, str]
                  ) -> None:
-        self._update_interval = update_interval
-        self._time_since_last_update = 0
+        self._update_interval = UnitConverter.time_to_ms(update_interval)
+        self._elapsed_time = 0
 
     @property
     def update_interval(self) -> int:
         return self._update_interval
 
     @property
-    def time_since_last_update(self) -> int:
-        return self._time_since_last_update
+    def elapsed_time(self) -> int:
+        return self._elapsed_time
 
     def update_needed(self) -> bool:
-        return self._update_interval <= self._time_since_last_update
+        return self._update_interval <= self._elapsed_time
 
-    def increase_time(self, dt) -> None:
-        self._time_since_last_update += dt
+    def increase_time(self, msecs) -> None:
+        self._elapsed_time += msecs
 
     def reset_time(self) -> None:
-        self._time_since_last_update = 0
+        self._elapsed_time = 0
