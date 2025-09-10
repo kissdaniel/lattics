@@ -1,1 +1,6 @@
 # List required packages in this file, one per line.
+numpy==1.26.3
+numba==0.58.1
+pandas
+scipy
+tqdm
