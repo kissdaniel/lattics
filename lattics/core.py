@@ -13,10 +13,18 @@ from .utils import UnitConverter
 
 
 class Agent:
+
+    id_count = 0
+
     def __init__(self) -> None:
         """Constructor method.
         """
         self._attributes = dict()
+        self._initialize_id()
+
+    @property
+    def id(self) -> int:
+        return self._id
 
     def clone(self) -> 'Agent':
         """Returns a deep copy instance of the agent.
@@ -91,6 +99,10 @@ class Agent:
         0
         """
         return self._attributes[name]
+
+    def _initialize_id(self) -> int:
+        self._id = Agent.id_count
+        Agent.id_count += 1
 
 
 class Event:
