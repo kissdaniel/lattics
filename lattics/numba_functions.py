@@ -127,7 +127,7 @@ def pairwise_interaction_energy_2d(position_one, bindig_aff_one, position_two, b
     """
     distance = abs(position_one[0] - position_two[0]) + abs(position_one[1] - position_two[1])
     if distance == 0:
-        return np.Inf
+        return np.inf
     elif distance == 1:
         return -np.sqrt(bindig_aff_one * binding_aff_two)
     else:
