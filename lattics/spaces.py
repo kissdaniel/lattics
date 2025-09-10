@@ -29,10 +29,8 @@ class BaseSpace(ABC):
         """
         self._simulation = simulation
         self._update_infos = dict()
-        if dt_agent:
-            self._update_infos['agent'] = UpdateInfo(dt_agent)
-        if dt_substrate:
-            self._update_infos['substrate'] = UpdateInfo(dt_substrate)
+        self._agent_update_info = UpdateInfo(dt_agent)
+        self._substrate_update_info = UpdateInfo(dt_substrate)
 
     @abstractmethod
     def add_agent(self, agent: Agent, **kwargs) -> None:
