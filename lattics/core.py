@@ -267,7 +267,6 @@ class Simulation:
             self._update_models(dt_ms)
             if self._space:
                 self._space.update(dt_ms)
-            self._time += dt_ms
             if dt_history:
                 if history_ui.update_needed():
                     self._make_history_entry(save_mode)
@@ -277,6 +276,9 @@ class Simulation:
                 days = UnitConverter.ms_to_days(self.time)
                 progressbar.set_postfix(T=f'{days:.2f}', N=f'{len(self.agents)}')
                 progressbar.update(PROGRESSBAR_SCALER)
+            self._time += dt_ms
+
+        progressbar.n = steps
 
         if save_mode == 'on_completion':
             self._save_history()
@@ -323,7 +325,10 @@ class UpdateInfo:
     def __init__(self,
                  update_interval: tuple[float, str]
                  ) -> None:
-        self._update_interval = UnitConverter.time_to_ms(update_interval)
+        if update_interval:
+            self._update_interval = UnitConverter.time_to_ms(update_interval)
+        else:
+            self._update_interval = 0
         self._elapsed_time = 0
 
     @property
