@@ -5,7 +5,7 @@ import numpy as np
 
 class BaseModel:
     def __init__(self,
-                 update_interval: int
+                 update_interval: int = None
                  ) -> None:
         self.update_info = UpdateInfo(update_interval=update_interval)
 
@@ -21,7 +21,7 @@ class BaseModel:
 
 class FixedIncrementCellCycleModel(BaseModel):
     def __init__(self,
-                 update_interval: int,
+                 update_interval: int = None,
                  distribution: str = 'erlang',
                  distribution_param: int = 4
                  ) -> None:
