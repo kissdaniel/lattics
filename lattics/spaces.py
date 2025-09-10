@@ -83,9 +83,9 @@ class HomogeneousSpace(BaseSpace):
     """
     def __init__(self,
                  simulation: Simulation,
-                 dt_agent: tuple[float, str],
-                 dt_substrate: tuple[float, str],
-                 volume: int = None
+                 volume: int = None,
+                 dt_agent: tuple[float, str] = None,
+                 dt_substrate: tuple[float, str] = None
                  ) -> None:
         """Constructor method.
 
@@ -127,6 +127,9 @@ class HomogeneousSpace(BaseSpace):
             The agent to be removed
         """
         self._agents.remove(agent)
+        sum_volumes = self._get_total_agent_volume()
+        if sum_volumes <= self._volume:
+            self._has_free_volume = True
 
     def add_substrate(self,
                       name: str,
@@ -150,27 +153,26 @@ class HomogeneousSpace(BaseSpace):
         dt : int
             The time elapsed since the last update call, in milliseconds
         """
-        agent_ui = self._update_infos['agent']
-        substrate_ui = self._update_infos['substrate']
+        self._agent_update_info.increase_time(dt)
+        self._substrate_update_info.increase_time(dt)
 
-        agent_ui.increase_time(dt)
-        substrate_ui.increase_time(dt)
-
-        if agent_ui.update_needed():
+        if self._agent_update_info.update_needed():
             self._clear_substrate_dynamic_nodes()
-            for a in self._agents:
+            for a in list(self._agents):
                 if a.get_attribute('division_pending'):
                     self._process_agent_division(a)
+                if a.get_attribute('remove_pending'):
+                    self._simulation.remove_agent(a)
 
                 info = a.get_attribute('substrate_info')
                 for i in info.keys():
                     self._substrates[i].add_dynamic_substrate_node(a)
-            agent_ui.reset_time()
+            self._agent_update_info.reset_time()
 
-        if substrate_ui.update_needed():
+        if self._substrate_update_info.update_needed():
             for s in self._substrates.values():
-                s.update(substrate_ui.elapsed_time)
-            substrate_ui.reset_time()
+                s.update(self._substrate_update_info.elapsed_time)
+            self._substrate_update_info.reset_time()
 
     def _initialize_attributes(self, agent, volume) -> None:
         """Initializes the attributes used by the domain. The domain tracks
@@ -185,6 +187,8 @@ class HomogeneousSpace(BaseSpace):
             agent.set_attribute('division_pending', False)
         if not agent.has_attribute('division_completed'):
             agent.set_attribute('division_completed', False)
+        if not agent.has_attribute('remove_pending'):
+            agent.set_attribute('remove_pending', False)
         if not agent.has_attribute('volume'):
             agent.set_attribute('volume', volume)
 
