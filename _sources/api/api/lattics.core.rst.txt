@@ -1,0 +1,32 @@
+﻿lattics.core
+============
+
+.. automodule:: lattics.core
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Agent
+      Event
+      Simulation
+      UpdateInfo
+   
+   
+
+   
+   
+   
+
+
+

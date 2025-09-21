@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Cell–environment interactions and transport &#8212; LattiCS 0.post95.dev0+g8885ebf documentation</title>
+    <title>Cell–environment interactions and transport &#8212; LattiCS 0.post99.dev0+g67696b8 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=13283fd6"></script>
+    <script src="../_static/documentation_options.js?v=c4814342"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Cell mechanics and motion" href="mechanics.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.post95.dev0+g8885ebf" />
+  <meta name="docsearch:version" content="0.post99.dev0+g67696b8" />
   </head>
   
   
@@ -121,8 +121,8 @@
       
     
     
-    <img src="../_static/logo-light_s.png" class="logo__image only-light" alt="LattiCS 0.post95.dev0+g8885ebf documentation - Home"/>
-    <img src="../_static/logo-dark_s.png" class="logo__image only-dark pst-js-only" alt="LattiCS 0.post95.dev0+g8885ebf documentation - Home"/>
+    <img src="../_static/logo-light_s.png" class="logo__image only-light" alt="LattiCS 0.post99.dev0+g67696b8 documentation - Home"/>
+    <img src="../_static/logo-dark_s.png" class="logo__image only-dark pst-js-only" alt="LattiCS 0.post99.dev0+g67696b8 documentation - Home"/>
   
   
 </a></div>
@@ -373,52 +373,58 @@
                   
   <section id="cellenvironment-interactions-and-transport">
 <h1>Cell–environment interactions and transport<a class="headerlink" href="#cellenvironment-interactions-and-transport" title="Link to this heading">#</a></h1>
-<p>During a simulation, we may want to model the transport of various chemical substances, such as nutrients, signaling factors, or drugs, that are taken up from or secreted into the environment by cells. This section explains the model used in LattiCS to simulate these processes.</p>
+<p>During a simulation, we may want to model the transport of chemical substances, such as nutrients, signaling factors, or drugs, that are taken up from or secreted into the environment by cells. This section explains the model used in LattiCS to simulate these processes.</p>
 <section id="representation">
 <h2>Representation<a class="headerlink" href="#representation" title="Link to this heading">#</a></h2>
-<p>Each chemical substance whose transport processes we want to simulate is represented by a SubstrateField object. This object is linked to the SimulationDomain object that represents the simulation space, and it matches its dimensionality, size, and grid resolution (if these are applicable for the given domain). The field object identifies the substance using a user-defined name (e.g., “oxygen” or “nutrient”). It continuously tracks the concentration and provides access to its values at any point in space.</p>
+<p>Each chemical substance whose transport processes we want to simulate is represented by a SubstrateField object. This object is linked to the Space object that represents the simulation space, and it matches its dimensionality, size, and grid resolution (if these are applicable for the given space). The field object identifies the substance using a user-defined name (e.g., “oxygen” or “nutrient”). It continuously tracks the concentration and provides access to its values at any point in space.</p>
 </section>
-<section id="diffusive-transport">
-<h2>Diffusive transport<a class="headerlink" href="#diffusive-transport" title="Link to this heading">#</a></h2>
-<p>The spatial and temporal behavior of the substance’s concentration in a domain without any sources or sinks is controlled by two key parameters: the diffusion coefficient and the decay rate. The diffusion coefficient determines how quickly the substance spreads through space via diffusion, while the decay rate represents the substance’s natural degradation over time. These processes are simulated by numerically solving the heat equation using the locally one-dimensional (LOD) method described in <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>. If the domain has no spatial structure, only a single (mean) concentration is tracked, and only its decay over time is simulated, without spatial diffusion.</p>
+<section id="diffusion-and-decay">
+<h2>Diffusion and decay<a class="headerlink" href="#diffusion-and-decay" title="Link to this heading">#</a></h2>
+<p>The spatial and temporal behavior of the substance’s concentration in a space without any sources or sinks is controlled by two key factors: the diffusion, and the decay of the substance. Diffusion is when a substance spreads out from where it’s most concentrated to where it’s less concentrated. Decay, on the other hand, is the substance’s concentration naturally decreasing over time.</p>
+<section id="diffusion">
+<h3>Diffusion<a class="headerlink" href="#diffusion" title="Link to this heading">#</a></h3>
+<p>A substance’s diffusion is determined by its diffusion coefficient. The greater this coefficient, the faster the substance’s concentration spreads out. In LattiCS, diffusion is modeled by the diffusion or heat equation, a partial differential equation that describes how the concentration is distributed over time in a given area. The numerical solution for this equation is calculated using the locally one-dimensional (LOD) method described in <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>. When the Space object doesn’t have a real spatial structure, it means there are no distinct spatial divisions or locations to track. Therefore, instead of modeling how a substance spreads out, only a single, overall average concentration for the entire system is tracked.</p>
+</section>
+<section id="decay">
+<h3>Decay<a class="headerlink" href="#decay" title="Link to this heading">#</a></h3>
+<p>A substance’s decay is determined by its decay rate. The greater this rate, the faster the concentration decreases. In LattiCS, decay can be modeled in three ways:</p>
+<ul class="simple">
+<li><p><strong>First-order kinetics</strong>: The decay rate is directly proportional to the substance’s concentration, causing it to decrease exponentially.</p></li>
+<li><p><strong>Second-order kinetics</strong>: The decay rate is proportional to the square of the concentration. As the concentration drops, the reaction slows down.</p></li>
+<li><p><strong>Michaelis–Menten kinetics</strong>: Decay is mediated by a component that can become saturated, like an enzyme. At low concentrations, the rate is roughly proportional to the concentration (similar to first-order decay). At high concentrations, the rate becomes constant, independent of the concentration (zero-order decay).</p></li>
+</ul>
+<p>For modeling decay with either first-order or second-order kinetics, the exact analytical solution is calculated during the simulation. However, since there is no analytical solution for Michaelis-Menten kinetics, an implicit numerical approximation is used instead. Note, that the numerical approximation can produce inaccurate results if large time steps are used during the simulation.</p>
+<p>When a Space object has a spatial structure, the decay is computed separately at each grid point. In contrast, if there is no spatial structure, a single value is tracked for the decay, much like how a single average concentration is tracked for diffusion.</p>
+</section>
 </section>
 <section id="release-and-uptake-by-nodes">
 <h2>Release and uptake by nodes<a class="headerlink" href="#release-and-uptake-by-nodes" title="Link to this heading">#</a></h2>
 <p>The appearance and disappearance of a chemical substance within the field occur at specific points called <em>nodes</em>. Nodes are virtual locations within the field where the concentration of the substance is either fixed (fixed-type node) or changes over time based on predefined rates and current concentration values (flux-type node). A node may represent, for example, an agent (such as a cell), or an abstract point where the substance is introduced into the simulation space (e.g., a drug carrier particle).</p>
 <section id="fixed-type-nodes">
 <h3>Fixed-type nodes<a class="headerlink" href="#fixed-type-nodes" title="Link to this heading">#</a></h3>
-<p>In the case of a fixed-type node, the concentration value of the field at the node’s location is set to the <cite>concentration</cite> specified for the node. (If position is not applicable for the domain, the field’s concentration will be the average of the values specified by all fixed-type nodes.)</p>
+<p>In the case of a fixed-type node, the concentration value of the field at the node’s location is set to the <cite>concentration</cite> specified for the node. (If position is not applicable for the space, the field’s concentration will be the average of the values specified by all fixed-type nodes.)</p>
 </section>
 <section id="flux-type-nodes">
 <h3>Flux-type nodes<a class="headerlink" href="#flux-type-nodes" title="Link to this heading">#</a></h3>
 <p>In the case of a flux-type node, the concentration in the field at the node’s location and the concentration within the node itself evolve according to the following model. Consider the node and the field as two separate compartments, denoted by <em>N</em> and <em>F</em>, respectively (see the figure below). <em>F</em> may represent either the entire field or just the chunk of the field corresponding to the node’s position.</p>
-<a class="reference internal image-reference" href="learn/transport_fig1.png"><img alt="learn/transport_fig1.png" class="align-center" src="learn/transport_fig1.png" style="width: 300px;" /></a>
+<a class="reference internal image-reference" href="../_images/transport_fig1.png"><img alt="../_images/transport_fig1.png" class="align-center" src="../_images/transport_fig1.png" style="width: 300px;" /></a>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
 <p>The following types of concentration exchange can be defined between the compartments:</p>
 <ul class="simple">
-<li><p><strong>Passive transport</strong>: the concentrations in the two compartments change based on the difference between their concentrations and a rate constant. In the case of cells, gases, hydrophobic molecules, and small polar molecules typically cross the membrane via this mechanism. The rate of concentration change is governed by the coefficient <span class="math notranslate nohighlight">\(k_p\)</span>. Due to passive transport, the concentrations of the two compartments gradually equalize over a sufficiently long time.</p></li>
-<li><p><strong>Active secretion</strong>: the node releases a substance into the field. The change depends on the concentration <span class="math notranslate nohighlight">\(c_N\)</span> in compartment <em>N</em> and the rate constant <span class="math notranslate nohighlight">\(k_r\)</span>. In the case of cells, this process can model the function of certain transporter proteins (e.g., ABC transporters), which are capable of pumping chemical substances from inside the cell even against a concentration gradient.</p></li>
-<li><p><strong>Active uptake</strong>: the node takes up a substance from the field. The change depends on the concentration <span class="math notranslate nohighlight">\(c_F\)</span> in compartment <em>F</em>, the node’s maximum (or saturation) concentration <span class="math notranslate nohighlight">\(c_N^s\)</span>, and the uptake rate constant <span class="math notranslate nohighlight">\(k_u\)</span>. If the substance is available in unlimited supply, the value of <span class="math notranslate nohighlight">\(c_N\)</span> approaches its steady-state value, <span class="math notranslate nohighlight">\(c_N^s\)</span>. In cells, this process also models the activity of transporter proteins (e.g., glucose uptake), and it is typically significantly faster than passive transport.</p></li>
+<li><p><strong>Passive transport</strong>: The concentrations in the two compartments change based on the difference between their concentrations and a rate constant. In the case of cells, gases, hydrophobic molecules, and small polar molecules typically cross the membrane via this mechanism. The rate of concentration change is governed by the coefficient <span class="math notranslate nohighlight">\(k_p\)</span>. Due to passive transport, the concentrations of the two compartments gradually equalize over a sufficiently long time.</p></li>
+<li><p><strong>Active secretion</strong>: the node releases a substance into the field. The change depends on the concentration <span class="math notranslate nohighlight">\(c_N\)</span> in compartment <em>N</em>, and the rate constant <span class="math notranslate nohighlight">\(k_r\)</span>. In the case of cells, this process can model the function of certain transporter proteins (e.g., ABC transporters), which are capable of pumping chemical substances from inside the cell even against a concentration gradient.</p></li>
+<li><p><strong>Active uptake</strong>: the node takes up a substance from the field. The change depends on the concentration <span class="math notranslate nohighlight">\(c_F\)</span> in compartment <em>F</em>, and the uptake rate constant <span class="math notranslate nohighlight">\(k_u\)</span>. In cells, this process also models the activity of transporter proteins (e.g., glucose uptake), and it is typically significantly faster than passive transport.</p></li>
 </ul>
 <p>According to the principle of mass conservation and Fick’s first law, the mass changes in the compartments can be described by the following differential equations.</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{align*}
 v_N \frac{\mathrm{d} c_N}{\mathrm{d} t} &amp;= k_p \left( c_F - c_N \right) + k_u c_F - k_r c_N \\[0.5em]
-v_F \frac{\mathrm{d} c_F}{\mathrm{d} t} &amp;= k_p \left( c_N - c_F \right) - k_u c_F + k_r c_N \\
+v_F \frac{\mathrm{d} c_F}{\mathrm{d} t} &amp;= - k_p \left( c_F - c_N \right) - k_u c_F + k_r c_N \\
 \end{align*}\end{split}\]</div>
-<p>Here, <span class="math notranslate nohighlight">\(n_N\)</span> and <span class="math notranslate nohighlight">\(n_F\)</span> denote the time-dependent amounts (or masses) of the substance in the respective compartments, <span class="math notranslate nohighlight">\(c_N\)</span> and <span class="math notranslate nohighlight">\(c_F\)</span> are the corresponding concentrations, <span class="math notranslate nohighlight">\(c_N^s\)</span> is the saturation concentration in the node, and <span class="math notranslate nohighlight">\(k_p\)</span>, <span class="math notranslate nohighlight">\(k_r\)</span>, and <span class="math notranslate nohighlight">\(k_u\)</span> are the rate constants defined previously. Given the compartment volumes <span class="math notranslate nohighlight">\(v_N\)</span> and <span class="math notranslate nohighlight">\(v_F\)</span>, the changes in concentration can be directly computed from the corresponding changes in mass.</p>
-<p>The concentration obtained from the solution of the differential equations is approximated at each time step using the following explicit finite difference scheme.</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}\begin{align*}
-c_{N, t+\Delta t} &amp; = c_{N, t} + \frac{1}{v_N} \Bigl( k_p \left( c_{F, t} - c_{N, t} \right) + k_u c_{F, t} \left(c_N^s - c_{N, t} \right) - k_r c_{N, t} \Bigr) \Delta t \\[0.5em]
-c_{F, t+\Delta t} &amp; = c_{F, t} + \frac{1}{v_F} \Bigl( k_p \left( c_{N, t} - c_{F, t} \right) - k_u c_{F, t} \left(c_N^s - c_{N, t} \right) + k_r c_{N, t} \Bigr) \Delta t
-\end{align*}\end{split}\]</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Since the current implementation of LattiCS uses an explicit scheme, we need to carefully choose the time steps assigned to the SubstrateField object to ensure numerical stability. These time steps must be sufficiently small, depending on the values of the rate constants (<span class="math notranslate nohighlight">\(k_p\)</span>, <span class="math notranslate nohighlight">\(k_u\)</span>, <span class="math notranslate nohighlight">\(k_r\)</span>), to avoid issues such as negative concentrations or oscillatory behavior.</p>
-</div>
+<p>Here, <span class="math notranslate nohighlight">\(c_N\)</span> and <span class="math notranslate nohighlight">\(c_F\)</span> denote the time-dependent concentrations of the substance in the respective compartments, and <span class="math notranslate nohighlight">\(k_p\)</span>, <span class="math notranslate nohighlight">\(k_r\)</span>, and <span class="math notranslate nohighlight">\(k_u\)</span> are the rate constants defined previously. Changes in a substance’s concentration are directly linked to changes in its total amount (or mass), given the compartment volumes <span class="math notranslate nohighlight">\(v_N\)</span> and <span class="math notranslate nohighlight">\(v_F\)</span>.</p>
+<p>After discretizing the variables, the backward Euler method (also known as the implicit Euler method) is used to approximate the solution of the equations. Note, that the numerical approximation can produce inaccurate results if large time steps are used during the simulation.</p>
 </section>
 </section>
 <section id="references">
@@ -480,7 +486,11 @@ c_{F, t+\Delta t} &amp; = c_{F, t} + \frac{1}{v_F} \Bigl( k_p \left( c_{N, t} - 
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#representation">Representation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#diffusive-transport">Diffusive transport</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#diffusion-and-decay">Diffusion and decay</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diffusion">Diffusion</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#decay">Decay</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#release-and-uptake-by-nodes">Release and uptake by nodes</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fixed-type-nodes">Fixed-type nodes</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flux-type-nodes">Flux-type nodes</a></li>
