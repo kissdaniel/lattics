@@ -1,0 +1,73 @@
+Cell–environment interactions and transport
+===========================================
+
+During a simulation, we may want to model the transport of various chemical substances, such as nutrients, signaling factors, or drugs, that are taken up from or secreted into the environment by cells. This section explains the model used in LattiCS to simulate these processes.
+
+Representation
+--------------
+
+Each chemical substance whose transport processes we want to simulate is represented by a SubstrateField object. This object is linked to the SimulationDomain object that represents the simulation space, and it matches its dimensionality, size, and grid resolution (if these are applicable for the given domain). The field object identifies the substance using a user-defined name (e.g., "oxygen" or "nutrient"). It continuously tracks the concentration and provides access to its values at any point in space.
+
+Diffusive transport
+-------------------
+
+The spatial and temporal behavior of the substance's concentration in a domain without any sources or sinks is controlled by two key parameters: the diffusion coefficient and the decay rate. The diffusion coefficient determines how quickly the substance spreads through space via diffusion, while the decay rate represents the substance's natural degradation over time. These processes are simulated by numerically solving the heat equation using the locally one-dimensional (LOD) method described in [1]_. If the domain has no spatial structure, only a single (mean) concentration is tracked, and only its decay over time is simulated, without spatial diffusion.
+
+Release and uptake by nodes
+---------------------------
+
+The appearance and disappearance of a chemical substance within the field occur at specific points called *nodes*. Nodes are virtual locations within the field where the concentration of the substance is either fixed (fixed-type node) or changes over time based on predefined rates and current concentration values (flux-type node). A node may represent, for example, an agent (such as a cell), or an abstract point where the substance is introduced into the simulation space (e.g., a drug carrier particle).
+
+Fixed-type nodes
+^^^^^^^^^^^^^^^^
+
+In the case of a fixed-type node, the concentration value of the field at the node's location is set to the `concentration` specified for the node. (If position is not applicable for the domain, the field's concentration will be the average of the values specified by all fixed-type nodes.)
+
+Flux-type nodes
+^^^^^^^^^^^^^^^
+
+In the case of a flux-type node, the concentration in the field at the node's location and the concentration within the node itself evolve according to the following model. Consider the node and the field as two separate compartments, denoted by *N* and *F*, respectively (see the figure below). *F* may represent either the entire field or just the chunk of the field corresponding to the node's position.
+
+.. image:: transport_fig1.png
+    :width: 300
+    :align: center
+
+|
+
+The following types of concentration exchange can be defined between the compartments:
+
+* **Passive transport**: the concentrations in the two compartments change based on the difference between their concentrations and a rate constant. In the case of cells, gases, hydrophobic molecules, and small polar molecules typically cross the membrane via this mechanism. The rate of concentration change is governed by the coefficient :math:`k_p`. Due to passive transport, the concentrations of the two compartments gradually equalize over a sufficiently long time.
+
+* **Active secretion**: the node releases a substance into the field. The change depends on the concentration :math:`c_N` in compartment *N* and the rate constant :math:`k_r`. In the case of cells, this process can model the function of certain transporter proteins (e.g., ABC transporters), which are capable of pumping chemical substances from inside the cell even against a concentration gradient.
+
+* **Active uptake**: the node takes up a substance from the field. The change depends on the concentration :math:`c_F` in compartment *F*, the node's maximum (or saturation) concentration :math:`c_N^s`, and the uptake rate constant :math:`k_u`. If the substance is available in unlimited supply, the value of :math:`c_N` approaches its steady-state value, :math:`c_N^s`. In cells, this process also models the activity of transporter proteins (e.g., glucose uptake), and it is typically significantly faster than passive transport. 
+
+According to the principle of mass conservation and Fick's first law, the mass changes in the compartments can be described by the following differential equations.
+
+.. math::
+
+    \begin{align*}
+    v_N \frac{\mathrm{d} c_N}{\mathrm{d} t} &= k_p \left( c_F - c_N \right) + k_u c_F - k_r c_N \\[0.5em]
+    v_F \frac{\mathrm{d} c_F}{\mathrm{d} t} &= k_p \left( c_N - c_F \right) - k_u c_F + k_r c_N \\
+    \end{align*}
+
+Here, :math:`n_N` and :math:`n_F` denote the time-dependent amounts (or masses) of the substance in the respective compartments, :math:`c_N` and :math:`c_F` are the corresponding concentrations, :math:`c_N^s` is the saturation concentration in the node, and :math:`k_p`, :math:`k_r`, and :math:`k_u` are the rate constants defined previously. Given the compartment volumes :math:`v_N` and :math:`v_F`, the changes in concentration can be directly computed from the corresponding changes in mass.
+
+The concentration obtained from the solution of the differential equations is approximated at each time step using the following explicit finite difference scheme.
+
+.. math::
+
+    \begin{align*}
+    c_{N, t+\Delta t} & = c_{N, t} + \frac{1}{v_N} \Bigl( k_p \left( c_{F, t} - c_{N, t} \right) + k_u c_{F, t} \left(c_N^s - c_{N, t} \right) - k_r c_{N, t} \Bigr) \Delta t \\[0.5em]
+    c_{F, t+\Delta t} & = c_{F, t} + \frac{1}{v_F} \Bigl( k_p \left( c_{N, t} - c_{F, t} \right) - k_u c_{F, t} \left(c_N^s - c_{N, t} \right) + k_r c_{N, t} \Bigr) \Delta t
+    \end{align*}
+
+.. note::
+
+    Since the current implementation of LattiCS uses an explicit scheme, we need to carefully choose the time steps assigned to the SubstrateField object to ensure numerical stability. These time steps must be sufficiently small, depending on the values of the rate constants (:math:`k_p`, :math:`k_u`, :math:`k_r`), to avoid issues such as negative concentrations or oscillatory behavior.
+
+
+References
+----------
+
+.. [1] Ahmadreza Ghaffarizadeh, Samuel H. Friedman, Paul Macklin, BioFVM: an efficient, parallelized diffusive transport solver for 3-D biological simulations, Bioinformatics, Volume 32, Issue 8, April 2016, Pages 1256–1258, https://doi.org/10.1093/bioinformatics/btv730
