@@ -198,7 +198,7 @@ def displacement_trial_2d(idx, positions, binding_affs, agent_idx_array, change_
             if not np.random.random() < np.exp(-(target_energy - current_energy)):
                 displace_agent_2d(positions, idx, current_pos, agent_idx_array)
             else:
-                change_flags[idx] = np.bool(True)
+                change_flags[idx] = bool(True)
 
 
 @numba.jit(float32[:](float32[:], float32[:], float32[:], float32[:]), nopython=True, cache=True)
