@@ -28,7 +28,7 @@ Flux-type nodes
 
 In the case of a flux-type node, the concentration in the field at the node's location and the concentration within the node itself evolve according to the following model. Consider the node and the field as two separate compartments, denoted by *N* and *F*, respectively (see the figure below). *F* may represent either the entire field or just the chunk of the field corresponding to the node's position.
 
-.. image:: transport_fig1.png
+.. image:: transport/transport_fig1.png
     :width: 300
     :align: center
 
