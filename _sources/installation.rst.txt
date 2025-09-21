@@ -1,48 +1,26 @@
+============
 Installation
 ============
 
-To use LattiCS, you'll need a Python interpreter. If you don't have one installed on your system, follow the instructions provided `here <https://www.python.org/about/gettingstarted/>`_.
-
 We recommend using LattiCS in a separate virtual environment to avoid potential issues caused by conflicting package versions.
 
-**For Linux users**
+First, create a new virtual environment::
 
-First, create a new virtual environment. If you haven't created one before, start by making an empty directory.
+    $ python -m venv lattics
 
-.. code-block::
+Activate the environment::
 
-    $ mkdir ~/.venvs
-    $ python3 -m venv ~/.venvs/latticsenv
+    $ source lattics/bin/activate
 
-Activate the environment.
+On Windows, you may need to use::
 
-.. code-block::
+    $ lattics\Scripts\activate.bat
 
-    $ source ~/.venvs/latticsenv/bin/activate
-
-**For Windows users**
-
-First, create a new virtual environment using the Command Prompt. The environment folder will be created in your current working directory.
-
-.. code-block::
-
-    $ python -m venv latticsenv
-
-Activate the environment.
-
-.. code-block::
-
-    $ latticsenv\Scripts\activate.bat
-
-Next, install the LattiCS package from the Git repository.
-
-.. code-block::
+Next, install the LattiCS package from the Git repository::
 
     $ pip install git+https://github.com/kissdaniel/lattics.git
 
-Start a Python shell and verify that the package can be successfully imported.
-
-.. code-block::
+Start a Python shell and verify that the package can be successfully imported::
 
     $ python
     >>> import lattics

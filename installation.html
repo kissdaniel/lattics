@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Installation &#8212; LattiCS 0.post65.dev0+g24601b3 documentation</title>
+    <title>Installation &#8212; LattiCS 0.post95.dev0+g8885ebf documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=4e05fbb3"></script>
+    <script src="_static/documentation_options.js?v=13283fd6"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Home" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.post65.dev0+g24601b3" />
+  <meta name="docsearch:version" content="0.post95.dev0+g8885ebf" />
   </head>
   
   
@@ -120,8 +120,8 @@
       
     
     
-    <img src="_static/logo-light_s.png" class="logo__image only-light" alt="LattiCS 0.post65.dev0+g24601b3 documentation - Home"/>
-    <img src="_static/logo-dark_s.png" class="logo__image only-dark pst-js-only" alt="LattiCS 0.post65.dev0+g24601b3 documentation - Home"/>
+    <img src="_static/logo-light_s.png" class="logo__image only-light" alt="LattiCS 0.post95.dev0+g8885ebf documentation - Home"/>
+    <img src="_static/logo-dark_s.png" class="logo__image only-dark pst-js-only" alt="LattiCS 0.post95.dev0+g8885ebf documentation - Home"/>
   
   
 </a></div>
@@ -369,32 +369,24 @@
                   
   <section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
-<p>To use LattiCS, you’ll need a Python interpreter. If you don’t have one installed on your system, follow the instructions provided <a class="reference external" href="https://www.python.org/about/gettingstarted/">here</a>.</p>
 <p>We recommend using LattiCS in a separate virtual environment to avoid potential issues caused by conflicting package versions.</p>
-<p><strong>For Linux users</strong></p>
-<p>First, create a new virtual environment. If you haven’t created one before, start by making an empty directory.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ mkdir ~/.venvs
-$ python3 -m venv ~/.venvs/latticsenv
+<p>First, create a new virtual environment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python -m venv lattics
 </pre></div>
 </div>
-<p>Activate the environment.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ source ~/.venvs/latticsenv/bin/activate
+<p>Activate the environment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ source lattics/bin/activate
 </pre></div>
 </div>
-<p><strong>For Windows users</strong></p>
-<p>First, create a new virtual environment using the Command Prompt. The environment folder will be created in your current working directory.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python -m venv latticsenv
+<p>On Windows, you may need to use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ lattics\Scripts\activate.bat
 </pre></div>
 </div>
-<p>Activate the environment.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ latticsenv\Scripts\activate.bat
-</pre></div>
-</div>
-<p>Next, install the LattiCS package from the Git repository.</p>
+<p>Next, install the LattiCS package from the Git repository:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install git+https://github.com/kissdaniel/lattics.git
 </pre></div>
 </div>
-<p>Start a Python shell and verify that the package can be successfully imported.</p>
+<p>Start a Python shell and verify that the package can be successfully imported:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python
 &gt;&gt;&gt; import lattics
 </pre></div>

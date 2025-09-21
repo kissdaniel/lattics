@@ -47,8 +47,8 @@ According to the principle of mass conservation and Fick's first law, the mass c
 .. math::
 
     \begin{align*}
-    \frac{\mathrm{d} n_N}{\mathrm{d} t} &= k_p \left( c_F - c_N \right) + k_u c_F \left(c_N^s - c_N \right) - k_r c_N \\[0.5em]
-    \frac{\mathrm{d} n_F}{\mathrm{d} t} &= k_p \left( c_N - c_F \right) - k_u c_f \left(c_N^s - c_N \right) + k_r c_N \\
+    v_N \frac{\mathrm{d} c_N}{\mathrm{d} t} &= k_p \left( c_F - c_N \right) + k_u c_F - k_r c_N \\[0.5em]
+    v_F \frac{\mathrm{d} c_F}{\mathrm{d} t} &= k_p \left( c_N - c_F \right) - k_u c_F + k_r c_N \\
     \end{align*}
 
 Here, :math:`n_N` and :math:`n_F` denote the time-dependent amounts (or masses) of the substance in the respective compartments, :math:`c_N` and :math:`c_F` are the corresponding concentrations, :math:`c_N^s` is the saturation concentration in the node, and :math:`k_p`, :math:`k_r`, and :math:`k_u` are the rate constants defined previously. Given the compartment volumes :math:`v_N` and :math:`v_F`, the changes in concentration can be directly computed from the corresponding changes in mass.

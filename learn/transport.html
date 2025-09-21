@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Cell–environment interactions and transport &#8212; LattiCS 0.post65.dev0+g24601b3 documentation</title>
+    <title>Cell–environment interactions and transport &#8212; LattiCS 0.post95.dev0+g8885ebf documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=4e05fbb3"></script>
+    <script src="../_static/documentation_options.js?v=13283fd6"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Cell mechanics and motion" href="mechanics.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.post65.dev0+g24601b3" />
+  <meta name="docsearch:version" content="0.post95.dev0+g8885ebf" />
   </head>
   
   
@@ -121,8 +121,8 @@
       
     
     
-    <img src="../_static/logo-light_s.png" class="logo__image only-light" alt="LattiCS 0.post65.dev0+g24601b3 documentation - Home"/>
-    <img src="../_static/logo-dark_s.png" class="logo__image only-dark pst-js-only" alt="LattiCS 0.post65.dev0+g24601b3 documentation - Home"/>
+    <img src="../_static/logo-light_s.png" class="logo__image only-light" alt="LattiCS 0.post95.dev0+g8885ebf documentation - Home"/>
+    <img src="../_static/logo-dark_s.png" class="logo__image only-dark pst-js-only" alt="LattiCS 0.post95.dev0+g8885ebf documentation - Home"/>
   
   
 </a></div>
@@ -392,7 +392,7 @@
 <section id="flux-type-nodes">
 <h3>Flux-type nodes<a class="headerlink" href="#flux-type-nodes" title="Link to this heading">#</a></h3>
 <p>In the case of a flux-type node, the concentration in the field at the node’s location and the concentration within the node itself evolve according to the following model. Consider the node and the field as two separate compartments, denoted by <em>N</em> and <em>F</em>, respectively (see the figure below). <em>F</em> may represent either the entire field or just the chunk of the field corresponding to the node’s position.</p>
-<a class="reference internal image-reference" href="../_images/transport_fig1.png"><img alt="../_images/transport_fig1.png" class="align-center" src="../_images/transport_fig1.png" style="width: 300px;" /></a>
+<a class="reference internal image-reference" href="learn/transport_fig1.png"><img alt="learn/transport_fig1.png" class="align-center" src="learn/transport_fig1.png" style="width: 300px;" /></a>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
@@ -405,8 +405,8 @@
 <p>According to the principle of mass conservation and Fick’s first law, the mass changes in the compartments can be described by the following differential equations.</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{align*}
-\frac{\mathrm{d} n_N}{\mathrm{d} t} &amp;= k_p \left( c_F - c_N \right) + k_u c_F \left(c_N^s - c_N \right) - k_r c_N \\[0.5em]
-\frac{\mathrm{d} n_F}{\mathrm{d} t} &amp;= k_p \left( c_N - c_F \right) - k_u c_f \left(c_N^s - c_N \right) + k_r c_N \\
+v_N \frac{\mathrm{d} c_N}{\mathrm{d} t} &amp;= k_p \left( c_F - c_N \right) + k_u c_F - k_r c_N \\[0.5em]
+v_F \frac{\mathrm{d} c_F}{\mathrm{d} t} &amp;= k_p \left( c_N - c_F \right) - k_u c_F + k_r c_N \\
 \end{align*}\end{split}\]</div>
 <p>Here, <span class="math notranslate nohighlight">\(n_N\)</span> and <span class="math notranslate nohighlight">\(n_F\)</span> denote the time-dependent amounts (or masses) of the substance in the respective compartments, <span class="math notranslate nohighlight">\(c_N\)</span> and <span class="math notranslate nohighlight">\(c_F\)</span> are the corresponding concentrations, <span class="math notranslate nohighlight">\(c_N^s\)</span> is the saturation concentration in the node, and <span class="math notranslate nohighlight">\(k_p\)</span>, <span class="math notranslate nohighlight">\(k_r\)</span>, and <span class="math notranslate nohighlight">\(k_u\)</span> are the rate constants defined previously. Given the compartment volumes <span class="math notranslate nohighlight">\(v_N\)</span> and <span class="math notranslate nohighlight">\(v_F\)</span>, the changes in concentration can be directly computed from the corresponding changes in mass.</p>
 <p>The concentration obtained from the solution of the differential equations is approximated at each time step using the following explicit finite difference scheme.</p>
