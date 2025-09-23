@@ -65,7 +65,9 @@ class HomogeneousSubstrateField(BaseSubstrateField):
                  domain,
                  substrate_name: str,
                  diffusion_coefficient: float = 0.0,
-                 decay_coefficient: float = 0.0
+                 decay_coefficient: float = 0.0,
+                 mm_constant: float = None,
+                 decay_kinetics: str = 'first-order'
                  ) -> None:
         super().__init__(domain=domain,
                          substrate_name=substrate_name,
@@ -73,6 +75,13 @@ class HomogeneousSubstrateField(BaseSubstrateField):
                          decay_coefficient=decay_coefficient
                          )
         self._concentration = 0.0
+        if decay_kinetics == 'first-order':
+            self._decay_function = self._decay_first_order
+        if decay_kinetics == 'second-order':
+            self._decay_function = self._decay_second_order
+        if decay_kinetics == 'michaelis-menten':
+            self._decay_function = self._decay_michaelis_menten
+            self._mm_constant = mm_constant
 
     def get_concentration(self, position=None) -> float:
         return self._concentration
@@ -107,9 +116,18 @@ class HomogeneousSubstrateField(BaseSubstrateField):
             self._concentration = sum_fixed / count_fixed
 
     def diffusion_decay(self, dt: int) -> None:
+        self._decay_function(dt)
+
+    def _decay_first_order(self, dt: int) -> None:
         C = self._concentration
         d = self._decay_coefficient
         self._concentration = C * np.exp(-d * dt)
+
+    def _decay_second_order(self, dt: int) -> None:
+        pass
+
+    def _decay_michaelis_menten(self, dt: int) -> None:
+        pass
 
 
 class Lattice2DSubstrateField(BaseSubstrateField):
