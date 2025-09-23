@@ -164,9 +164,10 @@ class HomogeneousSpace(BaseSpace):
                 if a.get_attribute('remove_pending'):
                     self._simulation.remove_agent(a)
 
-                info = a.get_attribute('substrate_info')
-                for i in info.keys():
-                    self._substrates[i].add_dynamic_substrate_node(a)
+                if 'substrate_info' in a._attributes:
+                    info = a.get_attribute('substrate_info')
+                    for i in info.keys():
+                        self._substrates[i].add_dynamic_substrate_node(a)
             self._agent_update_info.reset_time()
 
         if self._substrate_update_info.update_needed():
