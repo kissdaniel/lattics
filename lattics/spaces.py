@@ -59,7 +59,8 @@ class BaseSpace(ABC):
     def add_substrate(self,
                       name: str,
                       diffusion_coefficient: float = 0.0,
-                      decay_coefficient: float = 0.0
+                      decay_coefficient: float = 0.0,
+                      decay_kinetics: str = 'first-order'
                       ) -> None:
         pass
 
@@ -134,12 +135,16 @@ class HomogeneousSpace(BaseSpace):
     def add_substrate(self,
                       name: str,
                       diffusion_coefficient: float = 0.0,
-                      decay_coefficient: float = 0.0
+                      decay_coefficient: float = 0.0,
+                      decay_kinetics: str = 'first-order',
+                      mm_constant: float = None
                       ) -> None:
         substrate = HomogeneousSubstrateField(domain=self,
                                               substrate_name=name,
                                               diffusion_coefficient=diffusion_coefficient,
-                                              decay_coefficient=decay_coefficient
+                                              decay_coefficient=decay_coefficient,
+                                              decay_kinetics=decay_kinetics,
+                                              mm_constant=mm_constant
                                               )
         self._substrates[name] = substrate
 

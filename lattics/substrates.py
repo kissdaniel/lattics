@@ -66,8 +66,8 @@ class HomogeneousSubstrateField(BaseSubstrateField):
                  substrate_name: str,
                  diffusion_coefficient: float = 0.0,
                  decay_coefficient: float = 0.0,
-                 mm_constant: float = None,
-                 decay_kinetics: str = 'first-order'
+                 decay_kinetics: str = 'first-order',
+                 mm_constant: float = None
                  ) -> None:
         super().__init__(domain=domain,
                          substrate_name=substrate_name,
@@ -104,9 +104,9 @@ class HomogeneousSubstrateField(BaseSubstrateField):
                 c_n_cur = info.concentration
                 v_n = n.get_attribute('volume')
                 c_f_cur = self._concentration
-                dn = (k_p * (c_f_cur - c_n_cur) + k_u * c_f_cur - k_r * c_n_cur) * dt
-                c_n_new = c_n_cur + dn / v_n
-                c_f_new = c_f_cur - dn / v_f
+                m_t = c_n_cur * v_n + c_f_cur * v_f
+                c_n_new = (c_n_cur + (dt / v_n) * (m_t / v_f) * (k_p + k_u)) / (1 + (dt / v_n) * ((1 + (v_n / v_f)) * k_p + (v_n / v_f) * k_u + k_r))
+                c_f_new = (m_t - c_n_new * v_n) / v_f
                 info.concentration = c_n_new
                 self._concentration = c_f_new
             elif info.type == 'fixed':
@@ -124,10 +124,16 @@ class HomogeneousSubstrateField(BaseSubstrateField):
         self._concentration = C * np.exp(-d * dt)
 
     def _decay_second_order(self, dt: int) -> None:
-        pass
+        C = self._concentration
+        d = self._decay_coefficient
+        self._concentration = 1 / ((1 / C) + d * dt)
 
     def _decay_michaelis_menten(self, dt: int) -> None:
-        pass
+        C = self._concentration
+        v_max = self._decay_coefficient
+        k_M = self._mm_constant
+        x = k_M - C + dt * v_max
+        self._concentration = (-x + (x**2 + 4 * k_M * C)**0.5) / 2
 
 
 class Lattice2DSubstrateField(BaseSubstrateField):
