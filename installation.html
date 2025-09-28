@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Installation &#8212; LattiCS 0.post99.dev0+g67696b8 documentation</title>
+    <title>Installation &#8212; LattiCS 0.post105.dev0+gd72a87a documentation</title>
   
   
   
@@ -30,7 +30,7 @@
   <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 <link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="_static/plot_directive.css?v=7f9a90b1" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=81467e3f" />
@@ -41,8 +41,8 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=c4814342"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/documentation_options.js?v=384bd2a0"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=f281be69"></script>
@@ -54,7 +54,7 @@
     <link rel="prev" title="Home" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.post99.dev0+g67696b8" />
+  <meta name="docsearch:version" content="0.post105.dev0+gd72a87a" />
   </head>
   
   
@@ -120,8 +120,8 @@
       
     
     
-    <img src="_static/logo-light_s.png" class="logo__image only-light" alt="LattiCS 0.post99.dev0+g67696b8 documentation - Home"/>
-    <img src="_static/logo-dark_s.png" class="logo__image only-dark pst-js-only" alt="LattiCS 0.post99.dev0+g67696b8 documentation - Home"/>
+    <img src="_static/logo-light_s.png" class="logo__image only-light" alt="LattiCS 0.post105.dev0+gd72a87a documentation - Home"/>
+    <img src="_static/logo-dark_s.png" class="logo__image only-dark pst-js-only" alt="LattiCS 0.post105.dev0+gd72a87a documentation - Home"/>
   
   
 </a></div>
@@ -373,20 +373,20 @@
 <section id="install-on-linux">
 <h2>Install on Linux<a class="headerlink" href="#install-on-linux" title="Link to this heading">#</a></h2>
 <p>Create a new virtual environment:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>lattics
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m venv lattics</span>
 </pre></div>
 </div>
 <p>Activate the environment:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span><span class="w"> </span>lattics/bin/activate
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">source lattics/bin/activate</span>
 </pre></div>
 </div>
 <p>Install the LattiCS package from the Git repository:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/kissdaniel/lattics.git
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install git+https://github.com/kissdaniel/lattics.git</span>
 </pre></div>
 </div>
 <p>Start a Python shell and verify that the package can be successfully imported:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python
-&gt;&gt;&gt;<span class="w"> </span>import<span class="w"> </span>lattics
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python</span>
+<span class="go">&gt;&gt;&gt; import lattics</span>
 </pre></div>
 </div>
 <p>If no error messages appear, the installation was successful.</p>
@@ -394,20 +394,20 @@
 <section id="install-on-windows">
 <h2>Install on Windows<a class="headerlink" href="#install-on-windows" title="Link to this heading">#</a></h2>
 <p>Create a new virtual environment:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>lattics
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python -m venv lattics</span>
 </pre></div>
 </div>
 <p>Activate the environment:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>lattics/Scripts/activate.bat
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">lattics\Scripts\activate.bat</span>
 </pre></div>
 </div>
 <p>Install the LattiCS package from the Git repository:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/kissdaniel/lattics.git
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install git+https://github.com/kissdaniel/lattics.git</span>
 </pre></div>
 </div>
 <p>Start a Python shell and verify that the package can be successfully imported:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python
-&gt;&gt;&gt;<span class="w"> </span>import<span class="w"> </span>lattics
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">python</span>
+<span class="go">&gt;&gt;&gt; import lattics</span>
 </pre></div>
 </div>
 <p>If no error messages appear, the installation was successful.</p>
@@ -509,7 +509,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.7.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
     <br/>
   </p>
 </div>

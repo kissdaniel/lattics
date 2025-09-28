@@ -8,25 +8,25 @@ Install on Linux
 
 Create a new virtual environment:
 
-.. code-block:: bash
+.. code-block:: console
 
 	python -m venv lattics
 
 Activate the environment:
 
-.. code-block:: bash		
+.. code-block:: console	
 
 	source lattics/bin/activate
 
 Install the LattiCS package from the Git repository:
 
-.. code-block:: bash
+.. code-block:: console
 	
 	pip install git+https://github.com/kissdaniel/lattics.git
 
 Start a Python shell and verify that the package can be successfully imported:
 
-.. code-block:: bash
+.. code-block:: console
 
 	python
 	>>> import lattics
@@ -38,25 +38,25 @@ Install on Windows
 
 Create a new virtual environment:
 
-.. code-block:: bash
+.. code-block:: console
 
 	python -m venv lattics
 
 Activate the environment:
 
-.. code-block:: bash		
+.. code-block:: console	
 
-	lattics/Scripts/activate.bat
+	lattics\Scripts\activate.bat
 
 Install the LattiCS package from the Git repository:
 
-.. code-block:: bash
+.. code-block:: console
 	
 	pip install git+https://github.com/kissdaniel/lattics.git
 
 Start a Python shell and verify that the package can be successfully imported:
 
-.. code-block:: bash
+.. code-block:: console
 
 	python
 	>>> import lattics

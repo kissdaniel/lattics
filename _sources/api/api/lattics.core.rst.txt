@@ -4,15 +4,6 @@
 .. automodule:: lattics.core
 
    
-   
-   
-
-   
-   
-   
-
-   
-   
    .. rubric:: Classes
 
    .. autosummary::
@@ -22,11 +13,3 @@
       Simulation
       UpdateInfo
    
-   
-
-   
-   
-   
-
-
-
