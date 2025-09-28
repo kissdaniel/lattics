@@ -109,7 +109,6 @@ todo_include_todos = False
 html_theme = "pydata_sphinx_theme"
 import sphinx_rtd_theme
 
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 html_logo = "_static/lattics_logo_s.png"
 
 # Theme options are theme-specific and customize the look and feel of a theme
