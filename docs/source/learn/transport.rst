@@ -1,17 +1,35 @@
 Cell–environment interactions and transport
 ===========================================
 
-During a simulation, we may want to model the transport of various chemical substances, such as nutrients, signaling factors, or drugs, that are taken up from or secreted into the environment by cells. This section explains the model used in LattiCS to simulate these processes.
+During a simulation, we may want to model the transport of chemical substances, such as nutrients, signaling factors, or drugs, that are taken up from or secreted into the environment by cells. This section explains the model used in LattiCS to simulate these processes.
 
 Representation
 --------------
 
-Each chemical substance whose transport processes we want to simulate is represented by a SubstrateField object. This object is linked to the SimulationDomain object that represents the simulation space, and it matches its dimensionality, size, and grid resolution (if these are applicable for the given domain). The field object identifies the substance using a user-defined name (e.g., "oxygen" or "nutrient"). It continuously tracks the concentration and provides access to its values at any point in space.
+Each chemical substance whose transport processes we want to simulate is represented by a SubstrateField object. This object is linked to the Space object that represents the simulation space, and it matches its dimensionality, size, and grid resolution (if these are applicable for the given space). The field object identifies the substance using a user-defined name (e.g., "oxygen" or "nutrient"). It continuously tracks the concentration and provides access to its values at any point in space.
 
-Diffusive transport
+Diffusion and decay
 -------------------
 
-The spatial and temporal behavior of the substance's concentration in a domain without any sources or sinks is controlled by two key parameters: the diffusion coefficient and the decay rate. The diffusion coefficient determines how quickly the substance spreads through space via diffusion, while the decay rate represents the substance's natural degradation over time. These processes are simulated by numerically solving the heat equation using the locally one-dimensional (LOD) method described in [1]_. If the domain has no spatial structure, only a single (mean) concentration is tracked, and only its decay over time is simulated, without spatial diffusion.
+The spatial and temporal behavior of the substance's concentration in a space without any sources or sinks is controlled by two key factors: the diffusion, and the decay of the substance. Diffusion is when a substance spreads out from where it's most concentrated to where it's less concentrated. Decay, on the other hand, is the substance's concentration naturally decreasing over time.
+
+Diffusion
+^^^^^^^^^
+
+A substance's diffusion is determined by its diffusion coefficient. The greater this coefficient, the faster the substance's concentration spreads out. In LattiCS, diffusion is modeled by the diffusion or heat equation, a partial differential equation that describes how the concentration is distributed over time in a given area. The numerical solution for this equation is calculated using the locally one-dimensional (LOD) method described in [1]_. When the Space object doesn't have a real spatial structure, it means there are no distinct spatial divisions or locations to track. Therefore, instead of modeling how a substance spreads out, only a single, overall average concentration for the entire system is tracked.
+
+Decay
+^^^^^
+
+A substance's decay is determined by its decay rate. The greater this rate, the faster the concentration decreases. In LattiCS, decay can be modeled in three ways:
+
+* **First-order kinetics**: The decay rate is directly proportional to the substance's concentration, causing it to decrease exponentially.
+* **Second-order kinetics**: The decay rate is proportional to the square of the concentration. As the concentration drops, the reaction slows down.
+* **Michaelis--Menten kinetics**: Decay is mediated by a component that can become saturated, like an enzyme. At low concentrations, the rate is roughly proportional to the concentration (similar to first-order decay). At high concentrations, the rate becomes constant, independent of the concentration (zero-order decay).
+
+For modeling decay with either first-order or second-order kinetics, the exact analytical solution is calculated during the simulation. However, since there is no analytical solution for Michaelis-Menten kinetics, an implicit numerical approximation is used instead. Note, that the numerical approximation can produce inaccurate results if large time steps are used during the simulation.
+
+When a Space object has a spatial structure, the decay is computed separately at each grid point. In contrast, if there is no spatial structure, a single value is tracked for the decay, much like how a single average concentration is tracked for diffusion.
 
 Release and uptake by nodes
 ---------------------------
@@ -21,7 +39,7 @@ The appearance and disappearance of a chemical substance within the field occur 
 Fixed-type nodes
 ^^^^^^^^^^^^^^^^
 
-In the case of a fixed-type node, the concentration value of the field at the node's location is set to the `concentration` specified for the node. (If position is not applicable for the domain, the field's concentration will be the average of the values specified by all fixed-type nodes.)
+In the case of a fixed-type node, the concentration value of the field at the node's location is set to the `concentration` specified for the node. (If position is not applicable for the space, the field's concentration will be the average of the values specified by all fixed-type nodes.)
 
 Flux-type nodes
 ^^^^^^^^^^^^^^^
@@ -36,11 +54,11 @@ In the case of a flux-type node, the concentration in the field at the node's lo
 
 The following types of concentration exchange can be defined between the compartments:
 
-* **Passive transport**: the concentrations in the two compartments change based on the difference between their concentrations and a rate constant. In the case of cells, gases, hydrophobic molecules, and small polar molecules typically cross the membrane via this mechanism. The rate of concentration change is governed by the coefficient :math:`k_p`. Due to passive transport, the concentrations of the two compartments gradually equalize over a sufficiently long time.
+* **Passive transport**: The concentrations in the two compartments change based on the difference between their concentrations and a rate constant. In the case of cells, gases, hydrophobic molecules, and small polar molecules typically cross the membrane via this mechanism. The rate of concentration change is governed by the coefficient :math:`k_p`. Due to passive transport, the concentrations of the two compartments gradually equalize over a sufficiently long time.
 
-* **Active secretion**: the node releases a substance into the field. The change depends on the concentration :math:`c_N` in compartment *N* and the rate constant :math:`k_r`. In the case of cells, this process can model the function of certain transporter proteins (e.g., ABC transporters), which are capable of pumping chemical substances from inside the cell even against a concentration gradient.
+* **Active secretion**: the node releases a substance into the field. The change depends on the concentration :math:`c_N` in compartment *N*, and the rate constant :math:`k_r`. In the case of cells, this process can model the function of certain transporter proteins (e.g., ABC transporters), which are capable of pumping chemical substances from inside the cell even against a concentration gradient.
 
-* **Active uptake**: the node takes up a substance from the field. The change depends on the concentration :math:`c_F` in compartment *F*, the node's maximum (or saturation) concentration :math:`c_N^s`, and the uptake rate constant :math:`k_u`. If the substance is available in unlimited supply, the value of :math:`c_N` approaches its steady-state value, :math:`c_N^s`. In cells, this process also models the activity of transporter proteins (e.g., glucose uptake), and it is typically significantly faster than passive transport. 
+* **Active uptake**: the node takes up a substance from the field. The change depends on the concentration :math:`c_F` in compartment *F*, and the uptake rate constant :math:`k_u`. In cells, this process also models the activity of transporter proteins (e.g., glucose uptake), and it is typically significantly faster than passive transport. 
 
 According to the principle of mass conservation and Fick's first law, the mass changes in the compartments can be described by the following differential equations.
 
@@ -48,23 +66,12 @@ According to the principle of mass conservation and Fick's first law, the mass c
 
     \begin{align*}
     v_N \frac{\mathrm{d} c_N}{\mathrm{d} t} &= k_p \left( c_F - c_N \right) + k_u c_F - k_r c_N \\[0.5em]
-    v_F \frac{\mathrm{d} c_F}{\mathrm{d} t} &= k_p \left( c_N - c_F \right) - k_u c_F + k_r c_N \\
+    v_F \frac{\mathrm{d} c_F}{\mathrm{d} t} &= - k_p \left( c_F - c_N \right) - k_u c_F + k_r c_N \\
     \end{align*}
 
-Here, :math:`n_N` and :math:`n_F` denote the time-dependent amounts (or masses) of the substance in the respective compartments, :math:`c_N` and :math:`c_F` are the corresponding concentrations, :math:`c_N^s` is the saturation concentration in the node, and :math:`k_p`, :math:`k_r`, and :math:`k_u` are the rate constants defined previously. Given the compartment volumes :math:`v_N` and :math:`v_F`, the changes in concentration can be directly computed from the corresponding changes in mass.
+Here, :math:`c_N` and :math:`c_F` denote the time-dependent concentrations of the substance in the respective compartments, and :math:`k_p`, :math:`k_r`, and :math:`k_u` are the rate constants defined previously. Changes in a substance's concentration are directly linked to changes in its total amount (or mass), given the compartment volumes :math:`v_N` and :math:`v_F`.
 
-The concentration obtained from the solution of the differential equations is approximated at each time step using the following explicit finite difference scheme.
-
-.. math::
-
-    \begin{align*}
-    c_{N, t+\Delta t} & = c_{N, t} + \frac{1}{v_N} \Bigl( k_p \left( c_{F, t} - c_{N, t} \right) + k_u c_{F, t} \left(c_N^s - c_{N, t} \right) - k_r c_{N, t} \Bigr) \Delta t \\[0.5em]
-    c_{F, t+\Delta t} & = c_{F, t} + \frac{1}{v_F} \Bigl( k_p \left( c_{N, t} - c_{F, t} \right) - k_u c_{F, t} \left(c_N^s - c_{N, t} \right) + k_r c_{N, t} \Bigr) \Delta t
-    \end{align*}
-
-.. note::
-
-    Since the current implementation of LattiCS uses an explicit scheme, we need to carefully choose the time steps assigned to the SubstrateField object to ensure numerical stability. These time steps must be sufficiently small, depending on the values of the rate constants (:math:`k_p`, :math:`k_u`, :math:`k_r`), to avoid issues such as negative concentrations or oscillatory behavior.
+After discretizing the variables, the backward Euler method (also known as the implicit Euler method) is used to approximate the solution of the equations. Note, that the numerical approximation can produce inaccurate results if large time steps are used during the simulation.
 
 
 References
