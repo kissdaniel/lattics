@@ -1,0 +1,37 @@
+Tumor growth under drug treatment
+=================================
+
+This example presents a simple model of tumor growth coupled with the administration of an antitumor drug. The original research and theoretical background are detailed in Drexler et al. [1]_.
+
+Summary
+-------
+
+The original paper's experiments investigate the response of a murine breast cancer model to pegylated liposomal doxorubicin (PLD or Doxil) over a long time frame (approximately 80 to 250 days). The authors proposed a system of ordinary differential equations (ODEs) to describe the dynamics of tumor cells, necrotic cells, and drug levels in both the tumor tissue (central compartment) and peripheral organs (peripheral compartment). The drug treatment is modeled by instant changes to the drug levels in the central compartment at specific time points, corresponding to the actual injections administered in the in vivo experiment.
+
+The equations of the mathematical model are as follows.
+
+.. math::
+
+    \begin{align*}
+	\dot{x}_1 &= (a - n) x_1 - b \frac{x_1 x_3}{ED_{50} + x_3} \\
+	\dot{x}_2 &= n x_1 + b \frac{x_1 x_3}{ED_{50} + x_3} - w x_2 \\
+	\dot{x}_3 &= -(c + k_1) x_3 + k_2 x_4 - b_k \frac{x_1 x_3}{ED_{50} + x_3} \\
+	\dot{x}_4 &= k_1 x_3 - k_2 x_4
+    \end{align*}
+
+Here, the state variables :math:`x_1` and :math:`x_2` represent the tumor tissue volume and the necrotic tissue volume (in mm\ :sup:`3` ). Variables :math:`x_3` and :math:`x_4` correspond to the drug levels (in mg/kg) in the central and peripheral compartments, respectively.
+
+The model incorporates the following dynamics:
+
+* Tumor cells proliferate at a known duplication rate (:math:`a`).
+* Tumor cells undergo spontaneous necrosis at a rate (:math:`n`) independent of the drug level.
+* Tumor cells convert into necrotic cells based on the drug level (:math:`x_3`) and the drug's specific properties (explained below).
+* Necrotic cells are removed from the tissue (washout) at a known rate (:math:`w`).
+* The drug is administered instantaneously, resulting in an immediate change to the level of :math:`x_3`.
+* The drug is distributed between the two compartments, with transport governed by rates :math:`k_1` (central to peripheral) and :math:`k_2` (peripheral to central).
+ 
+
+References
+----------
+
+.. [1] Ahmadreza Ghaffarizadeh, Samuel H. Friedman, Paul Macklin, BioFVM: an efficient, parallelized diffusive transport solver for 3-D biological simulations, Bioinformatics, Volume 32, Issue 8, April 2016, Pages 1256–1258, https://doi.org/10.1093/bioinformatics/btv730
