@@ -50,6 +50,8 @@ extensions = [
 plot_html_show_source_link = False
 plot_html_show_formats = False
 
+numfig = True
+
 # Generate the API documentation when building
 autosummary_generate = True
 numpydoc_show_class_members = False
