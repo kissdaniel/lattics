@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Tumor growth under drug treatment &#8212; LattiCS 0.post106.dev0+g63eb254 documentation</title>
+    <title>Tumor growth under drug treatment &#8212; LattiCS 0.post108.dev0+gf4c5261 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=c6ddb51f"></script>
+    <script src="../../_static/documentation_options.js?v=f2cdd6f8"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -55,7 +55,7 @@
     <link rel="prev" title="Examples" href="../main.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.post106.dev0+g63eb254" />
+  <meta name="docsearch:version" content="0.post108.dev0+gf4c5261" />
   </head>
   
   
@@ -121,8 +121,8 @@
       
     
     
-    <img src="../../_static/logo-light_s.png" class="logo__image only-light" alt="LattiCS 0.post106.dev0+g63eb254 documentation - Home"/>
-    <img src="../../_static/logo-dark_s.png" class="logo__image only-dark pst-js-only" alt="LattiCS 0.post106.dev0+g63eb254 documentation - Home"/>
+    <img src="../../_static/logo-light_s.png" class="logo__image only-light" alt="LattiCS 0.post108.dev0+gf4c5261 documentation - Home"/>
+    <img src="../../_static/logo-dark_s.png" class="logo__image only-dark pst-js-only" alt="LattiCS 0.post108.dev0+gf4c5261 documentation - Home"/>
   
   
 </a></div>
@@ -410,7 +410,7 @@
 <p>Following the selection of the simulation space, the model setup will proceed in two major steps: first, tuning the parameters of the drug introduced during the treatments, and subsequently, adding the agents that describe the tumor tissue cells to the model.</p>
 <section id="initial-steps">
 <h3>Initial steps<a class="headerlink" href="#initial-steps" title="Link to this heading">#</a></h3>
-<p>First, we load the <code class="docutils literal notranslate"><span class="pre">lattics</span></code> package and create a <code class="docutils literal notranslate"><span class="pre">Simulation</span></code> object and a <code class="docutils literal notranslate"><span class="pre">HomogeneousSpace</span></code> object. We use a 1-hour time step for the agents’ simulation and a 5-second time step for the substrate (drug) simulation.</p>
+<p>First, we load the <code class="docutils literal notranslate"><span class="pre">lattics</span></code> package and create a <code class="docutils literal notranslate"><span class="pre">Simulation</span></code> object and a <code class="docutils literal notranslate"><span class="pre">HomogeneousSpace</span></code> object. We use a 1-hour time step for the agents’ simulation and a 30-second time step for the substrate (drug) simulation.</p>
 <p>For practical reasons, the volume of the simulation space is set to 2.7 × 10<sup>7</sup> μm<sup>3</sup> (corresponding to a virtual cubic space of 300 μm × 300 μm × 300 μm). This choice primarily determines the maximum cell capacity, thus influencing the simulation speed. Given the agent volumes (see below), this space will accommodate a maximum of 8000 agents, a simulation that should take no more than a few minutes on an average personal computer.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">lattics</span>
 
@@ -418,7 +418,7 @@
 <span class="n">space</span> <span class="o">=</span> <span class="n">lattics</span><span class="o">.</span><span class="n">HomogeneousSpace</span><span class="p">(</span>
         <span class="n">simulation</span><span class="o">=</span><span class="n">simulation</span><span class="p">,</span>
         <span class="n">dt_agent</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;hour&#39;</span><span class="p">),</span>
-        <span class="n">dt_substrate</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s1">&#39;sec&#39;</span><span class="p">),</span>
+        <span class="n">dt_substrate</span><span class="o">=</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="s1">&#39;sec&#39;</span><span class="p">),</span>
         <span class="n">volume</span><span class="o">=</span><span class="mf">2.7</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">7</span>
         <span class="p">)</span>
 <span class="n">simulation</span><span class="o">.</span><span class="n">add_space</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
@@ -459,8 +459,8 @@
 <span class="n">organs_transport_info</span> <span class="o">=</span> <span class="n">lattics</span><span class="o">.</span><span class="n">SubstrateInfo</span><span class="p">(</span>
         <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span>
         <span class="n">concentration</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-        <span class="n">release_rate</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-        <span class="n">uptake_rate</span><span class="o">=</span><span class="mf">1.0</span>
+        <span class="n">release_rate</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">uptake_rate</span><span class="o">=</span><span class="mf">0.0</span>
 <span class="p">)</span>
 <span class="n">organs</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s1">&#39;substrate_info&#39;</span><span class="p">)[</span><span class="s1">&#39;drug&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">organs_transport_info</span>
 <span class="n">space</span><span class="o">.</span><span class="n">_substrates</span><span class="p">[</span><span class="s1">&#39;drug&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">add_static_substrate_node</span><span class="p">(</span><span class="n">organs</span><span class="p">)</span>
@@ -472,6 +472,44 @@
 </a>
 <figcaption>
 <p><span class="caption-number">Fig. 2 </span><span class="caption-text">Schematic of the constructed pharmacokinetic model.</span><a class="headerlink" href="#id2" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p>For the calibration of the aforementioned parameters (the drug’s decay coefficient and the transport rates between the tissue and the organs), we utilize one of the data sets published in <a class="reference internal" href="#ref-drexler2020"><span class="std std-ref">Drexler et al. (2020)</span></a>.</p>
+<p><a class="reference internal" href="#figure3"><span class="std std-numref">Fig. 3</span></a> shows the drug concentrations measured in one of the mouse’s blood over time following a single 8 mg/kg bolus injection.</p>
+<figure class="align-default" id="id3">
+<span id="figure3"></span><img alt="../../_images/Figure_3.png" src="../../_images/Figure_3.png" />
+<figcaption>
+<p><span class="caption-number">Fig. 3 </span><span class="caption-text">Time course of drug concentration measured in blood. (Re-plotted from data in <a class="reference internal" href="#ref-drexler2020"><span class="std std-ref">Drexler et al. (2020)</span></a>.)</span><a class="headerlink" href="#id3" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p>The treatment is represented by an <code class="docutils literal notranslate"><span class="pre">Event</span></code> object in our LattiCS model. This event will be scheduled immediately at the start of the simulation and will trigger a change in the concentration of the substrate named “drug” to a specified value (which is also a placeholder value here).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">treatment_1</span> <span class="o">=</span> <span class="n">lattics</span><span class="o">.</span><span class="n">Event</span><span class="p">(</span>
+        <span class="n">time</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;sec&#39;</span><span class="p">),</span>
+        <span class="n">handler</span><span class="o">=</span><span class="n">set_substrate_level</span><span class="p">,</span>
+        <span class="n">concentration</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;drug&#39;</span>
+        <span class="p">)</span>
+<span class="n">simulation</span><span class="o">.</span><span class="n">add_event</span><span class="p">(</span><span class="n">treatment_1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Our model is now ready to be executed and the resulting data retrieved. Consistent with the measurement data shown in <a class="reference internal" href="#figure3"><span class="std std-numref">Fig. 3</span></a>, we will simulate a 5-day duration, using the previously set 30-second time step for the substrate. Data logs of the simulation will be stored after every 10 simulated minutes, but the data will only be written to a file upon completion (for a short simulation like this, continuous file writing could slow down the execution).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">simulation</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="n">time</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span><span class="p">),</span>
+        <span class="n">dt</span><span class="o">=</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="s1">&#39;sec&#39;</span><span class="p">),</span>
+        <span class="n">dt_history</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;min&#39;</span><span class="p">),</span>
+        <span class="n">save_mode</span><span class="o">=</span><span class="s1">&#39;on_completion&#39;</span>
+        <span class="p">)</span>
+</pre></div>
+</div>
+<p>After plotting the concentration profile established in the simulation space, it is clear that the model parameters require refinement, as the simulated data set deviates significantly from the real data. Although this calibration could be performed using any of the well-established parameter fitting routines, we instead employ an “eyeballing” approach here to heuristically tune the model’s parameters and gain a better understanding of their sensitivity and impact on the system dynamics.</p>
+<p>In the simulated data, the drug concentration settles to an equilibrium value after a long period (meaning the drug is transferred from the blood vessels into the tissues). However, this equilibrium concentration is orders of magnitude lower than the initial drug concentration observed in reality, and the steady-state is reached too slowly. Let’s first modify the <code class="docutils literal notranslate"><span class="pre">concentration</span></code> value within the <code class="docutils literal notranslate"><span class="pre">Event</span></code> representing the treatment so that the resulting equilibrium concentration roughly matches the initial value of the real data set (10<sup>6</sup> is an approximately good choice).</p>
+<p>Next, we modify the rate of transfer from the blood vessel node into the tissues by increasing the <code class="docutils literal notranslate"><span class="pre">passive_rate</span></code> parameter stored in the <code class="docutils literal notranslate"><span class="pre">blood_vessel_transport_info</span></code> variable (5 × 10<sup>-1</sup> is an approximately good choice). Following these changes, the simulated drug concentration in the tissues will approach the initial value of the real data set, but the elimination dynamics still remain unrealistic.</p>
+<p>In our model, the drug can leave the system due to decay, the rate of which was set during the substrate creation. Let’s modify the <code class="docutils literal notranslate"><span class="pre">decay_coefficient</span></code> and set a small but non-zero value (e.g., 10<sup>-8</sup>). As a result, the trend of the simulated curve begins to resemble that of the measured data; however, the dynamics are still not perfect (in our model, decay is a first-order reaction, meaning the concentration decreases exponentially, whereas in the real data set, the elimination rate gradually slows).</p>
+<p>Let us now set the <code class="docutils literal notranslate"><span class="pre">release_rate</span></code> and <code class="docutils literal notranslate"><span class="pre">uptake_rate</span></code> values stored in the <code class="docutils literal notranslate"><span class="pre">organs_transport_info</span></code> variable. We set the rate of uptake (flow from tissues to organs) greater than the rate of release (e.g., 1.0 and 10.0, respectively). Due to this change, the characteristic change in drug concentration begins to follow the trend of the real data set. Further adjustments to these parameters can quickly yield an adequate approximation.</p>
+<figure class="align-default" id="id4">
+<span id="figure8"></span><img alt="../../_images/Figure_8.png" src="../../_images/Figure_8.png" />
+<figcaption>
+<p><span class="caption-number">Fig. 4 </span><span class="caption-text">Simulated time course of drug concentration after parameter estimation.</span><a class="headerlink" href="#id4" title="Link to this image">#</a></p>
 </figcaption>
 </figure>
 </section>

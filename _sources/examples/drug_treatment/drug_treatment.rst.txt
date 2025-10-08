@@ -50,7 +50,7 @@ Following the selection of the simulation space, the model setup will proceed in
 Initial steps
 ^^^^^^^^^^^^^
 
-First, we load the ``lattics`` package and create a ``Simulation`` object and a ``HomogeneousSpace`` object. We use a 1-hour time step for the agents' simulation and a 5-second time step for the substrate (drug) simulation.
+First, we load the ``lattics`` package and create a ``Simulation`` object and a ``HomogeneousSpace`` object. We use a 1-hour time step for the agents' simulation and a 30-second time step for the substrate (drug) simulation.
 
 For practical reasons, the volume of the simulation space is set to 2.7 × 10\ :sup:`7` μm\ :sup:`3` (corresponding to a virtual cubic space of 300 μm × 300 μm × 300 μm). This choice primarily determines the maximum cell capacity, thus influencing the simulation speed. Given the agent volumes (see below), this space will accommodate a maximum of 8000 agents, a simulation that should take no more than a few minutes on an average personal computer.
 
@@ -62,7 +62,7 @@ For practical reasons, the volume of the simulation space is set to 2.7 × 10\ :
 	space = lattics.HomogeneousSpace(
 		simulation=simulation,
 		dt_agent=(1, 'hour'),
-		dt_substrate=(5, 'sec'),
+		dt_substrate=(30, 'sec'),
 		volume=2.7 * 10 ** 7
 		)
 	simulation.add_space(space)
@@ -115,8 +115,8 @@ To account for the organs acting as a drug reservoir ("buffering effect") the OD
 	organs_transport_info = lattics.SubstrateInfo(
 		type='flux',
 		concentration=0.0,
-		release_rate=1.0,
-		uptake_rate=1.0
+		release_rate=0.0,
+		uptake_rate=0.0
 	)
 	organs.get_attribute('substrate_info')['drug'] = organs_transport_info
 	space._substrates['drug'].add_static_substrate_node(organs)
@@ -130,7 +130,55 @@ To account for the organs acting as a drug reservoir ("buffering effect") the OD
 	
 	Schematic of the constructed pharmacokinetic model.
 
-    
+For the calibration of the aforementioned parameters (the drug's decay coefficient and the transport rates between the tissue and the organs), we utilize one of the data sets published in :ref:`Drexler et al. (2020) <ref_drexler2020>`.
+
+:numref:`figure3` shows the drug concentrations measured in one of the mouse's blood over time following a single 8 mg/kg bolus injection.
+
+.. _figure3:
+.. figure:: Figure_3.png	
+	
+	Time course of drug concentration measured in blood. (Re-plotted from data in :ref:`Drexler et al. (2020) <ref_drexler2020>`.)
+
+The treatment is represented by an ``Event`` object in our LattiCS model. This event will be scheduled immediately at the start of the simulation and will trigger a change in the concentration of the substrate named "drug" to a specified value (which is also a placeholder value here).
+
+.. code-block:: python
+
+	treatment_1 = lattics.Event(
+		time=(0, 'sec'),
+		handler=set_substrate_level,
+		concentration=1.0,
+		name='drug'
+		)
+	simulation.add_event(treatment_1)
+
+Our model is now ready to be executed and the resulting data retrieved. Consistent with the measurement data shown in :numref:`figure3`, we will simulate a 5-day duration, using the previously set 30-second time step for the substrate. Data logs of the simulation will be stored after every 10 simulated minutes, but the data will only be written to a file upon completion (for a short simulation like this, continuous file writing could slow down the execution).
+
+.. code-block:: python
+
+	simulation.run(
+		time=(5, 'day'),
+		dt=(30, 'sec'),
+		dt_history=(10, 'min'),
+		save_mode='on_completion'
+		)
+		
+		
+After plotting the concentration profile established in the simulation space, it is clear that the model parameters require refinement, as the simulated data set deviates significantly from the real data. Although this calibration could be performed using any of the well-established parameter fitting routines, we instead employ an "eyeballing" approach here to heuristically tune the model's parameters and gain a better understanding of their sensitivity and impact on the system dynamics.
+
+In the simulated data, the drug concentration settles to an equilibrium value after a long period (meaning the drug is transferred from the blood vessels into the tissues). However, this equilibrium concentration is orders of magnitude lower than the initial drug concentration observed in reality, and the steady-state is reached too slowly. Let's first modify the ``concentration`` value within the ``Event`` representing the treatment so that the resulting equilibrium concentration roughly matches the initial value of the real data set (10\ :sup:`6` is an approximately good choice).
+
+Next, we modify the rate of transfer from the blood vessel node into the tissues by increasing the ``passive_rate`` parameter stored in the ``blood_vessel_transport_info`` variable (5 × 10\ :sup:`-1` is an approximately good choice). Following these changes, the simulated drug concentration in the tissues will approach the initial value of the real data set, but the elimination dynamics still remain unrealistic.
+
+In our model, the drug can leave the system due to decay, the rate of which was set during the substrate creation. Let's modify the ``decay_coefficient`` and set a small but non-zero value (e.g., 10\ :sup:`-8`). As a result, the trend of the simulated curve begins to resemble that of the measured data; however, the dynamics are still not perfect (in our model, decay is a first-order reaction, meaning the concentration decreases exponentially, whereas in the real data set, the elimination rate gradually slows).
+
+Let us now set the ``release_rate`` and ``uptake_rate`` values stored in the ``organs_transport_info`` variable. We set the rate of uptake (flow from tissues to organs) greater than the rate of release (e.g., 1.0 and 10.0, respectively). Due to this change, the characteristic change in drug concentration begins to follow the trend of the real data set. Further adjustments to these parameters can quickly yield an adequate approximation.
+
+.. _figure8:
+.. figure:: Figure_8.png	
+	
+	Simulated time course of drug concentration after parameter estimation.
+
+
 Tumor growth
 ^^^^^^^^^^^^
 
