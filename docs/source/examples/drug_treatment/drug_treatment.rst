@@ -35,7 +35,7 @@ The model incorporates the following dynamics:
 By appropriately selecting the model parameters (fitting the model) and accounting for the treatment effects, this ODE model approximates the observed dynamics in reality: the rapidly growing tumor without treatment, followed by the volume decrease due to the treatment, which is explained by the death and clearance of the tumor tissue cells. After treatment, the drug is continuously cleared, thus its effect diminishes, leading to tumor regrowth.
 
 .. _figure1:
-.. figure:: Figure_1.png
+.. figure:: drug_treatment_fig1.png
 
     Actual tumor volumes measured during an experiment (red dots) and the simulated volumes obtained after fitting the model (blue line). The times of drug treatments are indicated by black arrows. (Re-plotted from data in :ref:`Drexler et al. (2020) <ref_drexler2020>`.)
 
@@ -43,7 +43,7 @@ By appropriately selecting the model parameters (fitting the model) and accounti
 LattiCS implementation
 ----------------------
 
-The presented experiment will be implemented in LattiCS in two distinct forms: first, using a homogeneous simulation space similar to the ODE model (which allows for fast simulation runs and can serve as a surrogate model for parameter estimation), and subsequently, using a three-dimensional simulation space.
+We will implement the experiment in LattiCS in two ways. Initially, a homogeneous simulation space (mirroring the ODE model) will serve as a surrogate model for parameter estimation. This will be followed by a two-dimensional simulation space to specifically model a slice of a spatial tumor. When LattiCS uses a homogeneous simulation space, it disregards all spatial properties of agents and substrates, significantly accelerating the simulation. This simplifies the model to only tracking cell counts and average substrate concentrations, similar to an ODE model. However, unlike a deterministic ODE model, the agent-based approach still uses stochastic update steps, meaning simulation results may differ due to random effects (e.g., in cell division or cell death).
 
 Following the selection of the simulation space, the model setup will proceed in two major steps: first, tuning the parameters of the drug introduced during the treatments, and subsequently, adding the agents that describe the tumor tissue cells to the model.
 
@@ -52,7 +52,7 @@ Initial steps
 
 First, we load the ``lattics`` package and create a ``Simulation`` object and a ``HomogeneousSpace`` object. We use a 1-hour time step for the agents' simulation and a 30-second time step for the substrate (drug) simulation.
 
-For practical reasons, the volume of the simulation space is set to 2.7 × 10\ :sup:`7` μm\ :sup:`3` (corresponding to a virtual cubic space of 300 μm × 300 μm × 300 μm). This choice primarily determines the maximum cell capacity, thus influencing the simulation speed. Given the agent volumes (see below), this space will accommodate a maximum of 8000 agents, a simulation that should take no more than a few minutes on an average personal computer.
+For practical reasons, ensuring compatibility with subsequent 2D slice-based simulations, the volume of the computational space is fixed at 8.4375 × 10\ :sup:`6` μm\ :sup:`3`. This corresponds to a 15 μm thick slice of a 750 μm × 750 μm region, deliberately chosen to facilitate direct comparison between the initial virtual model and its future 2D cross-section. This choice of volume primarily determines the maximum cell capacity, thus influencing the simulation speed. Given the agent volumes (see below), this space will accommodate a maximum of 2500 agents, a simulation that should take no more than a few minutes on an average personal computer.
 
 .. code-block:: python
 
@@ -63,7 +63,7 @@ For practical reasons, the volume of the simulation space is set to 2.7 × 10\ :
 		simulation=simulation,
 		dt_agent=(1, 'hour'),
 		dt_substrate=(30, 'sec'),
-		volume=2.7 * 10 ** 7
+		volume=8.4375 * 10 ** 6
 		)
 	simulation.add_space(space)
 
@@ -71,7 +71,7 @@ For practical reasons, the volume of the simulation space is set to 2.7 × 10\ :
 The pharmacokinetics of the drug
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the animal experiments, the drug is administered to the subjects as a bolus injection, which causes its concentration in the blood to instantaneously increase, followed by distribution into the tissues and subsequent elimination (or degradation) over time. The ODE model describes the drug concentration within two compartments (tumor tissue and organs). This two-compartment approach allows the model to more accurately describe the measurable concentrations observed in vivo following treatment.
+In the animal experiments, the drug is administered to the subjects as a bolus injection, which causes its concentration in the blood to instantaneously increase, followed by distribution into the tissues and subsequent elimination (or degradation) over time. The ODE model describes the drug concentration within two compartments (tumor tissue and organs). This two-compartment approach allows the model to accurately describe the measurable concentrations observed in vivo following treatment.
 
 We now incorporate a substrate named "drug" into the simulation space. When creating the substrate, we must specify the diffusion coefficient and the decay coefficient describing spontaneous degradation of the substrate. Although diffusion will not be simulated in the homogeneous space, the diffusion coefficient can still be set here and will be required during the three-dimensional simulation. Based on literature data regarding the typical size of PLD nanoparticles (on the order of 100 nm), we will set the substrate's diffusion coefficient to 2 × 10\ :sup:`-3` μm\ :sup:`2`/ms (:ref:`Lee et al. (2021) <ref_lee2021>` and :ref:`Schleyer et al. (2024) <ref_schleyer2024>`). Since the decay rate will be determined experimentally (see below), we will set it to an arbitrary placeholder value (e.g., 0.0) for now.
 
@@ -90,7 +90,7 @@ Since the location, shape, and distribution of the vessels cannot be accounted f
 .. code-block:: python
 
 	blood_vessels = lattics.SubstrateNode()
-	blood_vessels.set_attribute('volume', 2.7 * 10 ** 6)
+	blood_vessels.set_attribute('volume', 8.4375 * 10 ** 5)
 	
 When modeling the transport from the node to the surrounding tissue (space), three types of parameters can be specified to describe the process. For simplicity, we model this process by assuming that the drug moves between the vessels and the tissue at a rate proportional to the concentration difference; therefore, we will only set the parameter for the passive transport rate for the ``SubstrateNode`` (the other values will remain zero).
 
@@ -111,7 +111,7 @@ To account for the organs acting as a drug reservoir ("buffering effect") the OD
 .. code-block:: python
 
 	organs = lattics.SubstrateNode()
-	organs.set_attribute('volume', 2.7 * 10 ** 7)
+	organs.set_attribute('volume', 8.4375 * 10 ** 6)
 	organs_transport_info = lattics.SubstrateInfo(
 		type='flux',
 		concentration=0.0,
@@ -124,7 +124,7 @@ To account for the organs acting as a drug reservoir ("buffering effect") the OD
 :numref:`figure2` summarizes the structure of the constructed pharmacokinetic model. The blue node represents the simulation space, which defines the drug concentration within the tissue, and is the environment from which the substrate (drug) enters the tumor cells. During treatment, the drug is introduced into the red node, which models the blood vessels, and is subsequently transferred to the tissue in a concentration-dependent manner. The gray node models the buffering effect of the organs, with the substrate flow rates between this organ compartment and the tissue regulated by the :math:`k_u` and :math:`k_r` parameters.
 
 .. _figure2:
-.. figure:: Figure_2.png
+.. figure:: drug_treatment_fig2.png
 	:width: 400
 	:align: center    
 	
@@ -135,7 +135,7 @@ For the calibration of the aforementioned parameters (the drug's decay coefficie
 :numref:`figure3` shows the drug concentrations measured in one of the mouse's blood over time following a single 8 mg/kg bolus injection.
 
 .. _figure3:
-.. figure:: Figure_3.png	
+.. figure:: drug_treatment_fig3.png
 	
 	Time course of drug concentration measured in blood. (Re-plotted from data in :ref:`Drexler et al. (2020) <ref_drexler2020>`.)
 
@@ -161,22 +161,41 @@ Our model is now ready to be executed and the resulting data retrieved. Consiste
 		dt_history=(10, 'min'),
 		save_mode='on_completion'
 		)
-		
-		
-After plotting the concentration profile established in the simulation space, it is clear that the model parameters require refinement, as the simulated data set deviates significantly from the real data. Although this calibration could be performed using any of the well-established parameter fitting routines, we instead employ an "eyeballing" approach here to heuristically tune the model's parameters and gain a better understanding of their sensitivity and impact on the system dynamics.
 
-In the simulated data, the drug concentration settles to an equilibrium value after a long period (meaning the drug is transferred from the blood vessels into the tissues). However, this equilibrium concentration is orders of magnitude lower than the initial drug concentration observed in reality, and the steady-state is reached too slowly. Let's first modify the ``concentration`` value within the ``Event`` representing the treatment so that the resulting equilibrium concentration roughly matches the initial value of the real data set (10\ :sup:`6` is an approximately good choice).
 
-Next, we modify the rate of transfer from the blood vessel node into the tissues by increasing the ``passive_rate`` parameter stored in the ``blood_vessel_transport_info`` variable (5 × 10\ :sup:`-1` is an approximately good choice). Following these changes, the simulated drug concentration in the tissues will approach the initial value of the real data set, but the elimination dynamics still remain unrealistic.
+After plotting the concentration profile established in the simulation space (see :numref:`figure4` (A)), it is clear that the model parameters require refinement, as the simulated data set deviates significantly from the real data. Although this calibration could be performed using any of the well-established parameter fitting routines, we instead employ an "eyeballing" approach here to heuristically tune the model's parameters and gain a better understanding of their sensitivity and impact on the system dynamics.
 
-In our model, the drug can leave the system due to decay, the rate of which was set during the substrate creation. Let's modify the ``decay_coefficient`` and set a small but non-zero value (e.g., 10\ :sup:`-8`). As a result, the trend of the simulated curve begins to resemble that of the measured data; however, the dynamics are still not perfect (in our model, decay is a first-order reaction, meaning the concentration decreases exponentially, whereas in the real data set, the elimination rate gradually slows).
+In the simulated data, the drug concentration settles to an equilibrium value after a long period (meaning the drug is transferred from the blood vessels into the tissues). However, this equilibrium concentration is orders of magnitude lower than the initial drug concentration observed in reality, and the steady-state is reached too slowly. Let's first modify the ``concentration`` value within the ``Event`` representing the treatment so that the resulting equilibrium concentration roughly matches the initial value of the real data set (10\ :sup:`6` is an approximately good choice, see :numref:`figure4` (B)).
 
-Let us now set the ``release_rate`` and ``uptake_rate`` values stored in the ``organs_transport_info`` variable. We set the rate of uptake (flow from tissues to organs) greater than the rate of release (e.g., 1.0 and 10.0, respectively). Due to this change, the characteristic change in drug concentration begins to follow the trend of the real data set. Further adjustments to these parameters can quickly yield an adequate approximation.
+Next, we modify the rate of transfer from the blood vessel node into the tissues by increasing the ``passive_rate`` parameter stored in the ``blood_vessel_transport_info`` variable (5 × 10\ :sup:`-1` is an approximately good choice). Following these changes, the simulated drug concentration in the tissues will approach the initial value of the real data set (see :numref:`figure4` (C)), but the elimination dynamics still remain unrealistic.
 
-.. _figure8:
-.. figure:: Figure_8.png	
+In our model, the drug can leave the system due to decay, the rate of which was set during the substrate creation. Let's modify the ``decay_coefficient`` and set a small but non-zero value (e.g., 10\ :sup:`-8`). As a result, the trend of the simulated curve begins to resemble that of the measured data; however, the dynamics are still not perfect (see :numref:`figure4` (D)). In our model, decay is a first-order reaction, meaning the concentration decreases exponentially, whereas in the real data set, the elimination rate gradually slows.
+
+Let us now set the ``release_rate`` and ``uptake_rate`` values stored in the ``organs_transport_info`` variable. We set the rate of uptake (flow from tissues to organs) greater than the rate of release (e.g., 1.0 and 5.0, respectively). Due to this change, the characteristic change in drug concentration begins to follow the trend of the real data set (see :numref:`figure4` (E)). Further adjustments to these parameters can quickly yield an adequate approximation.
+
+.. _figure4:
+.. subfigure:: AB|CD|E.
+	:layout-sm: A|B|C|D|E|.
+	:gap: 8px
+	:subcaptions: above
 	
-	Simulated time course of drug concentration after parameter estimation.
+	.. image:: drug_treatment_fig4.png
+		:alt: (A)
+
+	.. image:: drug_treatment_fig5.png
+		:alt: (B)
+
+	.. image:: drug_treatment_fig6.png
+		:alt: (C)
+
+	.. image:: drug_treatment_fig7.png
+		:alt: (D)
+
+	.. image:: drug_treatment_fig8.png
+		:alt: (E)
+	
+
+	Concentration profiles generated during the stepwise fine-tuning of the substrate parameters.
 
 
 Tumor growth
