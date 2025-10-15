@@ -255,7 +255,9 @@ class Simulation:
         dt_ms = UnitConverter.time_to_ms(dt)
         if dt_history:
             history_ui = UpdateInfo(update_interval=dt_history)
-        steps = int(math.ceil(time_ms / dt_ms))
+            self._make_history_entry(save_mode)
+
+        steps = int(math.ceil(time_ms / dt_ms)) + 1
 
         progressbar_format = "{l_bar}{bar}| [{elapsed}<{remaining}{postfix}]"
         progressbar = tqdm.tqdm(total=steps, mininterval=1.0, colour='#d2de32', bar_format=progressbar_format)
