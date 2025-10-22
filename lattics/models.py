@@ -110,3 +110,31 @@ class StochasticTransitionModel(BaseModel):
             if np.random.random() < prob:
                 for s_name, s_value in self._end_states.items():
                     agent.set_attribute(s_name, s_value)
+
+
+class ConcentrationDependentToxicityModel(BaseModel):
+    def __init__(self,
+                 update_interval: tuple[float, str],
+                 substrate_name: str,
+                 max_rate: float,
+                 median_effective_concentration: float
+                 ) -> None:
+        super().__init__(update_interval)
+        self._substrate_name = substrate_name
+        self._max_rate = max_rate / UnitConverter.time_to_ms((1, 'day'))
+        self._ed50 = median_effective_concentration
+
+    def update_attributes(self, agent) -> None:
+        concentration = agent.get_attribute('substrate_info')[self._substrate_name].concentration
+        rate = self.mm_fun(x=concentration, vmax=self._max_rate, ed50=self._ed50)
+        dt = self.update_info.elapsed_time
+        prob = 1 - np.exp(-rate * dt)
+        if np.random.random() < prob:
+            agent.set_attribute('state', 'necrotic')
+            agent.set_attribute('cellcycle_is_active', False)
+            agent.set_attribute('division_pending', False)
+            agent.set_attribute('motility', 0)
+            agent.set_attribute('binding_affinity', 0)
+
+    def mm_fun(self, x, vmax, ed50):
+        return vmax * (x / (ed50 + x))
