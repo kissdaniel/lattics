@@ -1,3 +1,4 @@
+from typing import Any
 from .core import Agent, UpdateInfo
 from .utils import UnitConverter
 import numpy as np
@@ -86,3 +87,26 @@ class FixedIncrementCellCycleModel(BaseModel):
             loc = mean_length
             scale = self._distribution_param
             return np.random.normal(loc=loc, scale=scale)
+
+
+class StochasticTransitionModel(BaseModel):
+    def __init__(self,
+                 update_interval: tuple[float, str] = None,
+                 condition: tuple[str, Any] = None,
+                 end_states: dict[str, Any] = None,
+                 rate: float = 0
+                 ) -> None:
+        super().__init__(update_interval)
+        self._condition = condition
+        self._end_states = end_states
+        self._rate = rate
+
+    def update_attributes(self, agent: Agent) -> None:
+        attr_name = self._condition[0]
+        attr_value = self._condition[1]
+        if agent.get_attribute(attr_name) == attr_value:
+            dt = self.update_info.elapsed_time
+            prob = 1 - np.exp(-self._rate * dt)
+            if np.random.random() < prob:
+                for s_name, s_value in self._end_states.items():
+                    agent.set_attribute(s_name, s_value)
