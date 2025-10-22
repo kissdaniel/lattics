@@ -22,7 +22,7 @@ Features
 Installation
 ------------
 
-You can install LattiCS directly from this repository using pip. See details `HERE <https://kissdaniel.github.io/lattics/installation.html/>`__
+You can install LattiCS directly from this repository using pip. See details `here <https://kissdaniel.github.io/lattics/installation.html>`__ .
 
 Documentation
 -------------
