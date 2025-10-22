@@ -99,7 +99,7 @@ class StochasticTransitionModel(BaseModel):
         super().__init__(update_interval)
         self._condition = condition
         self._end_states = end_states
-        self._rate = rate
+        self._rate = rate / UnitConverter.time_to_ms((1, 'day'))
 
     def update_attributes(self, agent: Agent) -> None:
         attr_name = self._condition[0]
