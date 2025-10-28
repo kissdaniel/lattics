@@ -1,6 +1,6 @@
 from typing import Any
 from .core import Agent, UpdateInfo
-from .utils import UnitConverter
+from .utils import convert_time
 import numpy as np
 
 
@@ -44,7 +44,7 @@ class FixedIncrementCellCycleModel(BaseModel):
         if not agent.has_attribute('division_completed'):
             agent.set_attribute('division_completed', False)
         if 'cellcycle_mean_length' in params:
-            mean_length = UnitConverter.time_to_ms(params['cellcycle_mean_length'])
+            mean_length = convert_time(params['cellcycle_mean_length'][0], params['cellcycle_mean_length'][1], 'ms')
             agent.set_attribute('cellcycle_mean_length', mean_length)
             length = self._generate_cellcycle_length(mean_length)
             agent.set_attribute('cellcycle_length', length)
@@ -99,7 +99,7 @@ class StochasticTransitionModel(BaseModel):
         super().__init__(update_interval)
         self._condition = condition
         self._end_states = end_states
-        self._rate = rate / UnitConverter.time_to_ms((1, 'day'))
+        self._rate = rate / convert_time(1, 'day', 'ms')
 
     def update_attributes(self, agent: Agent) -> None:
         attr_name = self._condition[0]
@@ -121,7 +121,7 @@ class ConcentrationDependentToxicityModel(BaseModel):
                  ) -> None:
         super().__init__(update_interval)
         self._substrate_name = substrate_name
-        self._max_rate = max_rate / UnitConverter.time_to_ms((1, 'day'))
+        self._max_rate = max_rate / convert_time(1, 'day', 'ms')
         self._ed50 = median_effective_concentration
 
     def update_attributes(self, agent) -> None:

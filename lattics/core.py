@@ -9,7 +9,7 @@ import pickle
 import tqdm
 import uuid
 from typing import Any
-from .utils import UnitConverter
+from .utils import convert_time
 
 
 class Agent:
@@ -111,7 +111,7 @@ class Event:
                  handler: Any,
                  **params: dict
                  ) -> None:
-        self._time = UnitConverter.time_to_ms(time)
+        self._time = convert_time(time[0], time[1], 'ms')
         self._handler = handler
         self._params = params
 
@@ -254,8 +254,8 @@ class Simulation:
         dt : _type_
             Time step, in milliseconds
         """
-        time_ms = UnitConverter.time_to_ms(time)
-        dt_ms = UnitConverter.time_to_ms(dt)
+        time_ms = convert_time(time[0], time[1], 'ms')
+        dt_ms = convert_time(dt[0], dt[1], 'ms')
         if dt_history:
             history_ui = UpdateInfo(update_interval=dt_history)
             self._make_history_entry(save_mode)
@@ -278,7 +278,7 @@ class Simulation:
                     history_ui.reset_time()
                 history_ui.increase_time(dt_ms)
             if i % PROGRESSBAR_SCALER == 0:
-                days = UnitConverter.ms_to_days(self.time)
+                days = convert_time(self.time, 'ms', 'day')
                 progressbar.set_postfix(T=f'{days:.2f}', N=f'{len(self.agents)}')
                 progressbar.update(PROGRESSBAR_SCALER)
             self._time += dt_ms
@@ -331,7 +331,7 @@ class UpdateInfo:
                  update_interval: tuple[float, str]
                  ) -> None:
         if update_interval:
-            self._update_interval = UnitConverter.time_to_ms(update_interval)
+            self._update_interval = convert_time(update_interval[0], update_interval[1], 'ms')
         else:
             self._update_interval = 0
         self._elapsed_time = 0
