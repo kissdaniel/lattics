@@ -243,7 +243,7 @@ class Simulation:
         if self._space:
             self._space.remove_agent(agent)
 
-    def run(self, time: tuple[float, str] , dt: tuple[float, str], dt_history: tuple[float, str] = None, save_mode: str = 'always') -> None:
+    def run(self, time: tuple[float, str] , dt: tuple[float, str], dt_history: tuple[float, str] = None, save_mode: str = 'always', verbosity: int = 1) -> None:
         """Runs the simulation from the current state for the specified
         duration using the given time step.
 
@@ -262,10 +262,11 @@ class Simulation:
 
         steps = int(math.ceil(time_ms / dt_ms)) + 1
 
-        progressbar_format = "{l_bar}{bar}| [{elapsed}<{remaining}{postfix}]"
-        progressbar = tqdm.tqdm(total=steps, mininterval=1.0, colour='#d2de32', bar_format=progressbar_format)
-        progressbar.set_description(f'ID={self._id}')
-        PROGRESSBAR_SCALER = 100
+        if verbosity == 1:
+            progressbar_format = "{l_bar}{bar}| [{elapsed}<{remaining}{postfix}]"
+            progressbar = tqdm.tqdm(total=steps, mininterval=1.0, colour='#d2de32', bar_format=progressbar_format)
+            progressbar.set_description(f'ID={self._id}')
+            PROGRESSBAR_SCALER = 100
 
         for i in range(steps):
             self._update_events(self._time)
@@ -277,13 +278,15 @@ class Simulation:
                     self._make_history_entry(save_mode)
                     history_ui.reset_time()
                 history_ui.increase_time(dt_ms)
-            if i % PROGRESSBAR_SCALER == 0:
-                days = convert_time(self.time, 'ms', 'day')
-                progressbar.set_postfix(T=f'{days:.2f}', N=f'{len(self.agents)}')
-                progressbar.update(PROGRESSBAR_SCALER)
+            if verbosity == 1:
+                if i % PROGRESSBAR_SCALER == 0:
+                    days = convert_time(self.time, 'ms', 'day')
+                    progressbar.set_postfix(T=f'{days:.2f}', N=f'{len(self.agents)}')
+                    progressbar.update(PROGRESSBAR_SCALER)
             self._time += dt_ms
 
-        progressbar.n = steps
+        if verbosity == 1:
+            progressbar.n = steps
 
         if save_mode == 'on_completion':
             self._save_history()
