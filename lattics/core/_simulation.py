@@ -90,9 +90,6 @@ class Simulation:
                           'lead to unexpected consequences.')
         for m in self._models:
             m.initialize_attributes(agent, **params)
-        for par_name, par_value in params.items():
-            if not agent.has_attribute(par_name):
-                agent.set_attribute(par_name, par_value)
 
     def add_space(self, space: 'spaces.BaseSpace') -> None:
         """Sets the simulation space to the instance passed as a parameter.
@@ -214,7 +211,3 @@ class Simulation:
                     m.update_attributes(a)
                 m.update_info.reset_time()
             m.update_info.increase_time(dt)
-
-
-def create_simulation(id: str = None):
-    return Simulation(id=id)
