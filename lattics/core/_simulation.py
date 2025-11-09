@@ -1,7 +1,3 @@
-"""The main component of the LattiCS framework containing functionalities to
-set up and execute a simulation.
-"""
-
 import copy
 import math
 import warnings
@@ -9,117 +5,8 @@ import pickle
 import tqdm
 import uuid
 from typing import Any
-from .utils import convert_time
-
-
-class Agent:
-
-    id_count = 0
-
-    def __init__(self) -> None:
-        """Constructor method.
-        """
-        self._attributes = dict()
-        self._initialize_id()
-
-    @property
-    def id(self) -> int:
-        return self._id
-
-    def clone(self) -> 'Agent':
-        """Returns a deep copy instance of the agent.
-
-        Returns
-        -------
-        Agent
-            The cloned agent instance
-        """
-
-        cloned = Agent()
-        cloned._attributes = copy.deepcopy(self._attributes)
-        return cloned
-
-    def has_attribute(self, name: str) -> bool:
-        """Returns whether the agent instance has a specific attribute initialized.
-
-        Parameters
-        ----------
-        name : str
-            The identifier of the attribute
-
-        Returns
-        -------
-        bool
-            True if the agent has the attribute, otherwise false
-
-        Examples
-        --------
-        >>> a.initialize_attribute('my_attribute')
-        >>> a.has_attribute('my_attribute')
-        True
-        >>> a.has_attribute('nonexisting_attribute')
-        False
-        """
-        return name in self._attributes
-
-    def set_attribute(self, name: str, value: Any) -> None:
-        """Set the value of the specified attribute.
-
-        Parameters
-        ----------
-        name : str
-            The identifier of the attribute
-        value : Any
-            The new value to be set
-
-        Examples
-        --------
-        >>> a.initialize_attribute('my_attribute')
-        >>> a.set_attribute('my_attribute', True)
-        """
-        self._attributes[name] = value
-
-    def get_attribute(self, name: str) -> Any:
-        """Returns the value of the specified attribute.
-
-        Parameters
-        ----------
-        name : str
-            The identifier of the attribute
-
-        Returns
-        -------
-        any type
-            The current value of the attribute
-
-        Examples
-        --------
-        >>> a.initialize_attribute('my_attribute', 0)
-        >>> print(a.get_attribute(''my_attribute''))
-        0
-        """
-        return self._attributes[name]
-
-    def _initialize_id(self) -> int:
-        self._id = Agent.id_count
-        Agent.id_count += 1
-
-
-class Event:
-    def __init__(self,
-                 time: tuple[float, str],
-                 handler: Any,
-                 **params: dict
-                 ) -> None:
-        self._time = convert_time(time[0], time[1], 'ms')
-        self._handler = handler
-        self._params = params
-
-    def is_ready(self, current_time: int) -> bool:
-        return self._time <= current_time
-
-    def execute(self, simulation):
-        self._handler(simulation, **self._params)
+from ._agent import Agent
+from ._convert import convert_time
 
 
 class Simulation:
@@ -329,29 +216,5 @@ class Simulation:
             m.update_info.increase_time(dt)
 
 
-class UpdateInfo:
-    def __init__(self,
-                 update_interval: tuple[float, str]
-                 ) -> None:
-        if update_interval:
-            self._update_interval = convert_time(update_interval[0], update_interval[1], 'ms')
-        else:
-            self._update_interval = 0
-        self._elapsed_time = 0
-
-    @property
-    def update_interval(self) -> int:
-        return self._update_interval
-
-    @property
-    def elapsed_time(self) -> int:
-        return self._elapsed_time
-
-    def update_needed(self) -> bool:
-        return self._update_interval <= self._elapsed_time
-
-    def increase_time(self, msecs) -> None:
-        self._elapsed_time += msecs
-
-    def reset_time(self) -> None:
-        self._elapsed_time = 0
+def create_simulation(id: str = None):
+    return Simulation(id=id)

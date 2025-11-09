@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import numpy as np
 from typing import Any
-from .numba_functions import diffusion_solver_lod_2d
+from ._numba_functions import diffusion_solver_lod_2d
 
 
 @dataclass

@@ -1,26 +1,23 @@
-from typing import Any
-from .core import Agent, UpdateInfo
-from .utils import convert_time
 import numpy as np
 
-
-class BaseModel:
-    def __init__(self,
-                 update_interval: tuple[float, str] = None
-                 ) -> None:
-        self.update_info = UpdateInfo(update_interval=update_interval)
-
-    def initialize_attributes(self, agent: Agent, **params) -> None:
-        pass
-
-    def update_attributes(self, agent: Agent) -> None:
-        pass
-
-    def reset_attributes(self, agent: Agent) -> None:
-        pass
+from ._base import BaseModel
+from lattics.core._agent import Agent
+from lattics.core._convert import convert_time
 
 
 class FixedIncrementCellCycleModel(BaseModel):
+    """This model implements a simple fixed timestep-based cell cycle by using the cell cycle's length (time
+    duration) and an internal clock (counter) to track its current state.
+
+
+
+
+
+    Parameters
+    ----------
+    BaseModel : _type_
+        _description_
+    """
     def __init__(self,
                  update_interval: tuple[float, str] = None,
                  distribution: str = 'erlang',
@@ -87,54 +84,3 @@ class FixedIncrementCellCycleModel(BaseModel):
             loc = mean_length
             scale = self._distribution_param
             return np.random.normal(loc=loc, scale=scale)
-
-
-class StochasticTransitionModel(BaseModel):
-    def __init__(self,
-                 update_interval: tuple[float, str] = None,
-                 condition: tuple[str, Any] = None,
-                 end_states: dict[str, Any] = None,
-                 rate: float = 0
-                 ) -> None:
-        super().__init__(update_interval)
-        self._condition = condition
-        self._end_states = end_states
-        self._rate = rate / convert_time(1, 'day', 'ms')
-
-    def update_attributes(self, agent: Agent) -> None:
-        attr_name = self._condition[0]
-        attr_value = self._condition[1]
-        if agent.get_attribute(attr_name) == attr_value:
-            dt = self.update_info.elapsed_time
-            prob = 1 - np.exp(-self._rate * dt)
-            if np.random.random() < prob:
-                for s_name, s_value in self._end_states.items():
-                    agent.set_attribute(s_name, s_value)
-
-
-class ConcentrationDependentToxicityModel(BaseModel):
-    def __init__(self,
-                 update_interval: tuple[float, str],
-                 substrate_name: str,
-                 max_rate: float,
-                 median_effective_concentration: float
-                 ) -> None:
-        super().__init__(update_interval)
-        self._substrate_name = substrate_name
-        self._max_rate = max_rate / convert_time(1, 'day', 'ms')
-        self._ed50 = median_effective_concentration
-
-    def update_attributes(self, agent) -> None:
-        concentration = agent.get_attribute('substrate_info')[self._substrate_name].concentration
-        rate = self.mm_fun(x=concentration, vmax=self._max_rate, ed50=self._ed50)
-        dt = self.update_info.elapsed_time
-        prob = 1 - np.exp(-rate * dt)
-        if np.random.random() < prob:
-            agent.set_attribute('state', 'necrotic')
-            agent.set_attribute('cellcycle_is_active', False)
-            agent.set_attribute('division_pending', False)
-            agent.set_attribute('motility', 0)
-            agent.set_attribute('binding_affinity', 0)
-
-    def mm_fun(self, x, vmax, ed50):
-        return vmax * (x / (ed50 + x))

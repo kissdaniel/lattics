@@ -1,8 +1,8 @@
-from .core import Agent
-from .core import Simulation
-from .core import UpdateInfo
-from .numba_functions import bresenham_2d, displacement_trial_2d
-from .substrates import HomogeneousSubstrateField, Lattice2DSubstrateField
+from ._agent import Agent
+from ._simulation import Simulation
+from ._updateinfo import UpdateInfo
+from ._numba_functions import bresenham_2d, displacement_trial_2d
+from ._substrate import HomogeneousSubstrateField, Lattice2DSubstrateField
 
 from abc import ABC, abstractmethod
 import copy
