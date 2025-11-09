@@ -17,9 +17,6 @@ class ConcentrationDependentToxicityModel(BaseModel):
         self._max_rate = max_rate / convert_time(1, 'day', 'ms')
         self._ed50 = median_effective_concentration
 
-    def initialize_attributes(self, agent: Agent, **params) -> None:
-        pass
-
     def update_attributes(self, agent: Agent) -> None:
         concentration = agent.get_attribute('substrate_info')[self._substrate_name].concentration
         rate = self._mm_fun(x=concentration, vmax=self._max_rate, ed50=self._ed50)
@@ -32,8 +29,9 @@ class ConcentrationDependentToxicityModel(BaseModel):
             agent.set_attribute('motility', 0)
             agent.set_attribute('binding_affinity', 0)
 
-    def reset_attributes(self, agent: Agent) -> None:
-        pass
+    def _initialize_required_attributes(self, agent: Agent) -> None:
+        if not agent.has_attribute('substrate_info'):
+            raise AttributeError()
 
     def _mm_fun(self, x, vmax, ed50):
         return vmax * (x / (ed50 + x))

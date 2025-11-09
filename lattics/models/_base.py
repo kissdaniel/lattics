@@ -14,14 +14,23 @@ class BaseModel(abc.ABC):
                  ) -> None:
         self.update_info = UpdateInfo(update_interval=update_interval)
 
-    @abc.abstractmethod
-    def initialize_attributes(self, agent: Agent, **params) -> None:
-        raise NotImplementedError
+    def initialize_attributes(self, agent: Agent) -> None:
+        self._initialize_required_attributes(agent)
+        self._initialize_optional_attributes(agent)
+        self._initialize_attributes_default_values(agent)
 
     @abc.abstractmethod
     def update_attributes(self, agent: Agent) -> None:
         raise NotImplementedError
 
-    @abc.abstractmethod
     def reset_attributes(self, agent: Agent) -> None:
-        raise NotImplementedError
+        pass
+
+    def _initialize_required_attributes(self, agent: Agent) -> None:
+        pass
+
+    def _initialize_optional_attributes(self, agent: Agent) -> None:
+        pass
+
+    def _initialize_attributes_default_values(self, agent: Agent) -> None:
+        pass

@@ -27,32 +27,6 @@ class FixedIncrementCellCycleModel(BaseModel):
         self._distribution = distribution
         self._distribution_param = distribution_param
 
-    def initialize_attributes(self, agent: Agent, **params) -> None:
-        if not agent.has_attribute('cellcycle_is_active'):
-            agent.set_attribute('cellcycle_is_active', True)
-        if not agent.has_attribute('cellcycle_mean_length'):
-            agent.set_attribute('cellcycle_mean_length', None)
-        if not agent.has_attribute('cellcycle_length'):
-            agent.set_attribute('cellcycle_length', None)
-        if not agent.has_attribute('cellcycle_current_time'):
-            agent.set_attribute('cellcycle_current_time', 0)
-        if not agent.has_attribute('division_pending'):
-            agent.set_attribute('division_pending', False)
-        if not agent.has_attribute('division_completed'):
-            agent.set_attribute('division_completed', False)
-        if 'cellcycle_mean_length' in params:
-            mean_length = convert_time(params['cellcycle_mean_length'][0], params['cellcycle_mean_length'][1], 'ms')
-            agent.set_attribute('cellcycle_mean_length', mean_length)
-            length = self._generate_cellcycle_length(mean_length)
-            agent.set_attribute('cellcycle_length', length)
-        if 'cellcycle_current_time' in params:
-            agent.set_attribute('cellcycle_current_time', params['cellcycle_current_time'])
-        if 'cellcycle_random_initial' in params:
-            if params['cellcycle_random_initial']:
-                length = agent.get_attribute('cellcycle_length')
-                cc_time = np.random.uniform(low=0, high=length)
-                agent.set_attribute('cellcycle_current_time', cc_time)
-
     def update_attributes(self, agent: Agent) -> None:
         if agent.get_attribute('division_completed'):
             self.reset_attributes(agent)
@@ -69,7 +43,8 @@ class FixedIncrementCellCycleModel(BaseModel):
         agent.set_attribute('cellcycle_current_time', 0)
         agent.set_attribute('division_pending', False)
         agent.set_attribute('division_completed', False)
-        mean_length = agent.get_attribute('cellcycle_mean_length')
+        attr = agent.get_attribute('cellcycle_mean_length')
+        mean_length = convert_time(attr[0], attr[1], 'ms')
         length = self._generate_cellcycle_length(mean_length)
         agent.set_attribute('cellcycle_length', length)
 
@@ -84,3 +59,27 @@ class FixedIncrementCellCycleModel(BaseModel):
             loc = mean_length
             scale = self._distribution_param
             return np.random.normal(loc=loc, scale=scale)
+
+    def _initialize_required_attributes(self, agent: Agent) -> None:
+        if not agent.has_attribute('cellcycle_mean_length'):
+            raise AttributeError()
+        attr = agent.get_attribute('cellcycle_mean_length')
+        mean_length = convert_time(attr[0], attr[1], 'ms')
+        length = self._generate_cellcycle_length(mean_length)
+        agent.set_attribute('cellcycle_length', length)
+
+    def _initialize_optional_attributes(self, agent: Agent) -> None:
+        if agent.has_attribute('cellcycle_random_initial'):
+            length = agent.get_attribute('cellcycle_length')
+            cc_time = np.random.uniform(low=0, high=length)
+            agent.set_attribute('cellcycle_current_time', cc_time)
+
+    def _initialize_attributes_default_values(self, agent: Agent) -> None:
+        if not agent.has_attribute('cellcycle_is_active'):
+            agent.set_attribute('cellcycle_is_active', True)
+        if not agent.has_attribute('cellcycle_current_time'):
+            agent.set_attribute('cellcycle_current_time', 0)
+        if not agent.has_attribute('division_pending'):
+            agent.set_attribute('division_pending', False)
+        if not agent.has_attribute('division_completed'):
+            agent.set_attribute('division_completed', False)

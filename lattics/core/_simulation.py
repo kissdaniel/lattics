@@ -71,7 +71,7 @@ class Simulation:
 
         return self._time
 
-    def add_agent(self, agent: Agent, **params) -> None:
+    def add_agent(self, agent: Agent) -> None:
         """Adds the specified agent to the simulation. The agent will be added
         to the collection of all agents and, if a simulation domain is defined,
         will also be placed within the simulation domain.
@@ -83,13 +83,13 @@ class Simulation:
         """
         self._agents.append(agent)
         if self._space:
-            self._space.add_agent(agent, **params)
+            self._space.add_agent(agent)
         else:
             warnings.warn('No simulation domain has been defined. '
                           'You can proceed without one, but this may '
                           'lead to unexpected consequences.')
         for m in self._models:
-            m.initialize_attributes(agent, **params)
+            m.initialize_attributes(agent)
 
     def add_space(self, space: 'spaces.BaseSpace') -> None:
         """Sets the simulation space to the instance passed as a parameter.
