@@ -7,6 +7,7 @@ import uuid
 from typing import Any
 from ._agent import Agent
 from ._convert import convert_time
+from ._updateinfo import UpdateInfo
 
 
 class Simulation:
@@ -30,6 +31,7 @@ class Simulation:
         self._events = list()
         self._models = list()
         self._history = list()
+        self._history_ui = None
         self._time = 0
 
     def __getstate__(self):
@@ -127,7 +129,7 @@ class Simulation:
         if self._space:
             self._space.remove_agent(agent)
 
-    def run(self, time: tuple[float, str] , dt: tuple[float, str], dt_history: tuple[float, str] = None, save_mode: str = 'always', verbosity: int = 1) -> None:
+    def run(self, time: tuple[float, str] , dt: tuple[float, str], dt_history: tuple[float, str] = None, save_mode: str = 'never', verbosity: int = 1) -> None:
         """Runs the simulation from the current state for the specified
         duration using the given time step.
 
@@ -140,11 +142,13 @@ class Simulation:
         """
         time_ms = convert_time(time[0], time[1], 'ms')
         dt_ms = convert_time(dt[0], dt[1], 'ms')
-        if dt_history:
-            history_ui = UpdateInfo(update_interval=dt_history)
-            self._make_history_entry(save_mode)
 
-        steps = int(math.ceil(time_ms / dt_ms)) + 1
+        if self.time == 0:
+            if dt_history:
+                self._history_ui = UpdateInfo(update_interval=dt_history)
+                self._make_history_entry(save_mode)
+
+        steps = int(math.ceil(time_ms / dt_ms))
 
         if verbosity == 1:
             progressbar_format = "{l_bar}{bar}| [{elapsed}<{remaining}{postfix}]"
@@ -158,16 +162,17 @@ class Simulation:
             if self._space:
                 self._space.update(dt_ms)
             if dt_history:
-                if history_ui.update_needed():
+                self._history_ui.increase_time(dt_ms)
+            self._time += dt_ms
+            if dt_history:
+                if self._history_ui.update_needed():
                     self._make_history_entry(save_mode)
-                    history_ui.reset_time()
-                history_ui.increase_time(dt_ms)
+                    self._history_ui.reset_time()
             if verbosity == 1:
                 if i % PROGRESSBAR_SCALER == 0:
                     days = convert_time(self.time, 'ms', 'day')
                     progressbar.set_postfix(T=f'{days:.2f}', N=f'{len(self.agents)}')
                     progressbar.update(PROGRESSBAR_SCALER)
-            self._time += dt_ms
 
         if verbosity == 1:
             progressbar.n = steps
