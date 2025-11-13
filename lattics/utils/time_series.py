@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import csv
 
-from .util import convert_time
+from lattics.core import convert_time
 
 
 class TimeSeries:
