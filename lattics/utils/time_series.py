@@ -23,6 +23,12 @@ class TimeSeries:
         if interpolation == 'no':
             return self._sse_nointerpolation(other)
 
+    def rmse(self, other: 'TimeSeries', interpolation: str = 'no') -> float:
+        n = len(self.timepoints)
+        if interpolation == 'no':
+            sse = self._sse_nointerpolation(other)
+            return np.sqrt(sse / n)
+
     @staticmethod
     def from_csv(file_path: str, time_unit: str = 'ms', skip_header: bool = True) -> 'TimeSeries':
         timepoints = []
