@@ -3,12 +3,11 @@ from typing import Any
 
 
 class Agent:
+    """An entity representing a modeled individual."""
 
     id_count = 0
 
     def __init__(self) -> None:
-        """Constructor method.
-        """
         self._attributes = dict()
         self._initialize_id()
 
