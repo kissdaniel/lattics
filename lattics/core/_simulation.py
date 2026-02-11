@@ -122,7 +122,7 @@ class Simulation:
     def add_substrate(self, name: str, substrate) -> None:
         if not self._space:
             raise AttributeError('A simulation domain has to be set to add substrates.')
-        # self._domain.add_substrate_field(substrate)
+        self._domain.add_substrate_field(substrate)
 
     def remove_agent(self, agent: Agent) -> None:
         self._agents.remove(agent)
