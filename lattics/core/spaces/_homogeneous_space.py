@@ -1,5 +1,5 @@
 from ._base import BaseSpace
-# from lattics.core.substrates import HomogeneousSubstrateField
+from lattics.core.substrates import HomogeneousSubstrateField
 from lattics.core import Agent
 from lattics.core import Simulation
 from lattics.core import UpdateInfo
