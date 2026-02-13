@@ -1,6 +1,8 @@
 from lattics.core import Agent
 from lattics.core import Simulation
+from lattics.core.spaces import Lattice2DSpace
 from typing import Any
+import random
 
 
 def create_agent(attributes: dict[str, Any]) -> Agent:
@@ -62,9 +64,44 @@ def create_population(size: int, attributes: dict[str, Any]) -> list[Agent]:
     return agents
 
 
-def create_simulation(id: str = None, agents: list[Agent] = None):
-    sim = Simulation(id=id)
-    if agents:
-        for a in agents:
-            sim.add_agent(a)
-    return sim
+def create_simulation_2d(
+        id: str = None,
+        dimensions: tuple = None,
+        grid_spacing: int = 20,
+        dt_agent: tuple = (30, 'sec'),
+        dt_substrate: tuple = (1, 'sec')
+) -> Simulation:
+    simulation = Simulation(id=id)
+    space = Lattice2DSpace(
+        simulation=simulation,
+        dimensions=dimensions,
+        grid_spacing=grid_spacing,
+        dt_agent=dt_agent,
+        dt_substrate=dt_substrate
+    )
+    simulation.add_space(space=space)
+    return simulation
+
+
+def populate_agents(
+        simulation: Simulation,
+        method: str = 'count',
+        count: int = 1,
+        density: float = 0.0,
+        map: str = None,
+        attributes: dict[str, Any] = None
+) -> None:
+    if not attributes:
+        attributes = {}
+    if method == 'count':
+        rows, cols = simulation._space._agent_layer.shape
+        all_coordinates = [(r, c) for r in range(rows) for c in range(cols)]
+        target_coordinates = random.sample(all_coordinates, k=count)
+        for tc in target_coordinates:
+            agent_attributes = attributes | {'position': tc}
+            agent = create_agent(attributes=agent_attributes)
+            simulation.add_agent(agent=agent)
+    if method == 'density':
+        pass
+    if method == 'map':
+        pass
