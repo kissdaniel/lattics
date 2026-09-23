@@ -58,24 +58,85 @@ def get_substrate_concentration(filename: str, name: str, means_only: bool = Fal
     return TimeSeries(times, values)
 
 
-def show_agents_and_substrates_2d(filename: str, times: tuple[int], substrate: str):
+def show_agents_and_substrates_2d(
+        simulation: Simulation,
+        times: tuple[int] | str,
+        color_by: str = None,
+        cmap: str = 'viridis',
+        color_mapping: dict = None,
+        vmin: float = 0.0,
+        vmax: float = 1.0,
+        substrate: str = None,
+        filename: str = None,
+        show: bool = True
+):
     import matplotlib.pyplot as plt
+    from matplotlib.collections import PatchCollection
     counter = 0
-    with open(filename, 'rb') as f:
-        history = pickle.load(f)
-        for entry in history:
-            sim_state = pickle.loads(entry)
-            if sim_state.time in times:
-                fig, ax = plt.subplots()
+    history = simulation._history
+    dims = simulation._space._dimensions
+    for entry in history:
+        sim_state = pickle.loads(entry)
+        if times == 'all' or sim_state.time in times:
+            fig, ax = plt.subplots()
+            if substrate:
                 s = sim_state._space._substrates[substrate]._concentration
                 s_ax = ax.imshow(s, vmin=0, vmax=0.035, cmap='inferno')
-                for a in sim_state.agents:
-                    pos = a.get_attribute('position')
-                    color = 'blue' if a.get_attribute('state') == 'malignant' else 'red'
-                    patch = plt.Circle(pos, 0.35, edgecolor='black', facecolor=color, linewidth=0.5)
-                    ax.add_patch(patch)
-                plt.axis('off')
                 plt.colorbar(s_ax)
-                plt.savefig(f'{counter}.png', dpi=100)
-                plt.close()
-                counter += 1
+            agent_patches = []
+            for a in sim_state.agents:
+                pos = a.get_attribute('position')
+                if color_by:
+                    value = a.get_attribute(color_by)
+                    if isinstance(value, str):
+                        color = color_mapping[value]
+                    else:
+                        value_norm = (value - vmin) / (vmax - vmin)
+                        color = plt.cm.get_cmap(cmap)(value_norm)
+                else:
+                    color = 'blue'
+                patch = plt.Circle(pos, 0.4, edgecolor='black', facecolor=color, linewidth=0.2)
+                agent_patches.append(patch)
+                ax.add_patch(patch)
+            plt.title(f't = {sim_state.time / 3600000} h')
+            plt.axis('off')
+            plt.tight_layout()
+
+            ax.set_xlim((-0.5, dims[0] - 0.5))
+            ax.set_ylim((-0.5, dims[1] - 0.5))
+            ax.set_aspect('equal')
+            if color_by:
+                patches = PatchCollection(agent_patches, cmap=cmap)
+                # cbar = fig.colorbar(patches, ax=ax)
+                # cbar.mappable.set_clim(vmin, vmax)
+                # cbar.set_label(color_by)            
+            if filename:
+                plt.savefig(f'{filename}_{counter}.png', dpi=100)
+            if show:
+                plt.show()
+            plt.close()
+            counter += 1
+
+
+
+# def show_agents_and_substrates_2d(filename: str, times: tuple[int], substrate: str):
+#     import matplotlib.pyplot as plt
+#     counter = 0
+#     with open(filename, 'rb') as f:
+#         history = pickle.load(f)
+#         for entry in history:
+#             sim_state = pickle.loads(entry)
+#             if sim_state.time in times:
+#                 fig, ax = plt.subplots()
+#                 s = sim_state._space._substrates[substrate]._concentration
+#                 s_ax = ax.imshow(s, vmin=0, vmax=0.035, cmap='inferno')
+#                 for a in sim_state.agents:
+#                     pos = a.get_attribute('position')
+#                     color = 'blue' if a.get_attribute('state') == 'malignant' else 'red'
+#                     patch = plt.Circle(pos, 0.35, edgecolor='black', facecolor=color, linewidth=0.5)
+#                     ax.add_patch(patch)
+#                 plt.axis('off')
+#                 plt.colorbar(s_ax)
+#                 plt.savefig(f'{counter}.png', dpi=100)
+#                 plt.close()
+#                 counter += 1
