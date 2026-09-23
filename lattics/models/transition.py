@@ -1,18 +1,21 @@
-import numpy as np
 from typing import Any
 
-from ._base import BaseModel
+import numpy as np
+
 from lattics.core._agent import Agent
 from lattics.core._convert import convert_time
 
+from ._base import BaseModel
+
 
 class StochasticTransitionModel(BaseModel):
-    def __init__(self,
-                 update_interval: tuple[float, str] = None,
-                 condition: tuple[str, Any] = None,
-                 end_states: dict[str, Any] = None,
-                 rate: float = 0
-                 ) -> None:
+    def __init__(
+        self,
+        update_interval: tuple[float, str] = None,
+        condition: tuple[str, Any] = None,
+        end_states: dict[str, Any] = None,
+        rate: float = 0,
+    ) -> None:
         super().__init__(update_interval)
         self._condition = condition
         self._end_states = end_states

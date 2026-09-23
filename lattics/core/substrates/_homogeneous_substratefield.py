@@ -1,24 +1,27 @@
-from ._base import BaseSubstrateField
-
 from abc import ABC, abstractmethod
+
 import numpy as np
 import numpy.typing as npt
 
+from ._base import BaseSubstrateField
+
 
 class HomogeneousSubstrateField(BaseSubstrateField):
-    def __init__(self,
-                 domain,
-                 substrate_name: str,
-                 diffusion_coefficient: float = 0.0,
-                 decay_coefficient: float = 0.0,
-                 decay_kinetics: str = 'first-order',
-                 mm_constant: float = None
-                 ) -> None:
-        super().__init__(domain=domain,
-                         substrate_name=substrate_name,
-                         diffusion_coefficient=diffusion_coefficient,
-                         decay_coefficient=decay_coefficient
-                         )
+    def __init__(
+        self,
+        domain,
+        substrate_name: str,
+        diffusion_coefficient: float = 0.0,
+        decay_coefficient: float = 0.0,
+        decay_kinetics: str = 'first-order',
+        mm_constant: float = None,
+    ) -> None:
+        super().__init__(
+            domain=domain,
+            substrate_name=substrate_name,
+            diffusion_coefficient=diffusion_coefficient,
+            decay_coefficient=decay_coefficient,
+        )
         self._concentration = 0.0
         if decay_kinetics == 'first-order':
             self._decay_function = self._decay_first_order
@@ -50,7 +53,9 @@ class HomogeneousSubstrateField(BaseSubstrateField):
                 v_n = n.get_attribute('volume')
                 c_f_cur = self._concentration
                 m_t = c_n_cur * v_n + c_f_cur * v_f
-                c_n_new = (c_n_cur + (dt / v_n) * (m_t / v_f) * (k_p + k_u)) / (1 + (dt / v_n) * ((1 + (v_n / v_f)) * k_p + (v_n / v_f) * k_u + k_r))
+                c_n_new = (c_n_cur + (dt / v_n) * (m_t / v_f) * (k_p + k_u)) / (
+                    1 + (dt / v_n) * ((1 + (v_n / v_f)) * k_p + (v_n / v_f) * k_u + k_r)
+                )
                 c_f_new = (m_t - c_n_new * v_n) / v_f
                 info.concentration = c_n_new
                 self._concentration = c_f_new
@@ -78,4 +83,4 @@ class HomogeneousSubstrateField(BaseSubstrateField):
         v_max = self._decay_coefficient
         k_M = self._mm_constant
         x = k_M - C + dt * v_max
-        self._concentration = (-x + (x**2 + 4 * k_M * C)**0.5) / 2
+        self._concentration = (-x + (x**2 + 4 * k_M * C) ** 0.5) / 2

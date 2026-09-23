@@ -2,9 +2,7 @@ from ._convert import convert_time
 
 
 class UpdateInfo:
-    def __init__(self,
-                 update_interval: tuple[float, str]
-                 ) -> None:
+    def __init__(self, update_interval: tuple[float, str]) -> None:
         if update_interval:
             self._update_interval = convert_time(update_interval[0], update_interval[1], 'ms')
         else:

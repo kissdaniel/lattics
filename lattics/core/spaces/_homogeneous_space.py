@@ -1,15 +1,15 @@
-from ._base import BaseSpace
-from lattics.core.substrates import HomogeneousSubstrateField
-from lattics.core import Agent
-from lattics.core import Simulation
-from lattics.core import UpdateInfo
-
-from abc import ABC, abstractmethod
 import copy
+import warnings
+from abc import ABC, abstractmethod
+
 import numpy as np
 import numpy.typing as npt
 from scipy import ndimage
-import warnings
+
+from lattics.core import Agent, Simulation, UpdateInfo
+from lattics.core.substrates import HomogeneousSubstrateField
+
+from ._base import BaseSpace
 
 
 class HomogeneousSpace(BaseSpace):
@@ -18,12 +18,14 @@ class HomogeneousSpace(BaseSpace):
     interacting with any other agent in the population. Agents are stored in a
     list.
     """
-    def __init__(self,
-                 simulation: Simulation,
-                 volume: int = None,
-                 dt_agent: tuple[float, str] = None,
-                 dt_substrate: tuple[float, str] = None
-                 ) -> None:
+
+    def __init__(
+        self,
+        simulation: Simulation,
+        volume: int = None,
+        dt_agent: tuple[float, str] = None,
+        dt_substrate: tuple[float, str] = None,
+    ) -> None:
         """Constructor method.
 
         Parameters
@@ -50,8 +52,7 @@ class HomogeneousSpace(BaseSpace):
         """
         sum_volumes = self._get_total_agent_volume()
         if self._volume < sum_volumes + volume:
-            warnings.warn('The total volume of agents exceeded the capacity '
-                          'of the domain.')
+            warnings.warn('The total volume of agents exceeded the capacity ' 'of the domain.')
         self._agents.append(agent)
         self._initialize_attributes(agent, volume)
 
@@ -69,20 +70,22 @@ class HomogeneousSpace(BaseSpace):
             self._has_free_volume = True
 
     # TODO: create a Substrate class to store the data below (name, diffusion_coeff, etc.)
-    def add_substrate(self,
-                      name: str,
-                      diffusion_coefficient: float = 0.0,
-                      decay_coefficient: float = 0.0,
-                      decay_kinetics: str = 'first-order',
-                      mm_constant: float = None
-                      ) -> None:
-        substrate = HomogeneousSubstrateField(domain=self,
-                                              substrate_name=name,
-                                              diffusion_coefficient=diffusion_coefficient,
-                                              decay_coefficient=decay_coefficient,
-                                              decay_kinetics=decay_kinetics,
-                                              mm_constant=mm_constant
-                                              )
+    def add_substrate(
+        self,
+        name: str,
+        diffusion_coefficient: float = 0.0,
+        decay_coefficient: float = 0.0,
+        decay_kinetics: str = 'first-order',
+        mm_constant: float = None,
+    ) -> None:
+        substrate = HomogeneousSubstrateField(
+            domain=self,
+            substrate_name=name,
+            diffusion_coefficient=diffusion_coefficient,
+            decay_coefficient=decay_coefficient,
+            decay_kinetics=decay_kinetics,
+            mm_constant=mm_constant,
+        )
         self._substrates[name] = substrate
 
     def update(self, dt: int) -> None:

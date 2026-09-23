@@ -14,14 +14,14 @@ Create a new virtual environment:
 
 Activate the environment:
 
-.. code-block:: console	
+.. code-block:: console
 
 	source lattics/bin/activate
 
 Install the LattiCS package from the Git repository:
 
 .. code-block:: console
-	
+
 	pip install git+https://github.com/kissdaniel/lattics.git
 
 Start a Python shell and verify that the package can be successfully imported:
@@ -44,14 +44,14 @@ Create a new virtual environment:
 
 Activate the environment:
 
-.. code-block:: console	
+.. code-block:: console
 
 	lattics\Scripts\activate.bat
 
 Install the LattiCS package from the Git repository:
 
 .. code-block:: console
-	
+
 	pip install git+https://github.com/kissdaniel/lattics.git
 
 Start a Python shell and verify that the package can be successfully imported:

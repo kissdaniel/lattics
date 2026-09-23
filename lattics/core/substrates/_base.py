@@ -1,14 +1,12 @@
 from abc import ABC, abstractmethod
+
 from lattics.core import SubstrateNode
 
 
 class BaseSubstrateField(ABC):
-    def __init__(self,
-                 domain,
-                 substrate_name: str,
-                 diffusion_coefficient: float = 0.0,
-                 decay_coefficient: float = 0.0
-                 ) -> None:
+    def __init__(
+        self, domain, substrate_name: str, diffusion_coefficient: float = 0.0, decay_coefficient: float = 0.0
+    ) -> None:
         self._domain = domain
         self._substrate_name = substrate_name
         self._diffusion_coefficient = diffusion_coefficient

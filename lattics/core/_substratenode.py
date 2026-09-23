@@ -13,8 +13,7 @@ class SubstrateInfo:
 
 class SubstrateNode:
     def __init__(self) -> None:
-        """Constructor method.
-        """
+        """Constructor method."""
         self._attributes = dict()
         self.set_attribute('substrate_info', dict())
 

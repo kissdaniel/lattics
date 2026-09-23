@@ -10,3 +10,6 @@ exclude =
 max-line-length = 115
 # Ignore some style 'errors' produced while formatting by 'black'
 ignore = E203, W503
+# Hand-aligned neighborhood tables are kept with '# fmt: off'
+per-file-ignores =
+    lattics/core/_numba_functions.py: E201, E231, E241

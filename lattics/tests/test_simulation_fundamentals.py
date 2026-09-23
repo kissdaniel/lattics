@@ -3,13 +3,14 @@ import pytest
 
 def test_default_instantiation():
     from lattics import simulation
+
     sim = simulation.Simulation()
     assert sim is not None
 
 
 def test_agent_addition_no_space_gives_warning():
-    from lattics import simulation
-    from lattics import agent
+    from lattics import agent, simulation
+
     sim = simulation.Simulation()
     a = agent.Agent()
     with pytest.warns(Warning):
@@ -17,8 +18,8 @@ def test_agent_addition_no_space_gives_warning():
 
 
 def test_agent_addition_no_space():
-    from lattics import simulation
-    from lattics import agent
+    from lattics import agent, simulation
+
     sim = simulation.Simulation()
     with pytest.warns(Warning):
         a = agent.Agent()
@@ -29,8 +30,8 @@ def test_agent_addition_no_space():
 
 
 def test_agent_removal_no_space():
-    from lattics import simulation
-    from lattics import agent
+    from lattics import agent, simulation
+
     sim = simulation.Simulation()
     with pytest.warns(Warning):
         a1 = agent.Agent()
@@ -43,13 +44,10 @@ def test_agent_removal_no_space():
         assert actual == expected
 
 
-@pytest.mark.parametrize('time, dt, expected',
-                         [(10, 2, 10),
-                          (5, 3, 6),
-                          (5, 7, 7)
-                          ])
+@pytest.mark.parametrize('time, dt, expected', [(10, 2, 10), (5, 3, 6), (5, 7, 7)])
 def test_simulation_run_elapsed_time(time, dt, expected):
     from lattics import simulation
+
     sim = simulation.Simulation()
     sim.initialize()
     sim.run(time=time, dt=dt)

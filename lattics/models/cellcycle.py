@@ -1,8 +1,9 @@
 import numpy as np
 
-from ._base import BaseModel
 from lattics.core._agent import Agent
 from lattics.core._convert import convert_time
+
+from ._base import BaseModel
 
 
 class TimeBasedCellCycleModel(BaseModel):
@@ -26,11 +27,10 @@ class TimeBasedCellCycleModel(BaseModel):
     BaseModel : _type_
         _description_
     """
-    def __init__(self,
-                 update_interval: tuple[float, str] = None,
-                 distribution: str = 'erlang',
-                 distribution_param: int = 4
-                 ) -> None:
+
+    def __init__(
+        self, update_interval: tuple[float, str] = None, distribution: str = 'erlang', distribution_param: int = 4
+    ) -> None:
         super().__init__(update_interval)
         self._distribution = distribution
         self._distribution_param = distribution_param
@@ -102,9 +102,8 @@ class MultiPhaseTimeBasedCellCycleModel(BaseModel):
     BaseModel : _type_
         _description_
     """
-    def __init__(self,
-                 update_interval: tuple[float, str] = None
-                 ) -> None:
+
+    def __init__(self, update_interval: tuple[float, str] = None) -> None:
         super().__init__(update_interval)
 
     def update_attributes(self, agent: Agent) -> None:
@@ -140,7 +139,7 @@ class MultiPhaseTimeBasedCellCycleModel(BaseModel):
             ('cellcycle.phase_g1_mean', 'cellcycle.phase_g1_sd', 'cellcycle.phase_g1_length'),
             ('cellcycle.phase_s_mean', 'cellcycle.phase_s_sd', 'cellcycle.phase_s_length'),
             ('cellcycle.phase_g2_mean', 'cellcycle.phase_g2_sd', 'cellcycle.phase_g2_length'),
-            ('cellcycle.phase_m_mean', 'cellcycle.phase_m_sd', 'cellcycle.phase_m_length')
+            ('cellcycle.phase_m_mean', 'cellcycle.phase_m_sd', 'cellcycle.phase_m_length'),
         ]
         for attr in attributes:
             sd_ms = 0

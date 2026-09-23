@@ -91,13 +91,13 @@ Since the location, shape, and distribution of the vessels cannot be accounted f
 
 	blood_vessels = lattics.SubstrateNode()
 	blood_vessels.set_attribute('volume', 8.4375 * 10 ** 5)
-	
+
 When modeling the transport from the node to the surrounding tissue (space), three types of parameters can be specified to describe the process. For simplicity, we model this process by assuming that the drug moves between the vessels and the tissue at a rate proportional to the concentration difference; therefore, we will only set the parameter for the passive transport rate for the ``SubstrateNode`` (the other values will remain zero).
 
 We hypothesize that this process occurs relatively quickly, so we set the rate value to a high value (10\ :sup:`-3` 1/ms), and the initial drug concentration to zero, which will increase as a result of the treatments.
-	
+
 .. code-block:: python
-	
+
 	blood_vessel_transport_info = lattics.SubstrateInfo(
 		type='flux',
 		concentration=0.0,
@@ -126,8 +126,8 @@ To account for the organs acting as a drug reservoir ("buffering effect") the OD
 .. _figure2:
 .. figure:: drug_treatment_fig2.png
 	:width: 400
-	:align: center    
-	
+	:align: center
+
 	Schematic of the constructed pharmacokinetic model.
 
 For the calibration of the aforementioned parameters (the drug's decay coefficient and the transport rates between the tissue and the organs), we utilize one of the data sets published in :ref:`Drexler et al. (2020) <ref_drexler2020>`.
@@ -136,7 +136,7 @@ For the calibration of the aforementioned parameters (the drug's decay coefficie
 
 .. _figure3:
 .. figure:: drug_treatment_fig3.png
-	
+
 	Time course of drug concentration measured in blood. (Re-plotted from data in :ref:`Drexler et al. (2020) <ref_drexler2020>`.)
 
 The treatment is represented by an ``Event`` object in our LattiCS model. This event will be scheduled immediately at the start of the simulation and will trigger a change in the concentration of the substrate named "drug" to a specified value (which is also a placeholder value here).
@@ -178,7 +178,7 @@ Let us now set the ``release_rate`` and ``uptake_rate`` values stored in the ``o
 	:layout-sm: A|B|C|D|E|.
 	:gap: 8px
 	:subcaptions: above
-	
+
 	.. image:: drug_treatment_fig4.png
 		:alt: (A)
 
@@ -193,7 +193,7 @@ Let us now set the ``release_rate`` and ``uptake_rate`` values stored in the ``o
 
 	.. image:: drug_treatment_fig8.png
 		:alt: (E)
-	
+
 
 	Concentration profiles generated during the stepwise fine-tuning of the substrate parameters.
 
@@ -208,7 +208,7 @@ Next, we add the agents representing the tumor cells to the model. The changes o
 .. code-block:: python
 
 	from lattics.models import FixedIncrementCellCycleModel
-	
+
 	cellcycle_model = FixedIncrementCellCycleModel(update_interval=(1, 'hour'))
 	simulation.add_model(cellcycle_model)
 
@@ -219,7 +219,7 @@ The doubling time can be set when the agent are added, as it may be different fo
 .. code-block:: python
 
 	from lattics.models import StochasticTransitionModel
-	
+
 	necrosis_model = StochasticTransitionModel(
 		update_interval=(1, 'hour'),
 		condition=('state', 'live'),
@@ -277,4 +277,3 @@ IFAC-PapersOnLine, Volume 53, Issue 2, 2020, Pages 16245-16250, ISSN 2405-8963; 
 .. _ref_schleyer2024:
 
 `Schleyer et al. (2024)` Genevieve Schleyer, Eann A. Patterson, and Judith M. Curran, "Label free tracking to quantify nanoparticle diffusion through biological media", Sci Rep 14, 18822 (2024); https://doi.org/10.1038/s41598-024-69506-0
-

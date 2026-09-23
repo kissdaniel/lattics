@@ -58,7 +58,7 @@ The following types of concentration exchange can be defined between the compart
 
 * **Active secretion**: the node releases a substance into the field. The change depends on the concentration :math:`c_N` in compartment *N*, and the rate constant :math:`k_r`. In the case of cells, this process can model the function of certain transporter proteins (e.g., ABC transporters), which are capable of pumping chemical substances from inside the cell even against a concentration gradient.
 
-* **Active uptake**: the node takes up a substance from the field. The change depends on the concentration :math:`c_F` in compartment *F*, and the uptake rate constant :math:`k_u`. In cells, this process also models the activity of transporter proteins (e.g., glucose uptake), and it is typically significantly faster than passive transport. 
+* **Active uptake**: the node takes up a substance from the field. The change depends on the concentration :math:`c_F` in compartment *F*, and the uptake rate constant :math:`k_u`. In cells, this process also models the activity of transporter proteins (e.g., glucose uptake), and it is typically significantly faster than passive transport.
 
 According to the principle of mass conservation and Fick's first law, the mass changes in the compartments can be described by the following differential equations.
 

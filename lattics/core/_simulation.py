@@ -1,10 +1,12 @@
 import copy
 import math
-import warnings
 import pickle
-import tqdm
 import uuid
+import warnings
 from typing import Any
+
+import tqdm
+
 from ._agent import Agent
 from ._convert import convert_time
 from ._updateinfo import UpdateInfo
@@ -16,6 +18,7 @@ class Simulation:
     the various chemical substances (:class:`Substrate`) present within it.
     The class provides high-level access to configure and execute a simulation.
     """
+
     def __init__(self, id=None) -> None:
         """Constructor method.
 
@@ -87,9 +90,11 @@ class Simulation:
         if self._space:
             self._space.add_agent(agent)
         else:
-            warnings.warn('No simulation domain has been defined. '
-                          'You can proceed without one, but this may '
-                          'lead to unexpected consequences.')
+            warnings.warn(
+                'No simulation domain has been defined. '
+                'You can proceed without one, but this may '
+                'lead to unexpected consequences.'
+            )
         for m in self._models:
             m.initialize_attributes(agent)
 
@@ -129,7 +134,14 @@ class Simulation:
         if self._space:
             self._space.remove_agent(agent)
 
-    def run(self, time: tuple[float, str] , dt: tuple[float, str], dt_history: tuple[float, str] = None, save_mode: str = 'never', verbosity: int = 1) -> None:
+    def run(
+        self,
+        time: tuple[float, str],
+        dt: tuple[float, str],
+        dt_history: tuple[float, str] = None,
+        save_mode: str = 'never',
+        verbosity: int = 1,
+    ) -> None:
         """Runs the simulation from the current state for the specified
         duration using the given time step.
 

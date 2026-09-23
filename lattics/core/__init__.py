@@ -1,9 +1,8 @@
 from ._agent import Agent
-from ._simulation import Simulation
-from ._event import Event
-from ._updateinfo import UpdateInfo
 from ._convert import convert_time
-from ._substratenode import SubstrateInfo
-from ._substratenode import SubstrateNode
+from ._event import Event
+from ._simulation import Simulation
+from ._substratenode import SubstrateInfo, SubstrateNode
+from ._updateinfo import UpdateInfo
 
 """Core components of the LattiCS package."""

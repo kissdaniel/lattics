@@ -1,6 +1,6 @@
-import numpy as np
 import numba
-from numba import void, float32, int32, boolean, types
+import numpy as np
+from numba import boolean, float32, int32, types, void
 
 
 @numba.njit(int32[:, :](int32, int32, int32, int32), cache=True)
@@ -43,29 +43,11 @@ def bresenham_2d(x1, y1, x2, y2):
 @numba.njit(int32[:, :](types.unicode_type), cache=True)
 def get_neighborhood_2d(type):
     if type == 'von_neumann':
-        neighborhood = np.array(
-            [
-                [-1, 0],
-                [1, 0],
-                [0, -1],
-                [0, 1]
-            ],
-            dtype=np.int32
-        )
+        neighborhood = np.array([[-1, 0], [1, 0], [0, -1], [0, 1]], dtype=np.int32)
         return neighborhood
     elif type == 'moore':
         neighborhood = np.array(
-            [
-                [-1, -1],
-                [-1, 0],
-                [-1, 1],
-                [0, -1],
-                [0, 1],
-                [1, -1],
-                [1, 0],
-                [1, 1]
-            ],
-            dtype=np.int32
+            [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]], dtype=np.int32
         )
         return neighborhood
     else:
@@ -75,6 +57,7 @@ def get_neighborhood_2d(type):
 @numba.njit(int32[:, :](types.unicode_type), cache=True)
 def get_neighborhood_3d(type):
     if type == 'von_neumann':
+        # fmt: off
         neighborhood = np.array(
             [
                 [-1, 0, 0], [ 1, 0, 0],
@@ -83,8 +66,10 @@ def get_neighborhood_3d(type):
             ],
             dtype=np.int32
         )
+        # fmt: on
         return neighborhood
     elif type == 'moore':
+        # fmt: off
         neighborhood = np.array(
             [
                 [-1,-1,-1], [-1,-1, 0], [-1,-1, 1],
@@ -99,6 +84,7 @@ def get_neighborhood_3d(type):
             ],
             dtype=np.int32
         )
+        # fmt: on
         return neighborhood
     else:
         raise ValueError('Argument must be either \'von_neumann\' or \'moore\'.')

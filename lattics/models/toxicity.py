@@ -1,17 +1,19 @@
 import numpy as np
 
-from ._base import BaseModel
 from lattics.core._agent import Agent
 from lattics.core._convert import convert_time
 
+from ._base import BaseModel
+
 
 class ConcentrationDependentToxicityModel(BaseModel):
-    def __init__(self,
-                 update_interval: tuple[float, str],
-                 substrate_name: str,
-                 max_rate: float,
-                 median_effective_concentration: float
-                 ) -> None:
+    def __init__(
+        self,
+        update_interval: tuple[float, str],
+        substrate_name: str,
+        max_rate: float,
+        median_effective_concentration: float,
+    ) -> None:
         super().__init__(update_interval)
         self._substrate_name = substrate_name
         self._max_rate = max_rate / convert_time(1, 'day', 'ms')

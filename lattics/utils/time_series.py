@@ -1,6 +1,7 @@
+import csv
+
 import numpy as np
 import pandas as pd
-import csv
 
 from lattics.core import convert_time
 
@@ -65,7 +66,7 @@ class TimeSeries:
                 j += 1
             else:
                 diff = self.values[i] - other.values[j]
-                total_squared_diff += diff ** 2
+                total_squared_diff += diff**2
                 i += 1
                 j += 1
         return total_squared_diff

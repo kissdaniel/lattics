@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-import numpy as np
 from typing import Any
+
+import numpy as np
+
 from ._numba_functions import diffusion_solver_lod_2d
 
 
@@ -16,8 +18,7 @@ class SubstrateInfo:
 
 class SubstrateNode:
     def __init__(self) -> None:
-        """Constructor method.
-        """
+        """Constructor method."""
         self._attributes = dict()
         self.set_attribute('substrate_info', dict())
 
@@ -29,12 +30,9 @@ class SubstrateNode:
 
 
 class BaseSubstrateField(ABC):
-    def __init__(self,
-                 domain,
-                 substrate_name: str,
-                 diffusion_coefficient: float = 0.0,
-                 decay_coefficient: float = 0.0
-                 ) -> None:
+    def __init__(
+        self, domain, substrate_name: str, diffusion_coefficient: float = 0.0, decay_coefficient: float = 0.0
+    ) -> None:
         self._domain = domain
         self._substrate_name = substrate_name
         self._diffusion_coefficient = diffusion_coefficient
@@ -61,19 +59,21 @@ class BaseSubstrateField(ABC):
 
 
 class HomogeneousSubstrateField(BaseSubstrateField):
-    def __init__(self,
-                 domain,
-                 substrate_name: str,
-                 diffusion_coefficient: float = 0.0,
-                 decay_coefficient: float = 0.0,
-                 decay_kinetics: str = 'first-order',
-                 mm_constant: float = None
-                 ) -> None:
-        super().__init__(domain=domain,
-                         substrate_name=substrate_name,
-                         diffusion_coefficient=diffusion_coefficient,
-                         decay_coefficient=decay_coefficient
-                         )
+    def __init__(
+        self,
+        domain,
+        substrate_name: str,
+        diffusion_coefficient: float = 0.0,
+        decay_coefficient: float = 0.0,
+        decay_kinetics: str = 'first-order',
+        mm_constant: float = None,
+    ) -> None:
+        super().__init__(
+            domain=domain,
+            substrate_name=substrate_name,
+            diffusion_coefficient=diffusion_coefficient,
+            decay_coefficient=decay_coefficient,
+        )
         self._concentration = 0.0
         if decay_kinetics == 'first-order':
             self._decay_function = self._decay_first_order
@@ -105,7 +105,9 @@ class HomogeneousSubstrateField(BaseSubstrateField):
                 v_n = n.get_attribute('volume')
                 c_f_cur = self._concentration
                 m_t = c_n_cur * v_n + c_f_cur * v_f
-                c_n_new = (c_n_cur + (dt / v_n) * (m_t / v_f) * (k_p + k_u)) / (1 + (dt / v_n) * ((1 + (v_n / v_f)) * k_p + (v_n / v_f) * k_u + k_r))
+                c_n_new = (c_n_cur + (dt / v_n) * (m_t / v_f) * (k_p + k_u)) / (
+                    1 + (dt / v_n) * ((1 + (v_n / v_f)) * k_p + (v_n / v_f) * k_u + k_r)
+                )
                 c_f_new = (m_t - c_n_new * v_n) / v_f
                 info.concentration = c_n_new
                 self._concentration = c_f_new
@@ -133,21 +135,19 @@ class HomogeneousSubstrateField(BaseSubstrateField):
         v_max = self._decay_coefficient
         k_M = self._mm_constant
         x = k_M - C + dt * v_max
-        self._concentration = (-x + (x**2 + 4 * k_M * C)**0.5) / 2
+        self._concentration = (-x + (x**2 + 4 * k_M * C) ** 0.5) / 2
 
 
 class Lattice2DSubstrateField(BaseSubstrateField):
-    def __init__(self,
-                 domain,
-                 substrate_name: str,
-                 diffusion_coefficient: float = 0.0,
-                 decay_coefficient: float = 0.0
-                 ) -> None:
-        super().__init__(domain=domain,
-                         substrate_name=substrate_name,
-                         diffusion_coefficient=diffusion_coefficient,
-                         decay_coefficient=decay_coefficient
-                         )
+    def __init__(
+        self, domain, substrate_name: str, diffusion_coefficient: float = 0.0, decay_coefficient: float = 0.0
+    ) -> None:
+        super().__init__(
+            domain=domain,
+            substrate_name=substrate_name,
+            diffusion_coefficient=diffusion_coefficient,
+            decay_coefficient=decay_coefficient,
+        )
         self._dim_x = self._domain._dimensions[0]
         self._dim_y = self._domain._dimensions[1]
         self._dx = self._domain._grid_spacing

@@ -1,18 +1,17 @@
 from abc import ABC, abstractmethod
 
-from lattics.core import Agent
-from lattics.core import Simulation
-from lattics.core import UpdateInfo
+from lattics.core import Agent, Simulation, UpdateInfo
 
 
 class BaseSpace(ABC):
-    """Base class for different simulation domains.
-    """
-    def __init__(self,
-                 simulation: Simulation,
-                 dt_agent: tuple[float, str] = None,
-                 dt_substrate: tuple[float, str] = None,
-                 ) -> None:
+    """Base class for different simulation domains."""
+
+    def __init__(
+        self,
+        simulation: Simulation,
+        dt_agent: tuple[float, str] = None,
+        dt_substrate: tuple[float, str] = None,
+    ) -> None:
         """Constructor method.
 
         Parameters
@@ -49,12 +48,13 @@ class BaseSpace(ABC):
         pass
 
     @abstractmethod
-    def add_substrate(self,
-                      name: str,
-                      diffusion_coefficient: float = 0.0,
-                      decay_coefficient: float = 0.0,
-                      decay_kinetics: str = 'first-order'
-                      ) -> None:
+    def add_substrate(
+        self,
+        name: str,
+        diffusion_coefficient: float = 0.0,
+        decay_coefficient: float = 0.0,
+        decay_kinetics: str = 'first-order',
+    ) -> None:
         pass
 
     @abstractmethod

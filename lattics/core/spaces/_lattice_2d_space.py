@@ -1,32 +1,30 @@
-from ._base import BaseSpace
-# from lattics.core.substrates import HomogeneousSubstrateField
-from lattics.core import Agent
-from lattics.core import Simulation
-from lattics.core import UpdateInfo
-from lattics.core._convert import convert_time, convert_length
-
-from abc import ABC, abstractmethod
 import copy
+import warnings
+from abc import ABC, abstractmethod
+
+import numba
 import numpy as np
 import numpy.typing as npt
+from numba import boolean, float32, int32, types, void
 from scipy import ndimage
-import warnings
-import numba
-from numba import void, float32, int32, boolean, types
+
+# from lattics.core.substrates import HomogeneousSubstrateField
+from lattics.core import Agent, Simulation, UpdateInfo
+from lattics.core._convert import convert_length, convert_time
+
+from ._base import BaseSpace
 
 
 class Lattice2DSpace(BaseSpace):
     def __init__(
-            self,
-            simulation: Simulation,
-            dimensions: tuple[int, int],
-            grid_spacing: int,
-            dt_agent: tuple[float, str] = None,
-            dt_substrate: tuple[float, str] = None) -> None:
-        super().__init__(
-            simulation=simulation,
-            dt_agent=dt_agent,
-            dt_substrate=dt_substrate)
+        self,
+        simulation: Simulation,
+        dimensions: tuple[int, int],
+        grid_spacing: int,
+        dt_agent: tuple[float, str] = None,
+        dt_substrate: tuple[float, str] = None,
+    ) -> None:
+        super().__init__(simulation=simulation, dt_agent=dt_agent, dt_substrate=dt_substrate)
         if not dimensions:
             raise ValueError('You must provide a valid dimension for the space size, for example (50, 70).')
         self._dimensions = dimensions
@@ -76,8 +74,10 @@ class Lattice2DSpace(BaseSpace):
         if not self.is_empty_position(position):
             raise ValueError(f'Position {position} already occupied.')
         if self.get_remaining_volume(position) < volume:
-            warnings.warn('The agent\'s volume is larger than the volume assigned to '
-                          'the domain chunks. This may lead to unexpected behavior.')
+            warnings.warn(
+                'The agent\'s volume is larger than the volume assigned to '
+                'the domain chunks. This may lead to unexpected behavior.'
+            )
 
     def _validate_optional_attributes(self, agent: Agent) -> None:
         motility_default_value = 0
@@ -91,7 +91,9 @@ class Lattice2DSpace(BaseSpace):
             warnings.warn('Agent attribute \'binding_affinity\' was not defined, a default value is used.')
         if not agent.has_attribute('mechanics.displacement_limit'):
             agent.set_attribute('mechanics.displacement_limit', displacement_limit_default_value)
-            warnings.warn('Agent attribute \'mechanics.displacement_limit\' was not defined, a default value is used.')
+            warnings.warn(
+                'Agent attribute \'mechanics.displacement_limit\' was not defined, a default value is used.'
+            )
         if not agent.has_attribute('duplication_completed'):
             agent.set_attribute('duplication_completed', duplication_completed_default_value)
         if not agent.has_attribute('duplication_needed'):
@@ -116,11 +118,7 @@ class Lattice2DSpace(BaseSpace):
         self._agents.remove(agent)
         self._agent_layer[tuple(position)] = None
 
-    def add_substrate(self,
-                      name: str,
-                      diffusion_coefficient: float = 0.0,
-                      decay_coefficient: float = 0.0
-                      ) -> None:
+    def add_substrate(self, name: str, diffusion_coefficient: float = 0.0, decay_coefficient: float = 0.0) -> None:
         # substrate = Lattice2DSubstrateField(domain=self,
         #                                     substrate_name=name,
         #                                     diffusion_coefficient=diffusion_coefficient,
@@ -202,7 +200,9 @@ class Lattice2DSpace(BaseSpace):
             agents = copy.copy(self._agents)
             np.random.shuffle(agents)
             positions = np.array([a.get_attribute('position') for a in agents], dtype='int32')
-            disp_probs = np.array([a.get_attribute('motility') * dt / self._grid_spacing for a in agents], dtype='float32')
+            disp_probs = np.array(
+                [a.get_attribute('motility') * dt / self._grid_spacing for a in agents], dtype='float32'
+            )
             binding_affs = np.array([a.get_attribute('binding_affinity') for a in agents], dtype='float32')
             # 3D array containing identifiers (idx) at those elements occupied by agents
             idx_array = np.full((self._agent_layer.shape[0], self._agent_layer.shape[1]), -1, dtype='int32')
@@ -282,11 +282,13 @@ class Lattice2DSpace(BaseSpace):
 
     def _update_local_densities(self) -> None:
         coverage_map = np.where(self._agent_layer, 1, 0)
-        i_indices, j_indices = np.ogrid[:coverage_map.shape[0], :coverage_map.shape[1]]
+        i_indices, j_indices = np.ogrid[: coverage_map.shape[0], : coverage_map.shape[1]]
         for agent in self._agents:
             current_position = agent.get_attribute('position')
             displacement_limit = agent.get_attribute('mechanics.displacement_limit')
-            mask = (i_indices - current_position[0])**2 + (j_indices - current_position[1])**2 <= displacement_limit**2
+            mask = (i_indices - current_position[0]) ** 2 + (
+                j_indices - current_position[1]
+            ) ** 2 <= displacement_limit**2
             mask_covered = (mask) & (coverage_map == 1)
             density = (np.sum(mask_covered) - 1) / (np.sum(mask) - 1)
             agent.set_attribute('mechanics.local_density', density)
@@ -332,29 +334,11 @@ def bresenham_2d(x1, y1, x2, y2):
 @numba.njit(int32[:, :](types.unicode_type), cache=True)
 def get_neighborhood_2d(type):
     if type == 'von_neumann':
-        neighborhood = np.array(
-            [
-                [-1, 0],
-                [1, 0],
-                [0, -1],
-                [0, 1]
-            ],
-            dtype=np.int32
-        )
+        neighborhood = np.array([[-1, 0], [1, 0], [0, -1], [0, 1]], dtype=np.int32)
         return neighborhood
     elif type == 'moore':
         neighborhood = np.array(
-            [
-                [-1, -1],
-                [-1, 0],
-                [-1, 1],
-                [0, -1],
-                [0, 1],
-                [1, -1],
-                [1, 0],
-                [1, 1]
-            ],
-            dtype=np.int32
+            [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]], dtype=np.int32
         )
         return neighborhood
     else:

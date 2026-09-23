@@ -1,9 +1,9 @@
-from lattics.core import Agent
-from lattics.core import Simulation
-from lattics.core.spaces import Lattice2DSpace
-from lattics.core._convert import convert_length
-from typing import Any
 import random
+from typing import Any
+
+from lattics.core import Agent, Simulation
+from lattics.core._convert import convert_length
+from lattics.core.spaces import Lattice2DSpace
 
 
 def create_agent(attributes: dict[str, Any]) -> Agent:
@@ -66,11 +66,11 @@ def create_population(size: int, attributes: dict[str, Any]) -> list[Agent]:
 
 
 def create_simulation_2d(
-        id: str = None,
-        dimensions: tuple[tuple[float, str], tuple[float, str]] = None,
-        grid_spacing: int = 20,
-        dt_agent: tuple = (30, 'sec'),
-        dt_substrate: tuple = (1, 'sec')
+    id: str = None,
+    dimensions: tuple[tuple[float, str], tuple[float, str]] = None,
+    grid_spacing: int = 20,
+    dt_agent: tuple = (30, 'sec'),
+    dt_substrate: tuple = (1, 'sec'),
 ) -> Simulation:
     dimensions_um = convert_length(dimensions_um)
     simulation = Simulation(id=id)
@@ -79,19 +79,19 @@ def create_simulation_2d(
         dimensions=dimensions,
         grid_spacing=grid_spacing,
         dt_agent=dt_agent,
-        dt_substrate=dt_substrate
+        dt_substrate=dt_substrate,
     )
     simulation.add_space(space=space)
     return simulation
 
 
 def populate_agents(
-        simulation: Simulation,
-        method: str = 'count',
-        count: int = 1,
-        density: float = 0.0,
-        map: str = None,
-        attributes: dict[str, Any] = None
+    simulation: Simulation,
+    method: str = 'count',
+    count: int = 1,
+    density: float = 0.0,
+    map: str = None,
+    attributes: dict[str, Any] = None,
 ) -> None:
     if not attributes:
         attributes = {}

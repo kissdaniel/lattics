@@ -1,10 +1,12 @@
+import csv
+import pickle
+
 import numpy as np
 import pandas as pd
-import pickle
-import csv
+
+from lattics.core import Simulation
 
 from .time_series import TimeSeries
-from lattics.core import Simulation
 
 
 def get_agent_numbers_from_file(filename: str, filter=None) -> TimeSeries:
@@ -59,19 +61,20 @@ def get_substrate_concentration(filename: str, name: str, means_only: bool = Fal
 
 
 def show_agents_and_substrates_2d(
-        simulation: Simulation,
-        times: tuple[int] | str,
-        color_by: str = None,
-        cmap: str = 'viridis',
-        color_mapping: dict = None,
-        vmin: float = 0.0,
-        vmax: float = 1.0,
-        substrate: str = None,
-        filename: str = None,
-        show: bool = True
+    simulation: Simulation,
+    times: tuple[int] | str,
+    color_by: str = None,
+    cmap: str = 'viridis',
+    color_mapping: dict = None,
+    vmin: float = 0.0,
+    vmax: float = 1.0,
+    substrate: str = None,
+    filename: str = None,
+    show: bool = True,
 ):
     import matplotlib.pyplot as plt
     from matplotlib.collections import PatchCollection
+
     counter = 0
     history = simulation._history
     dims = simulation._space._dimensions
@@ -109,14 +112,13 @@ def show_agents_and_substrates_2d(
                 patches = PatchCollection(agent_patches, cmap=cmap)
                 # cbar = fig.colorbar(patches, ax=ax)
                 # cbar.mappable.set_clim(vmin, vmax)
-                # cbar.set_label(color_by)            
+                # cbar.set_label(color_by)
             if filename:
                 plt.savefig(f'{filename}_{counter}.png', dpi=100)
             if show:
                 plt.show()
             plt.close()
             counter += 1
-
 
 
 # def show_agents_and_substrates_2d(filename: str, times: tuple[int], substrate: str):
