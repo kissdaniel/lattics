@@ -1,4 +1,3 @@
-import csv
 import pickle
 
 import numpy as np
@@ -72,7 +71,6 @@ def show_agents_and_substrates_2d(
     show: bool = True,
 ):
     import matplotlib.pyplot as plt
-    from matplotlib.collections import PatchCollection
 
     counter = 0
     history = simulation._history
@@ -107,11 +105,6 @@ def show_agents_and_substrates_2d(
             ax.set_xlim((-0.5, dims[0] - 0.5))
             ax.set_ylim((-0.5, dims[1] - 0.5))
             ax.set_aspect('equal')
-            if color_by:
-                patches = PatchCollection(agent_patches, cmap=cmap)
-                # cbar = fig.colorbar(patches, ax=ax)
-                # cbar.mappable.set_clim(vmin, vmax)
-                # cbar.set_label(color_by)
             if filename:
                 plt.savefig(f'{filename}_{counter}.png', dpi=100)
             if show:

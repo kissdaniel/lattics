@@ -15,7 +15,8 @@ class TimeBasedCellCycleModel(BaseModel):
                                          that the agent is ready for replication.
     *space.duplication_completed*  bool  The simulation environment sets this to `True` once the agent has been
                                          successfully copied, indicating that the replication process is finished.
-    cellcycle.is_active            bool  Signals if the agent is proliferating (i.e. proceeds through the cell cycle)
+    cellcycle.is_active            bool  Signals if the agent is proliferating (i.e. proceeds through the cell
+                                         cycle)
     cellcycle.mean_length          int   Az ágens sejtciklus hosszának átlagos értéke ms-ban kifejezve.
     cellcycle.length               int   .
     cellcycle.current_time         int   .

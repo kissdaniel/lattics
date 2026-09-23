@@ -37,7 +37,8 @@ def create_agent(attributes: dict[str, Any]) -> Agent:
 
 
 def create_population(size: int, attributes: dict[str, Any]) -> list[Agent]:
-    """Creates the given number of :class:`~lattics.core.Agent` objects and initializes them with the provided attributes.
+    """Creates the given number of :class:`~lattics.core.Agent` objects and initializes them with the provided
+    attributes.
 
     Parameters
     ----------

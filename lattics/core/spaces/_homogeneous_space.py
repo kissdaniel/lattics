@@ -1,12 +1,6 @@
-import copy
 import warnings
-from abc import ABC, abstractmethod
 
-import numpy as np
-import numpy.typing as npt
-from scipy import ndimage
-
-from lattics.core import Agent, Simulation, UpdateInfo
+from lattics.core import Agent, Simulation
 from lattics.core.substrates import HomogeneousSubstrateField
 
 from ._base import BaseSpace

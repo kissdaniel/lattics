@@ -44,10 +44,12 @@ def convert_velocity(value: float, from_unit: str, to_unit: str) -> float:
     }
     if from_unit not in VELOCITY_UNITS:
         raise ValueError(
-            f"Invalid velocity unit: '{from_unit}'. Supported units are: 'um/ms', 'um/sec', 'um/min', 'um/hour', 'mm/ms', 'mm/sec', 'mm/min', 'mm/hour', 'cm/ms', 'cm/sec', 'cm/min', 'cm/hour'."
+            f"Invalid velocity unit: '{from_unit}'. Supported units are: 'um/ms', 'um/sec', 'um/min', 'um/hour', "
+            "'mm/ms', 'mm/sec', 'mm/min', 'mm/hour', 'cm/ms', 'cm/sec', 'cm/min', 'cm/hour'."
         )
     if to_unit not in VELOCITY_UNITS:
         raise ValueError(
-            f"Invalid velocity unit: '{to_unit}'. Supported units are: 'um/ms', 'um/sec', 'um/min', 'um/hour', 'mm/ms', 'mm/sec', 'mm/min', 'mm/hour', 'cm/ms', 'cm/sec', 'cm/min', 'cm/hour'."
+            f"Invalid velocity unit: '{to_unit}'. Supported units are: 'um/ms', 'um/sec', 'um/min', 'um/hour', "
+            "'mm/ms', 'mm/sec', 'mm/min', 'mm/hour', 'cm/ms', 'cm/sec', 'cm/min', 'cm/hour'."
         )
     return value * VELOCITY_UNITS[from_unit] / VELOCITY_UNITS[to_unit]
