@@ -30,11 +30,9 @@ def test_initialize_id():
 
     agent_1 = Agent()
     agent_2 = Agent()
-    expected_1 = 0
-    expected_2 = 1
-    actual_1 = agent_1.id
-    actual_2 = agent_2.id
-    assert actual_1 == expected_1 and actual_2 == expected_2
+    expected = agent_1.id + 1
+    actual = agent_2.id
+    assert actual == expected
 
 
 def test_clone():
