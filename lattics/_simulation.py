@@ -2,12 +2,17 @@ import math
 import pickle
 import uuid
 import warnings
+from typing import TYPE_CHECKING
 
 import tqdm
 
 from ._agent import Agent
-from ._convert import convert_time
+from ._units import convert_time
 from ._updateinfo import UpdateInfo
+
+if TYPE_CHECKING:
+    from .models._base import BaseModel
+    from .spaces._base import BaseSpace
 
 
 class Simulation:
@@ -96,7 +101,7 @@ class Simulation:
         for m in self._models:
             m.initialize_attributes(agent)
 
-    def add_space(self, space: 'spaces.BaseSpace') -> None:
+    def add_space(self, space: 'BaseSpace') -> None:
         """Sets the simulation space to the instance passed as a parameter.
 
         Parameters
@@ -111,14 +116,14 @@ class Simulation:
     def add_event(self, event) -> None:
         self._events.append(event)
 
-    def add_model(self, model: 'cellfunction.CellFunctionModel') -> None:
+    def add_model(self, model: 'BaseModel') -> None:
         """Adds the provided model instance to the agent's collection of cell
         function models and invokes the model's initialization method.
 
         Parameters
         ----------
-        model : CellFunctionModel
-            A subclass of the ``CellFunctionModel`` abstract base class.
+        model : BaseModel
+            A subclass of the ``BaseModel`` abstract base class.
         """
         self._models.append(model)
 

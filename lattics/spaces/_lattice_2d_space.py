@@ -4,8 +4,9 @@ import warnings
 import numpy as np
 from scipy import ndimage
 
-from lattics.core import Agent, Simulation
-from lattics.core._numba_functions import bresenham_2d, displacement_trial_2d
+from lattics._agent import Agent
+from lattics._kernels.lattice import bresenham_2d, displacement_trial_2d
+from lattics._simulation import Simulation
 
 from ._base import BaseSpace
 

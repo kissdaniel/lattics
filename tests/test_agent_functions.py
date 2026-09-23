@@ -1,12 +1,12 @@
 def test_default_instantiation():
-    from lattics.core._agent import Agent
+    from lattics import Agent
 
     agent = Agent()
     assert agent is not None
 
 
 def test_has_attribute():
-    from lattics.core._agent import Agent
+    from lattics import Agent
 
     agent = Agent()
     agent.set_attribute('test_attr', 'value')
@@ -16,7 +16,7 @@ def test_has_attribute():
 
 
 def test_get_set_attribute():
-    from lattics.core._agent import Agent
+    from lattics import Agent
 
     agent = Agent()
     agent.set_attribute('test_attr', 'value')
@@ -26,7 +26,7 @@ def test_get_set_attribute():
 
 
 def test_initialize_id():
-    from lattics.core._agent import Agent
+    from lattics import Agent
 
     agent_1 = Agent()
     agent_2 = Agent()
@@ -36,7 +36,7 @@ def test_initialize_id():
 
 
 def test_clone():
-    from lattics.core._agent import Agent
+    from lattics import Agent
 
     agent_1 = Agent()
     agent_1.set_attribute('test_attr', 'value')

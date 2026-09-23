@@ -1,7 +1,8 @@
 import warnings
 
-from lattics.core import Agent, Simulation
-from lattics.core.substrates import HomogeneousSubstrateField
+from lattics._agent import Agent
+from lattics._simulation import Simulation
+from lattics.substrates import HomogeneousSubstrateField
 
 from ._base import BaseSpace
 

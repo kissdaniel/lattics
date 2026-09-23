@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from lattics.core import SubstrateNode
+from ._node import SubstrateNode
 
 
 class BaseSubstrateField(ABC):

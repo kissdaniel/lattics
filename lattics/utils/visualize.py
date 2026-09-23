@@ -2,7 +2,7 @@ import pickle
 
 import numpy as np
 
-from lattics.core import Simulation
+from lattics._simulation import Simulation
 
 from .time_series import TimeSeries
 

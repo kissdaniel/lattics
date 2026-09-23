@@ -1,7 +1,7 @@
 import numpy as np
 
-from lattics.core._agent import Agent
-from lattics.core._convert import convert_time
+from lattics._agent import Agent
+from lattics._units import convert_time
 
 from ._base import BaseModel
 

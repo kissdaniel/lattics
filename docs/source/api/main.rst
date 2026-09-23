@@ -9,4 +9,4 @@ User Guide
 
 Developer Guide
 ===============
-   lattics.core
+   lattics

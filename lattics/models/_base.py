@@ -1,7 +1,7 @@
 import abc
 
-from lattics.core._agent import Agent
-from lattics.core._updateinfo import UpdateInfo
+from lattics._agent import Agent
+from lattics._updateinfo import UpdateInfo
 
 
 class BaseModel(abc.ABC):

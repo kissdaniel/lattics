@@ -1,13 +1,15 @@
+import math
 import random
 from typing import Any
 
-from lattics.core import Agent, Simulation
-from lattics.core._convert import convert_length
-from lattics.core.spaces import Lattice2DSpace
+from lattics._agent import Agent
+from lattics._simulation import Simulation
+from lattics._units import convert_length
+from lattics.spaces import Lattice2DSpace
 
 
 def create_agent(attributes: dict[str, Any]) -> Agent:
-    """Creates an :class:`~lattics.core.Agent` object and initializes it with the provided attributes.
+    """Creates an :class:`~lattics.Agent` object and initializes it with the provided attributes.
 
     Parameters
     ----------
@@ -16,7 +18,7 @@ def create_agent(attributes: dict[str, Any]) -> Agent:
 
     Returns
     -------
-    :class:`~lattics.core.Agent`
+    :class:`~lattics.Agent`
         An agent object
 
     Examples
@@ -37,7 +39,7 @@ def create_agent(attributes: dict[str, Any]) -> Agent:
 
 
 def create_population(size: int, attributes: dict[str, Any]) -> list[Agent]:
-    """Creates the given number of :class:`~lattics.core.Agent` objects and initializes them with the provided
+    """Creates the given number of :class:`~lattics.Agent` objects and initializes them with the provided
     attributes.
 
     Parameters
@@ -49,7 +51,7 @@ def create_population(size: int, attributes: dict[str, Any]) -> list[Agent]:
 
     Returns
     -------
-    list[:class:`~lattics.core.Agent`]
+    list[:class:`~lattics.Agent`]
         A list of agent objects
 
     Examples
@@ -73,11 +75,35 @@ def create_simulation_2d(
     dt_agent: tuple = (30, 'sec'),
     dt_substrate: tuple = (1, 'sec'),
 ) -> Simulation:
-    dimensions_um = convert_length(dimensions_um)
+    """Creates a :class:`~lattics.Simulation` with a :class:`~lattics.Lattice2DSpace` of the given physical size.
+
+    Parameters
+    ----------
+    dimensions : tuple[tuple[float, str], tuple[float, str]]
+        The size of the domain along the two axes, for example ``((1, 'mm'), (750, 'um'))``. Each size must be an
+        integer multiple of ``grid_spacing``.
+    grid_spacing : int
+        The distance between neighboring lattice sites, in micrometers
+
+    Raises
+    ------
+    ValueError
+        If the size is missing or not an integer multiple of the grid spacing
+    """
+    if not dimensions:
+        raise ValueError("You must provide the size of the domain, for example ((1, 'mm'), (1, 'mm')).")
+    lattice_dimensions = []
+    for value, unit in dimensions:
+        n_sites = convert_length(value, unit, 'um') / grid_spacing
+        if not math.isclose(n_sites, round(n_sites)):
+            raise ValueError(
+                f'The domain size {value} {unit} is not a multiple of the grid spacing ({grid_spacing} um).'
+            )
+        lattice_dimensions.append(round(n_sites))
     simulation = Simulation(id=id)
     space = Lattice2DSpace(
         simulation=simulation,
-        dimensions=dimensions,
+        dimensions=tuple(lattice_dimensions),
         grid_spacing=grid_spacing,
         dt_agent=dt_agent,
         dt_substrate=dt_substrate,

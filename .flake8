@@ -10,4 +10,4 @@ max-line-length = 115
 ignore = E203, W503
 # Hand-aligned neighborhood tables are kept with '# fmt: off'
 per-file-ignores =
-    lattics/core/_numba_functions.py: E201, E231, E241
+    lattics/_kernels/lattice.py: E201, E231, E241

@@ -2,7 +2,7 @@ import csv
 
 import numpy as np
 
-from lattics.core import convert_time
+from lattics._units import convert_time
 
 
 class TimeSeries:

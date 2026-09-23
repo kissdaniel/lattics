@@ -1,6 +1,6 @@
 import numpy as np
 
-from lattics.core._numba_functions import diffusion_solver_lod_2d
+from lattics._kernels.diffusion import diffusion_solver_lod_2d
 
 from ._base import BaseSubstrateField
 

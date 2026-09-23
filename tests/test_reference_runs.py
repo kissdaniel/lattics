@@ -13,11 +13,12 @@ import pickle
 import numpy as np
 import pytest
 
-from lattics.core import Agent, Event, Simulation, SubstrateInfo, SubstrateNode
-from lattics.core.spaces import HomogeneousSpace, Lattice2DSpace
-from lattics.models.cellcycle import MultiPhaseTimeBasedCellCycleModel
-from lattics.models.toxicity import ConcentrationDependentToxicityModel
-from lattics.models.transition import StochasticTransitionModel
+from lattics import Agent, Event, HomogeneousSpace, Lattice2DSpace, Simulation, SubstrateInfo, SubstrateNode
+from lattics.models import (
+    ConcentrationDependentToxicityModel,
+    MultiPhaseTimeBasedCellCycleModel,
+    StochasticTransitionModel,
+)
 
 from .helpers import seed_everything
 

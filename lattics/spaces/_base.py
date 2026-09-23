@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 
-from lattics.core import Agent, Simulation, UpdateInfo
+from lattics._agent import Agent
+from lattics._simulation import Simulation
+from lattics._updateinfo import UpdateInfo
 
 
 class BaseSpace(ABC):

@@ -1,4 +1,4 @@
-from ._convert import convert_time
+from ._units import convert_time
 
 
 class UpdateInfo:
