@@ -176,6 +176,9 @@ class Simulation:
 
         if verbosity == 1:
             progressbar.n = steps
+            days = convert_time(self.time, 'ms', 'day')
+            progressbar.set_postfix(T=f'{days:.2f}', N=f'{len(self.agents)}')
+            progressbar.update(PROGRESSBAR_SCALER)
 
         if save_mode == 'on_completion':
             self._save_history()

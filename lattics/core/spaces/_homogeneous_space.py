@@ -87,7 +87,7 @@ class HomogeneousSpace(BaseSpace):
 
     def update(self, dt: int) -> None:
         """Updates the domain according to the specified time duration. Agents
-        labeled as ``division_pending`` are duplicated based on the available
+        labeled as ``duplication_needed`` are duplicated based on the available
         space in the domain, constrained by ``capacity``.
 
         Parameters
@@ -101,9 +101,9 @@ class HomogeneousSpace(BaseSpace):
         if self._agent_update_info.update_needed():
             self._clear_substrate_dynamic_nodes()
             for a in list(self._agents):
-                if a.get_attribute('division_pending'):
+                if a.get_attribute('duplication_needed'):
                     self._process_agent_division(a)
-                if a.get_attribute('remove_pending'):
+                if a.get_attribute('removal_needed'):
                     self._simulation.remove_agent(a)
 
                 if 'substrate_info' in a._attributes:
@@ -119,19 +119,19 @@ class HomogeneousSpace(BaseSpace):
 
     def _initialize_attributes(self, agent, volume) -> None:
         """Initializes the attributes used by the domain. The domain tracks
-        two attributes: ``division_pending`` and ``division_completed``. The
-        ``division_pending`` attribute can be set by cell-level functions to
+        two attributes: ``duplication_needed`` and ``duplication_completed``. The
+        ``duplication_needed`` attribute can be set by cell-level functions to
         indicate that an agent is ready to divide and that the domain should
         handle the division event. Once division has occurred, the
-        ``division_completed`` attribute is set to ``True``.
+        ``duplication_completed`` attribute is set to ``True``.
         TODO: volume
         """
-        if not agent.has_attribute('division_pending'):
-            agent.set_attribute('division_pending', False)
-        if not agent.has_attribute('division_completed'):
-            agent.set_attribute('division_completed', False)
-        if not agent.has_attribute('remove_pending'):
-            agent.set_attribute('remove_pending', False)
+        if not agent.has_attribute('duplication_needed'):
+            agent.set_attribute('duplication_needed', False)
+        if not agent.has_attribute('duplication_completed'):
+            agent.set_attribute('duplication_completed', False)
+        if not agent.has_attribute('removal_needed'):
+            agent.set_attribute('removal_needed', False)
         if not agent.has_attribute('volume'):
             agent.set_attribute('volume', volume)
 
@@ -148,8 +148,8 @@ class HomogeneousSpace(BaseSpace):
         sum_volumes = self._get_total_agent_volume()
         agent_volume = agent.get_attribute('volume')
         if sum_volumes + agent_volume <= self._volume:
-            agent.set_attribute('division_pending', False)
-            agent.set_attribute('division_completed', True)
+            agent.set_attribute('duplication_needed', False)
+            agent.set_attribute('duplication_completed', True)
             new_agent = agent.clone()
             self._simulation.add_agent(new_agent)
         else:

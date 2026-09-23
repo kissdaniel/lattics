@@ -3,6 +3,7 @@ from ._base import BaseSpace
 from lattics.core import Agent
 from lattics.core import Simulation
 from lattics.core import UpdateInfo
+from lattics.core._convert import convert_time, convert_length
 
 from abc import ABC, abstractmethod
 import copy
@@ -82,24 +83,26 @@ class Lattice2DSpace(BaseSpace):
         motility_default_value = 0
         binding_affinity_default_value = 0
         displacement_limit_default_value = 1
-        division_completed_default_value = False
-        division_pending_default_value = False
-        remove_pending_default_value = False
+        duplication_completed_default_value = False
+        duplication_needed_default_value = False
+        removal_needed_default_value = False
         if not agent.has_attribute('binding_affinity'):
             agent.set_attribute('binding_affinity', binding_affinity_default_value)
             warnings.warn('Agent attribute \'binding_affinity\' was not defined, a default value is used.')
-        if not agent.has_attribute('displacement_limit'):
-            agent.set_attribute('displacement_limit', displacement_limit_default_value)
-            warnings.warn('Agent attribute \'displacement_limit\' was not defined, a default value is used.')
-        if not agent.has_attribute('division_completed'):
-            agent.set_attribute('division_completed', division_completed_default_value)
-        if not agent.has_attribute('division_pending'):
-            agent.set_attribute('division_pending', division_pending_default_value)
+        if not agent.has_attribute('mechanics.displacement_limit'):
+            agent.set_attribute('mechanics.displacement_limit', displacement_limit_default_value)
+            warnings.warn('Agent attribute \'mechanics.displacement_limit\' was not defined, a default value is used.')
+        if not agent.has_attribute('duplication_completed'):
+            agent.set_attribute('duplication_completed', duplication_completed_default_value)
+        if not agent.has_attribute('duplication_needed'):
+            agent.set_attribute('duplication_needed', duplication_needed_default_value)
         if not agent.has_attribute('motility'):
             agent.set_attribute('motility', motility_default_value)
             warnings.warn('Agent attribute \'motility\' was not defined, a default value is used.')
-        if not agent.has_attribute('remove_pending'):
-            agent.set_attribute('remove_pending', remove_pending_default_value)
+        if not agent.has_attribute('removal_needed'):
+            agent.set_attribute('removal_needed', removal_needed_default_value)
+        if not agent.has_attribute('mechanics.local_density'):
+            agent.set_attribute('mechanics.local_density', 0.0)
 
     def remove_agent(self, agent: Agent) -> None:
         """Removes the specified agent from the internal list of the agents.
@@ -142,12 +145,14 @@ class Lattice2DSpace(BaseSpace):
             self._displacement_trials(self._agent_update_info.elapsed_time)
             self._cell_division_trials(self._agent_update_info.elapsed_time)
             self._cell_removal_trials(self._agent_update_info.elapsed_time)
+            self._update_local_densities()
 
             self._clear_substrate_dynamic_nodes()
             for a in self._agents:
-                info = a.get_attribute('substrate_info')
-                for i in info.keys():
-                    self._substrates[i].add_dynamic_substrate_node(a)
+                if a.has_attribute('substrate_info'):
+                    info = a.get_attribute('substrate_info')
+                    for i in info.keys():
+                        self._substrates[i].add_dynamic_substrate_node(a)
             self._agent_update_info.reset_time()
 
         if self._substrate_update_info.update_needed():
@@ -227,21 +232,22 @@ class Lattice2DSpace(BaseSpace):
 
     def _cell_removal_trials(self, dt: int) -> None:
         agents_temp = copy.copy(self._agents)
+        # TODO: check if shuffle is needed here
         np.random.shuffle(agents_temp)
         for a in agents_temp:
-            if a.get_attribute('remove_pending'):
+            if a.get_attribute('removal_needed'):
                 self._simulation.remove_agent(a)
 
     def _cell_division_trials(self, dt: int) -> None:
         agents_temp = copy.copy(self._agents)
         np.random.shuffle(agents_temp)
         for a in agents_temp:
-            if a.get_attribute('division_pending'):
+            if a.get_attribute('duplication_needed'):
                 self._perform_cell_division(a, dt)
 
     def _perform_cell_division(self, agent: Agent, dt: int) -> None:
         current_position = agent.get_attribute('position')
-        displacement_limit = agent.get_attribute('displacement_limit')
+        displacement_limit = agent.get_attribute('mechanics.displacement_limit')
         coverage_mask = np.where(self._agent_layer, float('inf'), 0)
         if np.any(coverage_mask == 0):
             source_map = np.ones(self._agent_layer.shape)
@@ -264,15 +270,26 @@ class Lattice2DSpace(BaseSpace):
                         agent_to_move.set_attribute('position', path[i + 1])
                 clone_position = path[1]
                 self._agent_layer[tuple(clone_position)] = None
-                agent.set_attribute('division_pending', False)
-                agent.set_attribute('division_completed', True)
+                agent.set_attribute('duplication_needed', False)
+                agent.set_attribute('duplication_completed', True)
                 new_agent = agent.clone()
                 new_agent.set_attribute('position', clone_position)
-                self._simulation.add_agent(new_agent, position=clone_position)
+                self._simulation.add_agent(new_agent)
 
     def _clear_substrate_dynamic_nodes(self):
         for s in self._substrates.values():
             s.clear_dynamic_nodes()
+
+    def _update_local_densities(self) -> None:
+        coverage_map = np.where(self._agent_layer, 1, 0)
+        i_indices, j_indices = np.ogrid[:coverage_map.shape[0], :coverage_map.shape[1]]
+        for agent in self._agents:
+            current_position = agent.get_attribute('position')
+            displacement_limit = agent.get_attribute('mechanics.displacement_limit')
+            mask = (i_indices - current_position[0])**2 + (j_indices - current_position[1])**2 <= displacement_limit**2
+            mask_covered = (mask) & (coverage_map == 1)
+            density = (np.sum(mask_covered) - 1) / (np.sum(mask) - 1)
+            agent.set_attribute('mechanics.local_density', density)
 
 
 @numba.njit(int32[:, :](int32, int32, int32, int32), cache=True)

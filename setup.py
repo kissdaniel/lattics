@@ -40,8 +40,9 @@ with open(path.join(here, "requirements.txt")) as requirements_file:
 
 setup(
     name="lattics",
-    version=versioneer.get_version(),
-    cmdclass=versioneer.get_cmdclass(),
+    # version=versioneer.get_version(),
+    version="0.9.0",
+    #cmdclass=versioneer.get_cmdclass(),
     description="Lattice-based Cellular Simulation",
     long_description=readme,
     author="Daniel Kiss",

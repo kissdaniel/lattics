@@ -201,6 +201,58 @@ Let us now set the ``release_rate`` and ``uptake_rate`` values stored in the ``o
 Tumor growth
 ^^^^^^^^^^^^
 
+Next, we add the agents representing the tumor cells to the model. The changes observed in the tumor cells in the original ODE model are implemented using the following LattiCS components.
+
+**Cell proliferation**. We describe cell proliferation by adding a cell cycle component to the simulation. When creating any component, we must set its update timestep (this defines how often the component can update the agents' characteristics, in this case, whether or not the agent needs to double in that specific step). We set this to 1 hour to match the update interval of the simulation space (however, the two intervals can be configured differently).
+
+.. code-block:: python
+
+	from lattics.models import FixedIncrementCellCycleModel
+	
+	cellcycle_model = FixedIncrementCellCycleModel(update_interval=(1, 'hour'))
+	simulation.add_model(cellcycle_model)
+
+The doubling time can be set when the agent are added, as it may be different for each agent. (The component implements the general cell cycle model but fetches and applies its parameters individually to each agent to manage that agent's unique state.)
+
+**Spontaneous necrosis of cells**. Cells can undergo apoptosis (cell death) even independently of the drug concentration. Since the model does not account for the reasons behind this, we model this spontaneous necrosis as a random process.
+
+.. code-block:: python
+
+	from lattics.models import StochasticTransitionModel
+	
+	necrosis_model = StochasticTransitionModel(
+		update_interval=(1, 'hour'),
+		condition=('state', 'live'),
+		end_states={'state': 'necrotic', 'division_pending': False},
+		rate=5e-10
+	)
+	simulation.add_model(necrosis_model)
+
+**Concentration-dependent necrosis of cells**. Apoptosis in cells can also be initiated based on the level of intracellular drug concentration. As the exact mechanistic steps of the drug's action are not detailed in the original model, we treat this process in LattiCS as a random event. According to the original model, the time-unit cell death probability increases with concentration until it hits a saturation limit, beyond which further concentration increases have no effect. The `median_effective_concentration`) defines the drug concentration at which the probability of cell death is exactly 50%.
+
+.. code-block:: python
+
+	toxicity_model = ConcentrationDependentToxicityModel(
+		update_interval=(1, 'hour'),
+		substrate_name='drug',
+		max_rate=1e-3,
+		median_effective_concentration=1e-5
+		)
+	simulation.add_model(toxicity_model)
+
+**Necrotic cell washout**.  Cells in a``necrotic state`` are eventually cleared or otherwise disappear from the tissue. Since the model does not include the exact process of this, we also model the washout as a random process, in which the transition component marks the necrotic cells with a ``remove_pending`` label. As a result, they are deleted from the space and from the agents in the next step of the simulation.
+
+.. code-block:: python
+
+	washout_model = StochasticTransitionModel(
+		update_interval=(1, 'hour'),
+		condition=('state', 'necrotic'),
+		end_states={'remove_pending': True},
+		rate=1e-9
+		)
+	simulation.add_model(washout_model)
+
+
 
 References
 ----------

@@ -1,6 +1,7 @@
 from lattics.core import Agent
 from lattics.core import Simulation
 from lattics.core.spaces import Lattice2DSpace
+from lattics.core._convert import convert_length
 from typing import Any
 import random
 
@@ -66,11 +67,12 @@ def create_population(size: int, attributes: dict[str, Any]) -> list[Agent]:
 
 def create_simulation_2d(
         id: str = None,
-        dimensions: tuple = None,
+        dimensions: tuple[tuple[float, str], tuple[float, str]] = None,
         grid_spacing: int = 20,
         dt_agent: tuple = (30, 'sec'),
         dt_substrate: tuple = (1, 'sec')
 ) -> Simulation:
+    dimensions_um = convert_length(dimensions_um)
     simulation = Simulation(id=id)
     space = Lattice2DSpace(
         simulation=simulation,
