@@ -2,7 +2,6 @@ import csv
 import pickle
 
 import numpy as np
-import pandas as pd
 
 from lattics.core import Simulation
 

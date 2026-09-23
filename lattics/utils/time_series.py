@@ -1,7 +1,6 @@
 import csv
 
 import numpy as np
-import pandas as pd
 
 from lattics.core import convert_time
 
