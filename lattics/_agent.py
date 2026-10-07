@@ -5,18 +5,25 @@ from typing import Any
 class Agent:
     """An entity representing a modeled individual."""
 
-    id_count = 0
-
     def __init__(self) -> None:
         self._attributes = dict()
-        self._initialize_id()
+        self._id = None
 
     @property
-    def id(self) -> int:
+    def id(self) -> int | None:
+        """The identifier of the agent, unique within its population. It is
+        assigned when the agent is added to a simulation, and is ``None`` before.
+
+        Returns
+        -------
+        int or None
+            The identifier of the agent
+        """
         return self._id
 
     def clone(self) -> 'Agent':
-        """Returns a deep copy instance of the agent.
+        """Returns a deep copy instance of the agent. The copy has no identifier
+        until it is added to a simulation.
 
         Returns
         -------
@@ -88,7 +95,3 @@ class Agent:
         0
         """
         return self._attributes[name]
-
-    def _initialize_id(self) -> int:
-        self._id = Agent.id_count
-        Agent.id_count += 1

@@ -25,14 +25,11 @@ def test_get_set_attribute():
     assert actual == expected
 
 
-def test_initialize_id():
+def test_new_agent_has_no_id():
     from lattics import Agent
 
-    agent_1 = Agent()
-    agent_2 = Agent()
-    expected = agent_1.id + 1
-    actual = agent_2.id
-    assert actual == expected
+    agent = Agent()
+    assert agent.id is None
 
 
 def test_clone():
@@ -41,4 +38,5 @@ def test_clone():
     agent_1 = Agent()
     agent_1.set_attribute('test_attr', 'value')
     agent_2 = agent_1.clone()
-    assert (not agent_1.id == agent_2.id) and (agent_2.has_attribute('test_attr'))
+    agent_2.set_attribute('test_attr', 'changed')
+    assert agent_2.id is None and agent_1.get_attribute('test_attr') == 'value'

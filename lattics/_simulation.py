@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 import tqdm
 
 from ._agent import Agent
+from ._population import Population
 from ._units import convert_time
 from ._updateinfo import UpdateInfo
 
@@ -32,7 +33,7 @@ class Simulation:
             random identifier will be generated.
         """
         self._id = self._get_id(id)
-        self._agents = list()
+        self._population = Population()
         self._space = None
         self._events = list()
         self._models = list()
@@ -55,16 +56,27 @@ class Simulation:
 
     @property
     def agents(self) -> list[Agent]:
-        """Get the collection of agents currently present in the simulation.
-        The order of agents in this collection is maintained throughout the
-        simulation, with new agent instances always being added at the end.
+        """Get the agents currently present in the simulation, as a new list.
+        The order of agents is maintained throughout the simulation, with new
+        agent instances always being added at the end.
 
         Returns
         -------
         list[Agent]
             Collection of the agents
         """
-        return self._agents
+        return list(self._population)
+
+    @property
+    def population(self) -> Population:
+        """Get the population, the single collection that stores the agents.
+
+        Returns
+        -------
+        Population
+            The population of the simulation
+        """
+        return self._population
 
     @property
     def time(self) -> int:
@@ -89,7 +101,7 @@ class Simulation:
         agent : Agent
             The agent to be added
         """
-        self._agents.append(agent)
+        self._population.add(agent)
         if self._space:
             self._space.add_agent(agent)
         else:
@@ -133,7 +145,7 @@ class Simulation:
         self._domain.add_substrate_field(substrate)
 
     def remove_agent(self, agent: Agent) -> None:
-        self._agents.remove(agent)
+        self._population.remove(agent)
         if self._space:
             self._space.remove_agent(agent)
 
@@ -186,13 +198,13 @@ class Simulation:
             if verbosity == 1:
                 if i % PROGRESSBAR_SCALER == 0:
                     days = convert_time(self.time, 'ms', 'day')
-                    progressbar.set_postfix(T=f'{days:.2f}', N=f'{len(self.agents)}')
+                    progressbar.set_postfix(T=f'{days:.2f}', N=f'{len(self._population)}')
                     progressbar.update(PROGRESSBAR_SCALER)
 
         if verbosity == 1:
             progressbar.n = steps
             days = convert_time(self.time, 'ms', 'day')
-            progressbar.set_postfix(T=f'{days:.2f}', N=f'{len(self.agents)}')
+            progressbar.set_postfix(T=f'{days:.2f}', N=f'{len(self._population)}')
             progressbar.update(PROGRESSBAR_SCALER)
 
         if save_mode == 'on_completion':
@@ -230,7 +242,7 @@ class Simulation:
         """
         for m in self._models:
             if m.update_info.update_needed():
-                for a in self._agents:
+                for a in self._population:
                     m.update_attributes(a)
                 m.update_info.reset_time()
             m.update_info.increase_time(dt)

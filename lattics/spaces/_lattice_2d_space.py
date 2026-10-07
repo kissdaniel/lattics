@@ -1,4 +1,3 @@
-import copy
 import warnings
 
 import numpy as np
@@ -26,7 +25,6 @@ class Lattice2DSpace(BaseSpace):
             raise ValueError('You must provide a valid dimension for the space size, for example (50, 70).')
         self._dimensions = dimensions
         self._grid_spacing = grid_spacing
-        self._agents = list()
         self._agent_layer = np.empty(self._dimensions, dtype='object')
         self._substrates = dict()
 
@@ -56,7 +54,6 @@ class Lattice2DSpace(BaseSpace):
         self._validate_required_attributes(agent)
         self._validate_optional_attributes(agent)
         position = agent.get_attribute('space.position')
-        self._agents.append(agent)
         self._agent_layer[tuple(position)] = agent
 
     def _validate_required_attributes(self, agent: Agent) -> None:
@@ -92,7 +89,7 @@ class Lattice2DSpace(BaseSpace):
                 agent.set_attribute(name, default_of(name))
 
     def remove_agent(self, agent: Agent) -> None:
-        """Removes the specified agent from the internal list of the agents.
+        """Removes the specified agent from the lattice.
 
         Parameters
         ----------
@@ -100,7 +97,6 @@ class Lattice2DSpace(BaseSpace):
             The agent to be removed
         """
         position = agent.get_attribute('space.position')
-        self._agents.remove(agent)
         self._agent_layer[tuple(position)] = None
 
     def add_substrate(self, name: str, diffusion_coefficient: float = 0.0, decay_coefficient: float = 0.0) -> None:
@@ -131,7 +127,7 @@ class Lattice2DSpace(BaseSpace):
             self._update_local_densities()
 
             self._clear_substrate_dynamic_nodes()
-            for a in self._agents:
+            for a in self._simulation.population:
                 if a.has_attribute('substrate.transport'):
                     info = a.get_attribute('substrate.transport')
                     for i in info.keys():
@@ -181,8 +177,8 @@ class Lattice2DSpace(BaseSpace):
         return self._grid_spacing**2 - self._agent_layer[tuple(position)].get_attribute('space.volume')
 
     def _displacement_trials(self, dt: int) -> None:
-        if self._agents:
-            agents = copy.copy(self._agents)
+        if len(self._simulation.population):
+            agents = list(self._simulation.population)
             np.random.shuffle(agents)
             positions = np.array([a.get_attribute('space.position') for a in agents], dtype='int32')
             disp_probs = np.array(
@@ -219,7 +215,7 @@ class Lattice2DSpace(BaseSpace):
                         agent_old.set_attribute('space.position', pos_new)
 
     def _cell_removal_trials(self, dt: int) -> None:
-        agents_temp = copy.copy(self._agents)
+        agents_temp = list(self._simulation.population)
         # TODO: check if shuffle is needed here
         np.random.shuffle(agents_temp)
         for a in agents_temp:
@@ -227,7 +223,7 @@ class Lattice2DSpace(BaseSpace):
                 self._simulation.remove_agent(a)
 
     def _cell_division_trials(self, dt: int) -> None:
-        agents_temp = copy.copy(self._agents)
+        agents_temp = list(self._simulation.population)
         np.random.shuffle(agents_temp)
         for a in agents_temp:
             if a.get_attribute('space.division_requested'):
@@ -271,7 +267,7 @@ class Lattice2DSpace(BaseSpace):
     def _update_local_densities(self) -> None:
         coverage_map = np.where(self._agent_layer, 1, 0)
         i_indices, j_indices = np.ogrid[: coverage_map.shape[0], : coverage_map.shape[1]]
-        for agent in self._agents:
+        for agent in self._simulation.population:
             current_position = agent.get_attribute('space.position')
             displacement_limit = agent.get_attribute('mechanics.displacement_limit')
             mask = (i_indices - current_position[0]) ** 2 + (

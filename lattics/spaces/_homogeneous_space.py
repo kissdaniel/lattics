@@ -11,8 +11,7 @@ from ._base import BaseSpace
 class HomogeneousSpace(BaseSpace):
     """Represents a perfectly mixed simulation domain with no spatial structure
     or localized interactions, where each agent has an equal probability of
-    interacting with any other agent in the population. Agents are stored in a
-    list.
+    interacting with any other agent in the population.
     """
 
     def __init__(
@@ -29,40 +28,37 @@ class HomogeneousSpace(BaseSpace):
         simulation : Simulation
             The Simulation instance containing the domain
         volume : int, optional
-            TODO: The maximum number of agents in the population. Defaults to None,
-            meaning no limit (infinite population).
+            The capacity of the domain: the maximum total volume of the agents.
+            Defaults to None, meaning no limit.
         """
         super().__init__(simulation=simulation, dt_agent=dt_agent, dt_substrate=dt_substrate)
         self._volume = volume
-        self._agents = list()
         self._substrates = dict()
         self._has_free_volume = True
 
     def add_agent(self, agent: Agent, volume: int = 0, **params) -> None:
-        """Adds the specified agent to the internal list of the agents.
+        """Initializes the attributes of the specified agent, which is already
+        part of the simulation's population.
 
         Parameters
         ----------
         agent : Agent
             The agent to be added
         """
-        sum_volumes = self._get_total_agent_volume()
-        if self._volume < sum_volumes + volume:
-            warnings.warn('The total volume of agents exceeded the capacity ' 'of the domain.')
-        self._agents.append(agent)
         self._initialize_attributes(agent, volume)
+        if not self._fits(self._get_total_agent_volume()):
+            warnings.warn('The total volume of agents exceeded the capacity of the domain.')
 
     def remove_agent(self, agent: Agent) -> None:
-        """Removes the specified agent from the internal list of the agents.
+        """Updates the free capacity after the specified agent has been removed
+        from the simulation's population.
 
         Parameters
         ----------
         agent : Agent
             The agent to be removed
         """
-        self._agents.remove(agent)
-        sum_volumes = self._get_total_agent_volume()
-        if sum_volumes <= self._volume:
+        if self._fits(self._get_total_agent_volume()):
             self._has_free_volume = True
 
     # TODO: create a Substrate class to store the data below (name, diffusion_coeff, etc.)
@@ -99,7 +95,7 @@ class HomogeneousSpace(BaseSpace):
 
         if self._agent_update_info.update_needed():
             self._clear_substrate_dynamic_nodes()
-            for a in list(self._agents):
+            for a in self._simulation.population:
                 if a.get_attribute('space.division_requested'):
                     self._process_agent_division(a)
                 if a.get_attribute('space.removal_requested'):
@@ -147,7 +143,7 @@ class HomogeneousSpace(BaseSpace):
             return
         sum_volumes = self._get_total_agent_volume()
         agent_volume = agent.get_attribute('space.volume')
-        if sum_volumes + agent_volume <= self._volume:
+        if self._fits(sum_volumes + agent_volume):
             agent.set_attribute('space.division_requested', False)
             agent.set_attribute('space.division_completed', True)
             new_agent = agent.clone()
@@ -159,4 +155,7 @@ class HomogeneousSpace(BaseSpace):
         pass
 
     def _get_total_agent_volume(self) -> int:
-        return sum([a.get_attribute('space.volume') for a in self._agents])
+        return sum([a.get_attribute('space.volume') for a in self._simulation.population])
+
+    def _fits(self, total_volume: float) -> bool:
+        return self._volume is None or total_volume <= self._volume
