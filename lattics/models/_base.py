@@ -3,7 +3,7 @@ from collections.abc import Iterable
 
 from lattics._agent import Agent
 from lattics._context import UpdateContext
-from lattics._updateinfo import UpdateInfo
+from lattics._units import convert_time
 
 
 class BaseModel(abc.ABC):
@@ -20,14 +20,15 @@ class BaseModel(abc.ABC):
     Parameters
     ----------
     update_interval : tuple[float, str], optional
-        The time between two updates of the model, for example ``(30, 'min')``
+        The time between two updates of the model, for example ``(30, 'min')``.
+        Defaults to every time step of the simulation.
     """
 
     reads: tuple[str, ...] = ()
     writes: tuple[str, ...] = ()
 
     def __init__(self, update_interval: tuple[float, str] = None) -> None:
-        self.update_info = UpdateInfo(update_interval=update_interval)
+        self.interval = convert_time(update_interval[0], update_interval[1], 'ms') if update_interval else None
 
     def initialize(self, agent: Agent, ctx: UpdateContext) -> None:
         """Initializes the attributes the model needs, when the agent or the
@@ -66,8 +67,9 @@ class BaseModel(abc.ABC):
         agent : Agent
             The agent to be updated
         ctx : UpdateContext
-            The context of the update; ``ctx.dt`` is the time elapsed since the
-            previous update of the model
+            The context of the update: the model advances the agent from
+            ``ctx.time`` to ``ctx.time + ctx.dt``, where ``ctx.dt`` is the update
+            interval of the model
         """
         raise NotImplementedError
 

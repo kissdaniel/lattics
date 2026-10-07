@@ -1,3 +1,4 @@
+import heapq
 import math
 import pickle
 import uuid
@@ -8,9 +9,10 @@ import tqdm
 
 from ._agent import Agent
 from ._context import UpdateContext
+from ._event import Event
 from ._population import Population
+from ._scheduler import EPSILON, ScheduledUpdate, effective_period, next_grid_point
 from ._units import convert_time
-from ._updateinfo import UpdateInfo
 
 if TYPE_CHECKING:
     from .models._base import BaseModel
@@ -37,9 +39,10 @@ class Simulation:
         self._population = Population()
         self._space = None
         self._events = list()
+        self._event_count = 0
         self._models = list()
         self._history = list()
-        self._history_ui = None
+        self._schedule_state = dict()
         self._time = 0
 
     def __getstate__(self):
@@ -47,6 +50,7 @@ class Simulation:
         del state['_events']
         del state['_models']
         del state['_history']
+        del state['_schedule_state']
         return state
 
     def __setstate__(self, state):
@@ -54,6 +58,7 @@ class Simulation:
         self._events = list()
         self._models = list()
         self._history = list()
+        self._schedule_state = dict()
 
     @property
     def agents(self) -> list[Agent]:
@@ -131,8 +136,17 @@ class Simulation:
         for agent in self._population:
             space.add_agent(agent)
 
-    def add_event(self, event) -> None:
-        self._events.append(event)
+    def add_event(self, event: Event) -> None:
+        """Schedules the event. Events are executed at their exact time;
+        events with the same time are executed in the order they were added.
+
+        Parameters
+        ----------
+        event : Event
+            The event to be scheduled
+        """
+        heapq.heappush(self._events, (event.time, self._event_count, event))
+        self._event_count += 1
 
     def add_model(self, model: 'BaseModel') -> None:
         """Adds the provided model to the simulation and initializes the
@@ -166,58 +180,154 @@ class Simulation:
         save_mode: str = 'never',
         verbosity: int = 1,
     ) -> None:
-        """Runs the simulation from the current state for the specified
-        duration using the given time step.
+        """Runs the simulation from the current state for the specified duration.
+
+        The simulation advances on a grid of time points spaced by ``dt``. Every
+        model, the agents of the space and the substrate fields are updated with
+        their own interval, rounded up to a multiple of ``dt``: ``dt`` is the
+        finest time step, so a larger ``dt`` gives a faster but less accurate
+        run. Events are executed at their exact time.
+
+        At each time point the history is recorded first, then the due events
+        are executed, then the due models, the agents of the space and the
+        substrate fields are updated, in this order.
 
         Parameters
         ----------
-        time : int
-            The duration to be simulated, in milliseconds
-        dt : _type_
-            Time step, in milliseconds
+        time : tuple[float, str]
+            The duration to be simulated, for example ``(5, 'day')``. It is
+            rounded up to a multiple of ``dt``.
+        dt : tuple[float, str]
+            The time step of the simulation
+        dt_history : tuple[float, str], optional
+            The time between two history entries
+        save_mode : str, optional
+            When to write the history to a file: ``'never'`` (default),
+            ``'always'`` or ``'on_completion'``
+        verbosity : int, optional
+            ``1`` (default) prints the update intervals and shows a progress
+            bar, ``0`` is silent
         """
         time_ms = convert_time(time[0], time[1], 'ms')
         dt_ms = convert_time(dt[0], dt[1], 'ms')
+        steps = int(math.ceil(time_ms / dt_ms - EPSILON))
+        t0 = self._time
+        t_end = t0 + steps * dt_ms
 
-        if self.time == 0:
-            if dt_history:
-                self._history_ui = UpdateInfo(update_interval=dt_history)
-                self._make_history_entry(save_mode)
+        updates = [self._prepare_update(update, dt_ms, t0) for update in self._scheduled_updates()]
+        recorder = None
+        if dt_history:
+            recorder = ScheduledUpdate(
+                'history',
+                'History',
+                convert_time(dt_history[0], dt_history[1], 'ms'),
+                lambda now, period: self._make_history_entry(save_mode),
+            )
+            self._prepare_update(recorder, dt_ms, t0)
 
-        steps = int(math.ceil(time_ms / dt_ms))
+        if verbosity >= 1:
+            self._print_summary(time_ms, dt_ms, updates + ([recorder] if recorder else []))
+        self._warn_invalid_intervals(updates)
 
-        if verbosity == 1:
+        if verbosity >= 1:
             progressbar_format = "{l_bar}{bar}| [{elapsed}<{remaining}{postfix}]"
             progressbar = tqdm.tqdm(total=steps, mininterval=1.0, colour='#d2de32', bar_format=progressbar_format)
             progressbar.set_description(f'ID={self._id}')
-            PROGRESSBAR_SCALER = 100
 
-        for i in range(steps):
-            self._update_events(self._time)
-            self._update_models(dt_ms)
-            if self._space:
-                self._space.update(self._context(dt_ms))
-            if dt_history:
-                self._history_ui.increase_time(dt_ms)
-            self._time += dt_ms
-            if dt_history:
-                if self._history_ui.update_needed():
-                    self._make_history_entry(save_mode)
-                    self._history_ui.reset_time()
-            if verbosity == 1:
-                if i % PROGRESSBAR_SCALER == 0:
-                    days = convert_time(self.time, 'ms', 'day')
-                    progressbar.set_postfix(T=f'{days:.2f}', N=f'{len(self._population)}')
-                    progressbar.update(PROGRESSBAR_SCALER)
+        now = t0
+        while now < t_end - EPSILON:
+            self._time = now
+            if recorder and recorder.is_due(now):
+                recorder.run(now)
+            self._execute_events(now)
+            for update in updates:
+                if update.is_due(now):
+                    update.run(now)
+            next_points = [next_grid_point(update.next_due, t0, dt_ms) for update in updates]
+            if recorder:
+                next_points.append(next_grid_point(recorder.next_due, t0, dt_ms))
+            if self._events:
+                next_points.append(self._events[0][0])
+            next_time = min(next_points + [t_end])
+            if verbosity >= 1:
+                progressbar.update(round((next_time - now) / dt_ms))
+                days = convert_time(next_time, 'ms', 'day')
+                progressbar.set_postfix(T=f'{days:.2f}', N=f'{len(self._population)}', refresh=False)
+            now = next_time
 
-        if verbosity == 1:
-            progressbar.n = steps
-            days = convert_time(self.time, 'ms', 'day')
-            progressbar.set_postfix(T=f'{days:.2f}', N=f'{len(self._population)}')
-            progressbar.update(PROGRESSBAR_SCALER)
+        self._time = t_end
+        if recorder and recorder.is_due(t_end):
+            recorder.run(t_end)
+        for update in updates + ([recorder] if recorder else []):
+            self._schedule_state[update.key] = update.next_due
+        if verbosity >= 1:
+            progressbar.close()
 
         if save_mode == 'on_completion':
             self._save_history()
+
+    def _scheduled_updates(self) -> list[ScheduledUpdate]:
+        """The periodically updated parts of the simulation, in the order of their execution."""
+        updates = [
+            ScheduledUpdate(
+                ('model', model),
+                type(model).__name__,
+                model.interval,
+                lambda now, period, model=model: model.update(self._population, self._context(period)),
+            )
+            for model in self._models
+        ]
+        if self._space:
+            space_name = type(self._space).__name__
+            updates.append(
+                ScheduledUpdate(
+                    ('agents', self._space),
+                    f'{space_name} (agents)',
+                    self._space.interval,
+                    lambda now, period: self._space.update_agents(self._context(period)),
+                )
+            )
+            if self._space.has_substrates():
+                updates.append(
+                    ScheduledUpdate(
+                        ('substrates', self._space),
+                        f'{space_name} (substrates)',
+                        self._space.substrate_interval,
+                        lambda now, period: self._space.update_substrates(self._context(period)),
+                    )
+                )
+        return updates
+
+    def _prepare_update(self, update: ScheduledUpdate, dt: float, start: float) -> ScheduledUpdate:
+        update.period = effective_period(update.interval, dt)
+        update.next_due = self._schedule_state.get(update.key, start)
+        return update
+
+    def _print_summary(self, duration: float, dt: float, updates: list[ScheduledUpdate]) -> None:
+        print(f'Simulation {self._id}: {_format_duration(duration)}, time step {_format_duration(dt)}')
+        width = max(len(update.name) for update in updates) if updates else 0
+        for update in updates:
+            if update.interval is None:
+                interval = f'every time step ({_format_duration(update.period)})'
+            elif abs(update.period - update.interval) <= EPSILON:
+                interval = f'every {_format_duration(update.period)}'
+            else:
+                interval = (
+                    f'every {_format_duration(update.period)} '
+                    f'(requested {_format_duration(update.interval)}, rounded to the time step)'
+                )
+            print(f'  {update.name:<{width}}  {interval}')
+
+    def _warn_invalid_intervals(self, updates: list[ScheduledUpdate]) -> None:
+        for update in updates:
+            if update.key[0] == 'agents':
+                for message in self._space.interval_warnings(update.period):
+                    warnings.warn(message)
+
+    def _execute_events(self, now: float) -> None:
+        while self._events and self._events[0][0] <= now + EPSILON:
+            _, _, event = heapq.heappop(self._events)
+            event.execute(self)
 
     def _make_history_entry(self, save_mode):
         state = pickle.dumps(self)
@@ -238,24 +348,10 @@ class Simulation:
     def _get_id(self, identifier):
         return identifier if identifier else str(uuid.uuid4())
 
-    def _update_events(self, time: int) -> None:
-        for e in list(self._events):
-            if e.is_ready(time):
-                e.execute(self)
-                self._events.remove(e)
 
-    def _update_models(self, dt: int) -> None:
-        """Sequentially updates all models associated with the agent. If
-        multiple sub-models exist within the same category, they are updated
-        in the order they appear in their respective collection.
-
-        Parameters
-        ----------
-        dt : int
-            The time elapsed since the last update, in milliseconds
-        """
-        for m in self._models:
-            if m.update_info.update_needed():
-                m.update(self._population, self._context(m.update_info.elapsed_time))
-                m.update_info.reset_time()
-            m.update_info.increase_time(dt)
+def _format_duration(milliseconds: float) -> str:
+    for unit in ('week', 'day', 'hour', 'min', 'sec'):
+        value = convert_time(milliseconds, 'ms', unit)
+        if value >= 1:
+            return f'{value:g} {unit}'
+    return f'{milliseconds:g} ms'

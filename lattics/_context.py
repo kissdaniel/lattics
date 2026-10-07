@@ -17,7 +17,9 @@ class UpdateContext:
     time : float
         The current time of the simulation, in milliseconds
     dt : float
-        The time elapsed since the previous update of the component, in milliseconds
+        The time step of the update, in milliseconds: the component advances
+        from ``time`` to ``time + dt``. It equals the update interval of the
+        component, rounded up to a multiple of the simulation time step.
     population : Population, optional
         The agents of the simulation
     space : BaseSpace, optional
@@ -51,7 +53,7 @@ class UpdateContext:
 
     @property
     def dt(self) -> float:
-        """The time elapsed since the previous update of the component, in milliseconds."""
+        """The time step of the update, in milliseconds: the component advances from ``time`` to ``time + dt``."""
         return self._dt
 
     @property

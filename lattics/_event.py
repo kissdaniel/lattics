@@ -9,6 +9,11 @@ class Event:
         self._handler = handler
         self._params = params
 
+    @property
+    def time(self) -> float:
+        """The time of the event, in milliseconds."""
+        return self._time
+
     def is_ready(self, current_time: int) -> bool:
         return self._time <= current_time
 

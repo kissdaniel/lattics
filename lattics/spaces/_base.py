@@ -4,8 +4,7 @@ from abc import ABC, abstractmethod
 from lattics._agent import Agent
 from lattics._context import UpdateContext
 from lattics._population import Population
-from lattics._units import convert_length, convert_volume
-from lattics._updateinfo import UpdateInfo
+from lattics._units import convert_length, convert_time, convert_volume
 
 
 class BaseSpace(ABC):
@@ -19,10 +18,9 @@ class BaseSpace(ABC):
     The domain is given either by ``size`` (and ``thickness``) or by
     ``volume``, but not by both. Spaces with a spatial structure need ``size``.
 
-    The simulation calls :meth:`update` in every step. The base class keeps
-    track of the update intervals, lets the subclass process the agents
-    (:meth:`_update_agents`), registers the agents exchanging substrates, and
-    updates the substrate fields.
+    The simulation schedules two parts of the space separately: the agents
+    (:meth:`update_agents`, every ``interval``) and the substrate fields
+    (:meth:`update_substrates`, every ``substrate_interval``).
 
     The class attributes ``reads`` and ``writes`` list the names of the agent
     attributes the space uses and sets.
@@ -70,8 +68,10 @@ class BaseSpace(ABC):
             self._volume = None
         self._population = None
         self._substrates = dict()
-        self._agent_update_info = UpdateInfo(interval)
-        self._substrate_update_info = UpdateInfo(substrate_interval)
+        self.interval = convert_time(interval[0], interval[1], 'ms') if interval else None
+        self.substrate_interval = (
+            convert_time(substrate_interval[0], substrate_interval[1], 'ms') if substrate_interval else None
+        )
 
     @property
     def volume(self) -> float | None:
@@ -121,27 +121,51 @@ class BaseSpace(ABC):
     ) -> None:
         pass
 
-    def update(self, ctx: UpdateContext) -> None:
-        """Updates the space.
+    def update_agents(self, ctx: UpdateContext) -> None:
+        """Processes the agents: division and removal requests and the
+        space-specific behaviour (for example movement), then registers the
+        agents exchanging substrates.
 
         Parameters
         ----------
         ctx : UpdateContext
-            The context of the update; ``ctx.dt`` is the time elapsed since the
-            previous call, in milliseconds
+            The context of the update; the agents advance from ``ctx.time`` to
+            ``ctx.time + ctx.dt``
         """
-        self._agent_update_info.increase_time(ctx.dt)
-        self._substrate_update_info.increase_time(ctx.dt)
+        self._update_agents(ctx, ctx.dt)
+        self._register_substrate_nodes()
 
-        if self._agent_update_info.update_needed():
-            self._update_agents(ctx, self._agent_update_info.elapsed_time)
-            self._register_substrate_nodes()
-            self._agent_update_info.reset_time()
+    def update_substrates(self, ctx: UpdateContext) -> None:
+        """Advances the substrate fields from ``ctx.time`` to ``ctx.time + ctx.dt``.
 
-        if self._substrate_update_info.update_needed():
-            for s in self._substrates.values():
-                s.update(self._substrate_update_info.elapsed_time)
-            self._substrate_update_info.reset_time()
+        Parameters
+        ----------
+        ctx : UpdateContext
+            The context of the update
+        """
+        for s in self._substrates.values():
+            s.update(ctx.dt)
+
+    def has_substrates(self) -> bool:
+        """Indicates whether the space has substrate fields to update."""
+        return bool(self._substrates)
+
+    def interval_warnings(self, period: float) -> list[str]:
+        """Checks whether the agents can be updated with the given period
+        without losing validity, for example because a probability per update
+        would exceed 1. Subclasses override this method.
+
+        Parameters
+        ----------
+        period : float
+            The effective update period of the agents, in milliseconds
+
+        Returns
+        -------
+        list[str]
+            Warning messages; empty if the period is valid
+        """
+        return []
 
     @abstractmethod
     def _update_agents(self, ctx: UpdateContext, dt: float) -> None:
@@ -153,7 +177,7 @@ class BaseSpace(ABC):
         ctx : UpdateContext
             The context of the update
         dt : float
-            The time elapsed since the previous update of the agents, in milliseconds
+            The time step of the update, in milliseconds
         """
         pass
 

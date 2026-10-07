@@ -185,6 +185,18 @@ class Lattice2DSpace(BaseSpace):
         # self._substrates[name] = substrate
         pass
 
+    def interval_warnings(self, period: float) -> list[str]:
+        if not len(self._population):
+            return []
+        max_motility = max(a.get_attribute('mechanics.motility') for a in self._population)
+        probability = max_motility * period / self._grid_spacing
+        if probability <= 1:
+            return []
+        return [
+            f'The displacement probability per update is {probability:.2f} > 1, so the motility of the agents is '
+            'truncated to one lattice step per update. Use a shorter update interval for the agents.'
+        ]
+
     def _update_agents(self, ctx: UpdateContext, dt: float) -> None:
         self._displacement_trials(dt)
         self._cell_division_trials(ctx)

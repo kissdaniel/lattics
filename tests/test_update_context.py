@@ -28,8 +28,8 @@ def test_custom_model_needs_only_update_agent():
     agent.set_attribute('space.volume', 1)
     sim.add_agent(agent)
     sim.run(time=(3, 'hour'), dt=(30, 'min'), verbosity=0)
-    # the model runs every hour and receives the time elapsed since its previous update
-    expected = [(0, 3600000.0, 3600000.0), (0, 7200000.0, 3600000.0)]
+    # the model runs every hour, from the start, and advances by one hour each time
+    expected = [(0, 0, 3600000.0), (0, 3600000.0, 3600000.0), (0, 7200000.0, 3600000.0)]
     actual = model.calls
     assert actual == expected
 
