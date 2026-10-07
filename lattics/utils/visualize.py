@@ -85,7 +85,7 @@ def show_agents_and_substrates_2d(
                 plt.colorbar(s_ax)
             agent_patches = []
             for a in sim_state.agents:
-                pos = a.get_attribute('position')
+                pos = a.get_attribute('space.position')
                 if color_by:
                     value = a.get_attribute(color_by)
                     if isinstance(value, str):

@@ -20,19 +20,19 @@ class ConcentrationDependentToxicityModel(BaseModel):
         self._ed50 = median_effective_concentration
 
     def update_attributes(self, agent: Agent) -> None:
-        concentration = agent.get_attribute('substrate_info')[self._substrate_name].concentration
+        concentration = agent.get_attribute('substrate.transport')[self._substrate_name].concentration
         rate = self._mm_fun(x=concentration, vmax=self._max_rate, ed50=self._ed50)
         dt = self.update_info.elapsed_time
         prob = 1 - np.exp(-rate * dt)
         if np.random.random() < prob:
-            agent.set_attribute('state', 'necrotic')
-            agent.set_attribute('cellcycle_is_active', False)
-            agent.set_attribute('division_pending', False)
-            agent.set_attribute('motility', 0)
-            agent.set_attribute('binding_affinity', 0)
+            agent.set_attribute('toxicity.state', 'necrotic')
+            agent.set_attribute('cellcycle.is_active', False)
+            agent.set_attribute('space.division_requested', False)
+            agent.set_attribute('mechanics.motility', 0)
+            agent.set_attribute('mechanics.binding_affinity', 0)
 
     def _initialize_required_attributes(self, agent: Agent) -> None:
-        if not agent.has_attribute('substrate_info'):
+        if not agent.has_attribute('substrate.transport'):
             raise AttributeError()
 
     def _mm_fun(self, x, vmax, ed50):

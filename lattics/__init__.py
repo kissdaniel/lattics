@@ -1,4 +1,4 @@
-from lattics import models, spaces, substrates, utils
+from lattics import attributes, models, spaces, substrates, utils
 from lattics._agent import Agent
 from lattics._event import Event
 from lattics._simulation import Simulation
@@ -15,6 +15,7 @@ __all__ = [
     'Simulation',
     'SubstrateInfo',
     'SubstrateNode',
+    'attributes',
     'convert_length',
     'convert_time',
     'convert_velocity',

@@ -25,8 +25,8 @@ def create_agent(attributes: dict[str, Any]) -> Agent:
     --------
     >>> agent = lattics.create_agent(
     ...     attributes={
-    ...         'volume': 2000,
-    ...         'position': (0, 0),
+    ...         'space.volume': 2000,
+    ...         'space.position': (0, 0),
     ...         'my_custom_attribute': 'High'
     ...         }
     ...     )
@@ -58,7 +58,7 @@ def create_population(size: int, attributes: dict[str, Any]) -> list[Agent]:
     --------
     >>> agents = lattics.create_population(
     ...     size=100,
-    ...     attributes={'volume': 2000}
+    ...     attributes={'space.volume': 2000}
     ...     )
     """
     agents = []
@@ -127,7 +127,7 @@ def populate_agents(
         all_coordinates = [(r, c) for r in range(rows) for c in range(cols)]
         target_coordinates = random.sample(all_coordinates, k=count)
         for tc in target_coordinates:
-            agent_attributes = attributes | {'position': tc}
+            agent_attributes = attributes | {'space.position': tc}
             agent = create_agent(attributes=agent_attributes)
             simulation.add_agent(agent=agent)
     if method == 'density':

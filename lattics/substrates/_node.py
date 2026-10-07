@@ -15,7 +15,7 @@ class SubstrateNode:
     def __init__(self) -> None:
         """Constructor method."""
         self._attributes = dict()
-        self.set_attribute('substrate_info', dict())
+        self.set_attribute('substrate.transport', dict())
 
     def set_attribute(self, name: str, value: Any) -> None:
         self._attributes[name] = value

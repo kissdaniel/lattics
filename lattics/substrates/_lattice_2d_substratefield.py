@@ -31,14 +31,14 @@ class Lattice2DSubstrateField(BaseSubstrateField):
         v_f = self._dx**2
         all_nodes = self._static_nodes + self._dynamic_nodes
         for n in all_nodes:
-            info = n.get_attribute('substrate_info')[self._substrate_name]
-            pos = n.get_attribute('position')
+            info = n.get_attribute('substrate.transport')[self._substrate_name]
+            pos = n.get_attribute('space.position')
             if info.type == 'flux':
                 k_p = info.passive_rate
                 k_u = info.uptake_rate
                 k_r = info.release_rate
                 c_n_cur = info.concentration
-                v_n = n.get_attribute('volume')
+                v_n = n.get_attribute('space.volume')
                 c_f_cur = self._concentration[tuple(pos)]
                 dn = (k_p * (c_f_cur - c_n_cur) + k_u * c_f_cur - k_r * c_n_cur) * dt
                 c_n_new = c_n_cur + dn / v_n

@@ -41,13 +41,13 @@ class HomogeneousSubstrateField(BaseSubstrateField):
         v_f = self._domain._volume
         all_nodes = self._static_nodes + self._dynamic_nodes
         for n in all_nodes:
-            info = n.get_attribute('substrate_info')[self._substrate_name]
+            info = n.get_attribute('substrate.transport')[self._substrate_name]
             if info.type == 'flux':
                 k_p = info.passive_rate
                 k_u = info.uptake_rate
                 k_r = info.release_rate
                 c_n_cur = info.concentration
-                v_n = n.get_attribute('volume')
+                v_n = n.get_attribute('space.volume')
                 c_f_cur = self._concentration
                 m_t = c_n_cur * v_n + c_f_cur * v_f
                 c_n_new = (c_n_cur + (dt / v_n) * (m_t / v_f) * (k_p + k_u)) / (

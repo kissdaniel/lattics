@@ -2,6 +2,7 @@ import numpy as np
 
 from lattics._agent import Agent
 from lattics._units import convert_time
+from lattics.attributes import default_of
 
 from ._base import BaseModel
 
@@ -11,9 +12,9 @@ class TimeBasedCellCycleModel(BaseModel):
     and an internal clock (counter) to track the current state of the cell cycle.
 
     =============================  ====  ========
-    *space.duplication_needed*     bool  The model sets this to `True` once the cell cycle is complete, signaling
+    *space.division_requested*     bool  The model sets this to `True` once the cell cycle is complete, signaling
                                          that the agent is ready for replication.
-    *space.duplication_completed*  bool  The simulation environment sets this to `True` once the agent has been
+    *space.division_completed*     bool  The simulation environment sets this to `True` once the agent has been
                                          successfully copied, indicating that the replication process is finished.
     cellcycle.is_active            bool  Signals if the agent is proliferating (i.e. proceeds through the cell
                                          cycle)
@@ -37,7 +38,7 @@ class TimeBasedCellCycleModel(BaseModel):
         self._distribution_param = distribution_param
 
     def update_attributes(self, agent: Agent) -> None:
-        if agent.get_attribute('space.duplication_completed'):
+        if agent.get_attribute('space.division_completed'):
             self.reset_attributes(agent)
         if agent.get_attribute('cellcycle.is_active'):
             current_time = agent.get_attribute('cellcycle.current_time')
@@ -45,13 +46,13 @@ class TimeBasedCellCycleModel(BaseModel):
             updated_time = current_time + time_since_last_update
             agent.set_attribute('cellcycle.current_time', updated_time)
             if agent.get_attribute('cellcycle.length') <= updated_time:
-                agent.set_attribute('space.duplication_needed', True)
+                agent.set_attribute('space.division_requested', True)
 
     def reset_attributes(self, agent: Agent) -> None:
         agent.set_attribute('cellcycle.is_active', True)
         agent.set_attribute('cellcycle.current_time', 0)
-        agent.set_attribute('space.duplication_needed', False)
-        agent.set_attribute('space.duplication_completed', False)
+        agent.set_attribute('space.division_requested', False)
+        agent.set_attribute('space.division_completed', False)
         attr = agent.get_attribute('cellcycle.mean_length')
         mean_length = convert_time(attr[0], attr[1], 'ms')
         length = self._generate_cellcycle_length(mean_length)
@@ -84,14 +85,14 @@ class TimeBasedCellCycleModel(BaseModel):
             agent.set_attribute('cellcycle.current_time', cc_time)
 
     def _initialize_attributes_default_values(self, agent: Agent) -> None:
-        if not agent.has_attribute('cellcycle.is_active'):
-            agent.set_attribute('cellcycle.is_active', True)
-        if not agent.has_attribute('cellcycle.current_time'):
-            agent.set_attribute('cellcycle.current_time', 0)
-        if not agent.has_attribute('space.duplication_needed'):
-            agent.set_attribute('space.duplication_needed', False)
-        if not agent.has_attribute('space.duplication_completed'):
-            agent.set_attribute('space.duplication_completed', False)
+        for name in (
+            'cellcycle.is_active',
+            'cellcycle.current_time',
+            'space.division_requested',
+            'space.division_completed',
+        ):
+            if not agent.has_attribute(name):
+                agent.set_attribute(name, default_of(name))
 
 
 class MultiPhaseTimeBasedCellCycleModel(BaseModel):
@@ -108,16 +109,16 @@ class MultiPhaseTimeBasedCellCycleModel(BaseModel):
         super().__init__(update_interval)
 
     def update_attributes(self, agent: Agent) -> None:
-        if agent.get_attribute('duplication_completed'):
+        if agent.get_attribute('space.division_completed'):
             self.reset_attributes(agent)
 
         limit = agent.get_attribute('cellcycle.inhibition_density_limit')
         if agent.get_attribute('cellcycle.current_phase') == 'G1':
-            if agent.get_attribute('mechanics.local_density') >= limit:
+            if agent.get_attribute('space.local_density') >= limit:
                 agent.set_attribute('cellcycle.current_phase', 'G0')
 
         if agent.get_attribute('cellcycle.current_phase') == 'G0':
-            if agent.get_attribute('mechanics.local_density') < limit:
+            if agent.get_attribute('space.local_density') < limit:
                 agent.set_attribute('cellcycle.current_phase', 'G1')
 
         if not agent.get_attribute('cellcycle.current_phase') == 'G0':
@@ -131,8 +132,8 @@ class MultiPhaseTimeBasedCellCycleModel(BaseModel):
         # agent.set_attribute('cellcycle.is_proliferating', True)
         agent.set_attribute('cellcycle.current_time', 0)
         agent.set_attribute('cellcycle.current_phase', 'G1')
-        agent.set_attribute('duplication_needed', False)
-        agent.set_attribute('duplication_completed', False)
+        agent.set_attribute('space.division_requested', False)
+        agent.set_attribute('space.division_completed', False)
         self._set_cellcycle_phase_lengths(agent)
 
     def _set_cellcycle_phase_lengths(self, agent: Agent) -> None:
@@ -169,7 +170,7 @@ class MultiPhaseTimeBasedCellCycleModel(BaseModel):
         if m_checkpoint <= current_time < div_checkpoint:
             agent.set_attribute('cellcycle.current_phase', 'M')
         if div_checkpoint <= current_time:
-            agent.set_attribute('duplication_needed', True)
+            agent.set_attribute('space.division_requested', True)
 
     def _generate_cellcycle_phase_length(self, length_mean, length_sd) -> int:
         if length_sd == 0.0:
@@ -201,13 +202,12 @@ class MultiPhaseTimeBasedCellCycleModel(BaseModel):
             self._update_cellcycle_phase(agent)
 
     def _initialize_attributes_default_values(self, agent: Agent) -> None:
-        if not agent.has_attribute('cellcycle.current_time'):
-            agent.set_attribute('cellcycle.current_time', 0)
-        if not agent.has_attribute('cellcycle.current_phase'):
-            agent.set_attribute('cellcycle.current_phase', 'G1')
-        if not agent.has_attribute('duplication_needed'):
-            agent.set_attribute('duplication_needed', False)
-        if not agent.has_attribute('duplication_completed'):
-            agent.set_attribute('duplication_completed', False)
-        if not agent.has_attribute('cellcycle.inhibition_density_limit'):
-            agent.set_attribute('cellcycle.inhibition_density_limit', 1.0)
+        for name in (
+            'cellcycle.current_time',
+            'cellcycle.current_phase',
+            'space.division_requested',
+            'space.division_completed',
+            'cellcycle.inhibition_density_limit',
+        ):
+            if not agent.has_attribute(name):
+                agent.set_attribute(name, default_of(name))

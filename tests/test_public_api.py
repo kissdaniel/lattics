@@ -20,6 +20,20 @@ def test_models_are_exported():
     assert missing == [] and 'MultiPhaseTimeBasedCellCycleModel' in lattics.models.__all__
 
 
+def test_attribute_names_carry_their_subsystem_prefix():
+    from lattics.attributes import known_names
+
+    names = known_names()
+    wrong = [name for name in names if name.count('.') != 1 or not all(name.split('.'))]
+    assert names and wrong == []
+
+
+def test_default_of_unknown_attribute_is_missing():
+    from lattics.attributes import MISSING, default_of
+
+    assert default_of('my.attribute') is MISSING
+
+
 def test_helper_imports_are_not_exposed():
     import lattics
 

@@ -41,17 +41,17 @@ def run_lattice_growth() -> dict:
         StochasticTransitionModel(
             update_interval=(30, 'min'),
             condition=('cellcycle.current_phase', 'G0'),
-            end_states={'removal_needed': True},
+            end_states={'space.removal_requested': True},
             rate=1.0,
         )
     )
     for site in np.random.choice(LATTICE_SIZE**2, 60, replace=False):
         agent = Agent()
         attributes = {
-            'position': np.array(divmod(int(site), LATTICE_SIZE), dtype=np.int32),
-            'volume': 300,
-            'motility': 5e-6,
-            'binding_affinity': 1.0,
+            'space.position': np.array(divmod(int(site), LATTICE_SIZE), dtype=np.int32),
+            'space.volume': 300,
+            'mechanics.motility': 5e-6,
+            'mechanics.binding_affinity': 1.0,
             'mechanics.displacement_limit': 3,
             'cellcycle.phase_g1_mean': (10, 'hour'),
             'cellcycle.phase_g1_sd': (2, 'hour'),
@@ -74,10 +74,10 @@ def run_lattice_growth() -> dict:
         ],
         'final_agents': sorted(
             [
-                [int(v) for v in a.get_attribute('position')],
+                [int(v) for v in a.get_attribute('space.position')],
                 a.get_attribute('cellcycle.current_phase'),
                 float(a.get_attribute('cellcycle.current_time')),
-                float(a.get_attribute('mechanics.local_density')),
+                float(a.get_attribute('space.local_density')),
             ]
             for a in simulation.agents
         ),
@@ -85,7 +85,7 @@ def run_lattice_growth() -> dict:
 
 
 def _set_node_concentration(simulation, node, name, concentration):
-    node.get_attribute('substrate_info')[name].concentration = concentration
+    node.get_attribute('substrate.transport')[name].concentration = concentration
 
 
 def run_homogeneous_drug_treatment() -> dict:
@@ -99,12 +99,14 @@ def run_homogeneous_drug_treatment() -> dict:
     field = space._substrates['drug']
 
     vessels = SubstrateNode()
-    vessels.set_attribute('volume', 8.4375e5)
-    vessels.get_attribute('substrate_info')['drug'] = SubstrateInfo(type='flux', passive_rate=0.5)
+    vessels.set_attribute('space.volume', 8.4375e5)
+    vessels.get_attribute('substrate.transport')['drug'] = SubstrateInfo(type='flux', passive_rate=0.5)
     field.add_static_substrate_node(vessels)
     organs = SubstrateNode()
-    organs.set_attribute('volume', 8.4375e6)
-    organs.get_attribute('substrate_info')['drug'] = SubstrateInfo(type='flux', release_rate=1.0, uptake_rate=5.0)
+    organs.set_attribute('space.volume', 8.4375e6)
+    organs.get_attribute('substrate.transport')['drug'] = SubstrateInfo(
+        type='flux', release_rate=1.0, uptake_rate=5.0
+    )
     field.add_static_substrate_node(organs)
 
     simulation.add_model(
@@ -114,8 +116,8 @@ def run_homogeneous_drug_treatment() -> dict:
     )
     for _ in range(100):
         agent = Agent()
-        agent.set_attribute('volume', 3375)
-        agent.set_attribute('substrate_info', {'drug': SubstrateInfo(type='flux', passive_rate=1e-3)})
+        agent.set_attribute('space.volume', 3375)
+        agent.set_attribute('substrate.transport', {'drug': SubstrateInfo(type='flux', passive_rate=1e-3)})
         simulation.add_agent(agent)
     for day, dose in [(0, 1e6), (1, 5e5)]:
         simulation.add_event(
@@ -129,14 +131,17 @@ def run_homogeneous_drug_treatment() -> dict:
     return {
         'field_concentrations': [float(state._space._substrates['drug']._concentration) for state in history],
         'necrotic_counts': [
-            sum(a.has_attribute('state') and a.get_attribute('state') == 'necrotic' for a in state.agents)
+            sum(
+                a.has_attribute('toxicity.state') and a.get_attribute('toxicity.state') == 'necrotic'
+                for a in state.agents
+            )
             for state in history
         ],
         'final_node_concentrations': [
-            float(node.get_attribute('substrate_info')['drug'].concentration) for node in (vessels, organs)
+            float(node.get_attribute('substrate.transport')['drug'].concentration) for node in (vessels, organs)
         ],
         'final_agent_concentrations': [
-            float(a.get_attribute('substrate_info')['drug'].concentration) for a in simulation.agents
+            float(a.get_attribute('substrate.transport')['drug'].concentration) for a in simulation.agents
         ],
     }
 

@@ -7,6 +7,7 @@ from scipy import ndimage
 from lattics._agent import Agent
 from lattics._kernels.lattice import bresenham_2d, displacement_trial_2d
 from lattics._simulation import Simulation
+from lattics.attributes import default_of
 
 from ._base import BaseSpace
 
@@ -54,17 +55,17 @@ class Lattice2DSpace(BaseSpace):
         """
         self._validate_required_attributes(agent)
         self._validate_optional_attributes(agent)
-        position = agent.get_attribute('position')
+        position = agent.get_attribute('space.position')
         self._agents.append(agent)
         self._agent_layer[tuple(position)] = agent
 
     def _validate_required_attributes(self, agent: Agent) -> None:
-        if not agent.has_attribute('position'):
-            raise ValueError('The agent must have an attribute named \'position\'.')
-        if not agent.has_attribute('volume'):
-            raise ValueError('The agent must have an attribute named \'volume\'.')
-        position = agent.get_attribute('position')
-        volume = agent.get_attribute('volume')
+        if not agent.has_attribute('space.position'):
+            raise ValueError('The agent must have an attribute named \'space.position\'.')
+        if not agent.has_attribute('space.volume'):
+            raise ValueError('The agent must have an attribute named \'space.volume\'.')
+        position = agent.get_attribute('space.position')
+        volume = agent.get_attribute('space.volume')
         if not self.is_valid_position(position):
             raise ValueError(f'Position {position} is out of the bounds of the domain.')
         if not self.is_empty_position(position):
@@ -76,31 +77,19 @@ class Lattice2DSpace(BaseSpace):
             )
 
     def _validate_optional_attributes(self, agent: Agent) -> None:
-        motility_default_value = 0
-        binding_affinity_default_value = 0
-        displacement_limit_default_value = 1
-        duplication_completed_default_value = False
-        duplication_needed_default_value = False
-        removal_needed_default_value = False
-        if not agent.has_attribute('binding_affinity'):
-            agent.set_attribute('binding_affinity', binding_affinity_default_value)
-            warnings.warn('Agent attribute \'binding_affinity\' was not defined, a default value is used.')
-        if not agent.has_attribute('mechanics.displacement_limit'):
-            agent.set_attribute('mechanics.displacement_limit', displacement_limit_default_value)
-            warnings.warn(
-                'Agent attribute \'mechanics.displacement_limit\' was not defined, a default value is used.'
-            )
-        if not agent.has_attribute('duplication_completed'):
-            agent.set_attribute('duplication_completed', duplication_completed_default_value)
-        if not agent.has_attribute('duplication_needed'):
-            agent.set_attribute('duplication_needed', duplication_needed_default_value)
-        if not agent.has_attribute('motility'):
-            agent.set_attribute('motility', motility_default_value)
-            warnings.warn('Agent attribute \'motility\' was not defined, a default value is used.')
-        if not agent.has_attribute('removal_needed'):
-            agent.set_attribute('removal_needed', removal_needed_default_value)
-        if not agent.has_attribute('mechanics.local_density'):
-            agent.set_attribute('mechanics.local_density', 0.0)
+        for name in ('mechanics.binding_affinity', 'mechanics.displacement_limit'):
+            if not agent.has_attribute(name):
+                agent.set_attribute(name, default_of(name))
+                warnings.warn(f'Agent attribute \'{name}\' was not defined, a default value is used.')
+        for name in ('space.division_completed', 'space.division_requested'):
+            if not agent.has_attribute(name):
+                agent.set_attribute(name, default_of(name))
+        if not agent.has_attribute('mechanics.motility'):
+            agent.set_attribute('mechanics.motility', default_of('mechanics.motility'))
+            warnings.warn('Agent attribute \'mechanics.motility\' was not defined, a default value is used.')
+        for name in ('space.removal_requested', 'space.local_density'):
+            if not agent.has_attribute(name):
+                agent.set_attribute(name, default_of(name))
 
     def remove_agent(self, agent: Agent) -> None:
         """Removes the specified agent from the internal list of the agents.
@@ -110,7 +99,7 @@ class Lattice2DSpace(BaseSpace):
         agent : Agent
             The agent to be removed
         """
-        position = agent.get_attribute('position')
+        position = agent.get_attribute('space.position')
         self._agents.remove(agent)
         self._agent_layer[tuple(position)] = None
 
@@ -143,8 +132,8 @@ class Lattice2DSpace(BaseSpace):
 
             self._clear_substrate_dynamic_nodes()
             for a in self._agents:
-                if a.has_attribute('substrate_info'):
-                    info = a.get_attribute('substrate_info')
+                if a.has_attribute('substrate.transport'):
+                    info = a.get_attribute('substrate.transport')
                     for i in info.keys():
                         self._substrates[i].add_dynamic_substrate_node(a)
             self._agent_update_info.reset_time()
@@ -189,21 +178,24 @@ class Lattice2DSpace(BaseSpace):
     def get_remaining_volume(self, position: tuple[int, int]) -> int:
         if self.is_empty_position(position):
             return self._grid_spacing**2
-        return self._grid_spacing**2 - self._agent_layer[tuple(position)].get_attribute('volume')
+        return self._grid_spacing**2 - self._agent_layer[tuple(position)].get_attribute('space.volume')
 
     def _displacement_trials(self, dt: int) -> None:
         if self._agents:
             agents = copy.copy(self._agents)
             np.random.shuffle(agents)
-            positions = np.array([a.get_attribute('position') for a in agents], dtype='int32')
+            positions = np.array([a.get_attribute('space.position') for a in agents], dtype='int32')
             disp_probs = np.array(
-                [a.get_attribute('motility') * dt / self._grid_spacing for a in agents], dtype='float32'
+                [a.get_attribute('mechanics.motility') * dt / self._grid_spacing for a in agents],
+                dtype='float32',
             )
-            binding_affs = np.array([a.get_attribute('binding_affinity') for a in agents], dtype='float32')
+            binding_affs = np.array(
+                [a.get_attribute('mechanics.binding_affinity') for a in agents], dtype='float32'
+            )
             # 3D array containing identifiers (idx) at those elements occupied by agents
             idx_array = np.full((self._agent_layer.shape[0], self._agent_layer.shape[1]), -1, dtype='int32')
             for i, a in enumerate(agents):
-                position = a.get_attribute('position')
+                position = a.get_attribute('space.position')
                 idx_array[tuple(position)] = np.int32(i)
             # Indicates whether a certain agent changed its position during the MC trial
             change_flags = np.full(len(agents), False, dtype='bool')
@@ -216,33 +208,33 @@ class Lattice2DSpace(BaseSpace):
             for i, cflag in enumerate(change_flags):
                 if cflag:
                     pos_new = positions[i]
-                    pos_old = agents[i].get_attribute('position')
+                    pos_old = agents[i].get_attribute('space.position')
                     agent_new = self._agent_layer[pos_new[0], pos_new[1]]
                     agent_old = self._agent_layer[pos_old[0], pos_old[1]]
                     self._agent_layer[tuple(pos_new)] = agent_old
                     self._agent_layer[tuple(pos_old)] = agent_new
                     if agent_new:
-                        agent_new.set_attribute('position', pos_old)
+                        agent_new.set_attribute('space.position', pos_old)
                     if agent_old:
-                        agent_old.set_attribute('position', pos_new)
+                        agent_old.set_attribute('space.position', pos_new)
 
     def _cell_removal_trials(self, dt: int) -> None:
         agents_temp = copy.copy(self._agents)
         # TODO: check if shuffle is needed here
         np.random.shuffle(agents_temp)
         for a in agents_temp:
-            if a.get_attribute('removal_needed'):
+            if a.get_attribute('space.removal_requested'):
                 self._simulation.remove_agent(a)
 
     def _cell_division_trials(self, dt: int) -> None:
         agents_temp = copy.copy(self._agents)
         np.random.shuffle(agents_temp)
         for a in agents_temp:
-            if a.get_attribute('duplication_needed'):
+            if a.get_attribute('space.division_requested'):
                 self._perform_cell_division(a, dt)
 
     def _perform_cell_division(self, agent: Agent, dt: int) -> None:
-        current_position = agent.get_attribute('position')
+        current_position = agent.get_attribute('space.position')
         displacement_limit = agent.get_attribute('mechanics.displacement_limit')
         coverage_mask = np.where(self._agent_layer, float('inf'), 0)
         if np.any(coverage_mask == 0):
@@ -263,13 +255,13 @@ class Lattice2DSpace(BaseSpace):
                         a_new_x, a_new_y = path[i + 1, :2]
                         agent_to_move = self._agent_layer[a_old_x, a_old_y]
                         self._agent_layer[a_new_x, a_new_y] = agent_to_move
-                        agent_to_move.set_attribute('position', path[i + 1])
+                        agent_to_move.set_attribute('space.position', path[i + 1])
                 clone_position = path[1]
                 self._agent_layer[tuple(clone_position)] = None
-                agent.set_attribute('duplication_needed', False)
-                agent.set_attribute('duplication_completed', True)
+                agent.set_attribute('space.division_requested', False)
+                agent.set_attribute('space.division_completed', True)
                 new_agent = agent.clone()
-                new_agent.set_attribute('position', clone_position)
+                new_agent.set_attribute('space.position', clone_position)
                 self._simulation.add_agent(new_agent)
 
     def _clear_substrate_dynamic_nodes(self):
@@ -280,11 +272,11 @@ class Lattice2DSpace(BaseSpace):
         coverage_map = np.where(self._agent_layer, 1, 0)
         i_indices, j_indices = np.ogrid[: coverage_map.shape[0], : coverage_map.shape[1]]
         for agent in self._agents:
-            current_position = agent.get_attribute('position')
+            current_position = agent.get_attribute('space.position')
             displacement_limit = agent.get_attribute('mechanics.displacement_limit')
             mask = (i_indices - current_position[0]) ** 2 + (
                 j_indices - current_position[1]
             ) ** 2 <= displacement_limit**2
             mask_covered = (mask) & (coverage_map == 1)
             density = (np.sum(mask_covered) - 1) / (np.sum(mask) - 1)
-            agent.set_attribute('mechanics.local_density', density)
+            agent.set_attribute('space.local_density', density)
