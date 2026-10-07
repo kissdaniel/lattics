@@ -32,10 +32,8 @@ def run_lattice_growth() -> dict:
     removal of inhibited (G0) cells."""
     seed_everything(SEED)
     simulation = Simulation(id='reference_lattice_growth')
-    space = Lattice2DSpace(
-        simulation, dimensions=(LATTICE_SIZE, LATTICE_SIZE), grid_spacing=20, dt_agent=(30, 'min')
-    )
-    simulation.add_space(space)
+    space = Lattice2DSpace(dimensions=(LATTICE_SIZE, LATTICE_SIZE), grid_spacing=20, dt_agent=(30, 'min'))
+    simulation.set_space(space)
     simulation.add_model(MultiPhaseTimeBasedCellCycleModel(update_interval=(30, 'min')))
     simulation.add_model(
         StochasticTransitionModel(
@@ -93,8 +91,8 @@ def run_homogeneous_drug_treatment() -> dict:
     the agents, and concentration-dependent necrosis."""
     seed_everything(SEED)
     simulation = Simulation(id='reference_homogeneous_drug_treatment')
-    space = HomogeneousSpace(simulation, volume=8.4375e6, dt_agent=(1, 'hour'), dt_substrate=(30, 'sec'))
-    simulation.add_space(space)
+    space = HomogeneousSpace(volume=8.4375e6, dt_agent=(1, 'hour'), dt_substrate=(30, 'sec'))
+    simulation.set_space(space)
     space.add_substrate(name='drug', diffusion_coefficient=2e-3, decay_coefficient=1e-8)
     field = space._substrates['drug']
 

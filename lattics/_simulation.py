@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 import tqdm
 
 from ._agent import Agent
+from ._context import UpdateContext
 from ._population import Population
 from ._units import convert_time
 from ._updateinfo import UpdateInfo
@@ -110,10 +111,11 @@ class Simulation:
                 'You can proceed without one, but this may '
                 'lead to unexpected consequences.'
             )
+        ctx = self._context(dt=0)
         for m in self._models:
-            m.initialize_attributes(agent)
+            m.initialize(agent, ctx)
 
-    def add_space(self, space: 'BaseSpace') -> None:
+    def set_space(self, space: 'BaseSpace') -> None:
         """Sets the simulation space to the instance passed as a parameter.
 
         Parameters
@@ -123,14 +125,15 @@ class Simulation:
         """
         if self._space:
             raise AttributeError('Simulation space is already set and cannot be modified.')
+        space._bind(self._population)
         self._space = space
 
     def add_event(self, event) -> None:
         self._events.append(event)
 
     def add_model(self, model: 'BaseModel') -> None:
-        """Adds the provided model instance to the agent's collection of cell
-        function models and invokes the model's initialization method.
+        """Adds the provided model to the simulation and initializes the
+        agents already present with it.
 
         Parameters
         ----------
@@ -138,6 +141,9 @@ class Simulation:
             A subclass of the ``BaseModel`` abstract base class.
         """
         self._models.append(model)
+        ctx = self._context(dt=0)
+        for a in self._population:
+            model.initialize(a, ctx)
 
     def add_substrate(self, name: str, substrate) -> None:
         if not self._space:
@@ -187,7 +193,7 @@ class Simulation:
             self._update_events(self._time)
             self._update_models(dt_ms)
             if self._space:
-                self._space.update(dt_ms)
+                self._space.update(self._context(dt_ms))
             if dt_history:
                 self._history_ui.increase_time(dt_ms)
             self._time += dt_ms
@@ -221,6 +227,11 @@ class Simulation:
         with open(filename, 'wb') as f:
             pickle.dump(self._history, f)
 
+    def _context(self, dt: float) -> UpdateContext:
+        return UpdateContext(
+            time=self._time, dt=dt, population=self._population, space=self._space, simulation=self
+        )
+
     def _get_id(self, identifier):
         return identifier if identifier else str(uuid.uuid4())
 
@@ -242,7 +253,6 @@ class Simulation:
         """
         for m in self._models:
             if m.update_info.update_needed():
-                for a in self._population:
-                    m.update_attributes(a)
+                m.update(self._population, self._context(m.update_info.elapsed_time))
                 m.update_info.reset_time()
             m.update_info.increase_time(dt)

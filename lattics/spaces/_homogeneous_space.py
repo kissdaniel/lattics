@@ -1,7 +1,7 @@
 import warnings
 
 from lattics._agent import Agent
-from lattics._simulation import Simulation
+from lattics._context import UpdateContext
 from lattics.attributes import default_of
 from lattics.substrates import HomogeneousSubstrateField
 
@@ -16,7 +16,6 @@ class HomogeneousSpace(BaseSpace):
 
     def __init__(
         self,
-        simulation: Simulation,
         volume: int = None,
         dt_agent: tuple[float, str] = None,
         dt_substrate: tuple[float, str] = None,
@@ -25,15 +24,12 @@ class HomogeneousSpace(BaseSpace):
 
         Parameters
         ----------
-        simulation : Simulation
-            The Simulation instance containing the domain
         volume : int, optional
             The capacity of the domain: the maximum total volume of the agents.
             Defaults to None, meaning no limit.
         """
-        super().__init__(simulation=simulation, dt_agent=dt_agent, dt_substrate=dt_substrate)
+        super().__init__(dt_agent=dt_agent, dt_substrate=dt_substrate)
         self._volume = volume
-        self._substrates = dict()
         self._has_free_volume = True
 
     def add_agent(self, agent: Agent, volume: int = 0, **params) -> None:
@@ -80,37 +76,16 @@ class HomogeneousSpace(BaseSpace):
         )
         self._substrates[name] = substrate
 
-    def update(self, dt: int) -> None:
-        """Updates the domain according to the specified time duration. Agents
-        labeled as ``space.division_requested`` are duplicated based on the available
-        space in the domain, constrained by ``capacity``.
-
-        Parameters
-        ----------
-        dt : int
-            The time elapsed since the last update call, in milliseconds
+    def _update_agents(self, ctx: UpdateContext, dt: float) -> None:
+        """Agents labeled as ``space.division_requested`` are duplicated based on
+        the available space in the domain, constrained by ``volume``; agents
+        labeled as ``space.removal_requested`` are removed.
         """
-        self._agent_update_info.increase_time(dt)
-        self._substrate_update_info.increase_time(dt)
-
-        if self._agent_update_info.update_needed():
-            self._clear_substrate_dynamic_nodes()
-            for a in self._simulation.population:
-                if a.get_attribute('space.division_requested'):
-                    self._process_agent_division(a)
-                if a.get_attribute('space.removal_requested'):
-                    self._simulation.remove_agent(a)
-
-                if a.has_attribute('substrate.transport'):
-                    info = a.get_attribute('substrate.transport')
-                    for i in info.keys():
-                        self._substrates[i].add_dynamic_substrate_node(a)
-            self._agent_update_info.reset_time()
-
-        if self._substrate_update_info.update_needed():
-            for s in self._substrates.values():
-                s.update(self._substrate_update_info.elapsed_time)
-            self._substrate_update_info.reset_time()
+        for a in self._population:
+            if a.get_attribute('space.division_requested'):
+                self._process_agent_division(a, ctx)
+            if a.get_attribute('space.removal_requested'):
+                ctx.remove_agent(a)
 
     def _initialize_attributes(self, agent, volume) -> None:
         """Initializes the attributes used by the domain. The domain tracks
@@ -134,11 +109,7 @@ class HomogeneousSpace(BaseSpace):
     def _process_substrates(self, dt) -> None:
         pass
 
-    def _clear_substrate_dynamic_nodes(self):
-        for s in self._substrates.values():
-            s.clear_dynamic_nodes()
-
-    def _process_agent_division(self, agent: Agent) -> None:
+    def _process_agent_division(self, agent: Agent, ctx: UpdateContext) -> None:
         if not self._has_free_volume:
             return
         sum_volumes = self._get_total_agent_volume()
@@ -147,7 +118,7 @@ class HomogeneousSpace(BaseSpace):
             agent.set_attribute('space.division_requested', False)
             agent.set_attribute('space.division_completed', True)
             new_agent = agent.clone()
-            self._simulation.add_agent(new_agent)
+            ctx.add_agent(new_agent)
         else:
             self._has_free_volume = False
 
@@ -155,7 +126,7 @@ class HomogeneousSpace(BaseSpace):
         pass
 
     def _get_total_agent_volume(self) -> int:
-        return sum([a.get_attribute('space.volume') for a in self._simulation.population])
+        return sum([a.get_attribute('space.volume') for a in self._population])
 
     def _fits(self, total_volume: float) -> bool:
         return self._volume is None or total_volume <= self._volume

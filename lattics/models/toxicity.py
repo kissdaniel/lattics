@@ -1,12 +1,22 @@
 import numpy as np
 
 from lattics._agent import Agent
+from lattics._context import UpdateContext
 from lattics._units import convert_time
 
 from ._base import BaseModel
 
 
 class ConcentrationDependentToxicityModel(BaseModel):
+    reads = ('substrate.transport',)
+    writes = (
+        'toxicity.state',
+        'cellcycle.is_active',
+        'space.division_requested',
+        'mechanics.motility',
+        'mechanics.binding_affinity',
+    )
+
     def __init__(
         self,
         update_interval: tuple[float, str],
@@ -19,10 +29,10 @@ class ConcentrationDependentToxicityModel(BaseModel):
         self._max_rate = max_rate / convert_time(1, 'day', 'ms')
         self._ed50 = median_effective_concentration
 
-    def update_attributes(self, agent: Agent) -> None:
+    def update_agent(self, agent: Agent, ctx: UpdateContext) -> None:
         concentration = agent.get_attribute('substrate.transport')[self._substrate_name].concentration
         rate = self._mm_fun(x=concentration, vmax=self._max_rate, ed50=self._ed50)
-        dt = self.update_info.elapsed_time
+        dt = ctx.dt
         prob = 1 - np.exp(-rate * dt)
         if np.random.random() < prob:
             agent.set_attribute('toxicity.state', 'necrotic')

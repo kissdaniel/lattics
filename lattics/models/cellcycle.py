@@ -1,6 +1,7 @@
 import numpy as np
 
 from lattics._agent import Agent
+from lattics._context import UpdateContext
 from lattics._units import convert_time
 from lattics.attributes import default_of
 
@@ -30,6 +31,20 @@ class TimeBasedCellCycleModel(BaseModel):
         _description_
     """
 
+    reads = (
+        'cellcycle.mean_length',
+        'cellcycle.random_initial',
+        'cellcycle.is_active',
+        'space.division_completed',
+    )
+    writes = (
+        'cellcycle.length',
+        'cellcycle.current_time',
+        'cellcycle.is_active',
+        'space.division_requested',
+        'space.division_completed',
+    )
+
     def __init__(
         self, update_interval: tuple[float, str] = None, distribution: str = 'erlang', distribution_param: int = 4
     ) -> None:
@@ -37,12 +52,12 @@ class TimeBasedCellCycleModel(BaseModel):
         self._distribution = distribution
         self._distribution_param = distribution_param
 
-    def update_attributes(self, agent: Agent) -> None:
+    def update_agent(self, agent: Agent, ctx: UpdateContext) -> None:
         if agent.get_attribute('space.division_completed'):
             self.reset_attributes(agent)
         if agent.get_attribute('cellcycle.is_active'):
             current_time = agent.get_attribute('cellcycle.current_time')
-            time_since_last_update = self.update_info.elapsed_time
+            time_since_last_update = ctx.dt
             updated_time = current_time + time_since_last_update
             agent.set_attribute('cellcycle.current_time', updated_time)
             if agent.get_attribute('cellcycle.length') <= updated_time:
@@ -105,10 +120,36 @@ class MultiPhaseTimeBasedCellCycleModel(BaseModel):
         _description_
     """
 
+    reads = (
+        'cellcycle.phase_g1_mean',
+        'cellcycle.phase_g1_sd',
+        'cellcycle.phase_s_mean',
+        'cellcycle.phase_s_sd',
+        'cellcycle.phase_g2_mean',
+        'cellcycle.phase_g2_sd',
+        'cellcycle.phase_m_mean',
+        'cellcycle.phase_m_sd',
+        'cellcycle.random_initial',
+        'cellcycle.inhibition_density_limit',
+        'space.local_density',
+        'space.division_completed',
+    )
+    writes = (
+        'cellcycle.phase_g1_length',
+        'cellcycle.phase_s_length',
+        'cellcycle.phase_g2_length',
+        'cellcycle.phase_m_length',
+        'cellcycle.current_time',
+        'cellcycle.current_phase',
+        'cellcycle.inhibition_density_limit',
+        'space.division_requested',
+        'space.division_completed',
+    )
+
     def __init__(self, update_interval: tuple[float, str] = None) -> None:
         super().__init__(update_interval)
 
-    def update_attributes(self, agent: Agent) -> None:
+    def update_agent(self, agent: Agent, ctx: UpdateContext) -> None:
         if agent.get_attribute('space.division_completed'):
             self.reset_attributes(agent)
 
@@ -123,7 +164,7 @@ class MultiPhaseTimeBasedCellCycleModel(BaseModel):
 
         if not agent.get_attribute('cellcycle.current_phase') == 'G0':
             current_time = agent.get_attribute('cellcycle.current_time')
-            time_since_last_update = self.update_info.elapsed_time
+            time_since_last_update = ctx.dt
             updated_time = current_time + time_since_last_update
             agent.set_attribute('cellcycle.current_time', updated_time)
             self._update_cellcycle_phase(agent)

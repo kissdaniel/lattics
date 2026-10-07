@@ -3,6 +3,7 @@ from typing import Any
 import numpy as np
 
 from lattics._agent import Agent
+from lattics._context import UpdateContext
 from lattics._units import convert_time
 
 from ._base import BaseModel
@@ -20,15 +21,14 @@ class StochasticTransitionModel(BaseModel):
         self._condition = condition
         self._end_states = end_states
         self._rate = rate / convert_time(1, 'day', 'ms')
+        self.reads = (condition[0],) if condition else ()
+        self.writes = tuple(end_states) if end_states else ()
 
-    def initialize_attributes(self, agent: Agent, **params) -> None:
-        pass
-
-    def update_attributes(self, agent: Agent) -> None:
+    def update_agent(self, agent: Agent, ctx: UpdateContext) -> None:
         attr_name = self._condition[0]
         attr_value = self._condition[1]
         if agent.get_attribute(attr_name) == attr_value:
-            dt = self.update_info.elapsed_time
+            dt = ctx.dt
             prob = 1 - np.exp(-self._rate * dt)
             if np.random.random() < prob:
                 for s_name, s_value in self._end_states.items():

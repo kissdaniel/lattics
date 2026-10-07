@@ -1,5 +1,6 @@
 from lattics import attributes, models, spaces, substrates, utils
 from lattics._agent import Agent
+from lattics._context import UpdateContext
 from lattics._event import Event
 from lattics._population import Population
 from lattics._simulation import Simulation
@@ -17,6 +18,7 @@ __all__ = [
     'Simulation',
     'SubstrateInfo',
     'SubstrateNode',
+    'UpdateContext',
     'attributes',
     'convert_length',
     'convert_time',

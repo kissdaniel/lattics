@@ -102,13 +102,12 @@ def create_simulation_2d(
         lattice_dimensions.append(round(n_sites))
     simulation = Simulation(id=id)
     space = Lattice2DSpace(
-        simulation=simulation,
         dimensions=tuple(lattice_dimensions),
         grid_spacing=grid_spacing,
         dt_agent=dt_agent,
         dt_substrate=dt_substrate,
     )
-    simulation.add_space(space=space)
+    simulation.set_space(space)
     return simulation
 
 
