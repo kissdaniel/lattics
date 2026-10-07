@@ -6,7 +6,7 @@ def test_time_based_cell_cycle_divides_in_homogeneous_space():
     from lattics.models import TimeBasedCellCycleModel
 
     sim = Simulation()
-    sim.set_space(HomogeneousSpace(volume=10**9, dt_agent=(1, 'hour')))
+    sim.set_space(HomogeneousSpace(interval=(1, 'hour')))
     sim.add_model(TimeBasedCellCycleModel(update_interval=(1, 'hour'), distribution='fixed'))
     agent = Agent()
     agent.set_attribute('space.volume', 1)

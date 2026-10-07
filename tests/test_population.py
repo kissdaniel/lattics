@@ -55,7 +55,7 @@ def test_homogeneous_space_without_volume_limit():
     from lattics import Agent, HomogeneousSpace, Simulation
 
     sim = Simulation()
-    sim.set_space(HomogeneousSpace(dt_agent=(1, 'hour')))
+    sim.set_space(HomogeneousSpace(interval=(1, 'hour')))
     agent = Agent()
     agent.set_attribute('space.volume', 1000)
     agent.set_attribute('space.division_requested', True)

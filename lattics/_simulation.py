@@ -117,6 +117,7 @@ class Simulation:
 
     def set_space(self, space: 'BaseSpace') -> None:
         """Sets the simulation space to the instance passed as a parameter.
+        Agents added before are placed in the space now.
 
         Parameters
         ----------
@@ -127,6 +128,8 @@ class Simulation:
             raise AttributeError('Simulation space is already set and cannot be modified.')
         space._bind(self._population)
         self._space = space
+        for agent in self._population:
+            space.add_agent(agent)
 
     def add_event(self, event) -> None:
         self._events.append(event)

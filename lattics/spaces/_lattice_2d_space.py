@@ -1,3 +1,4 @@
+import math
 import warnings
 
 import numpy as np
@@ -12,64 +13,142 @@ from ._base import BaseSpace
 
 
 class Lattice2DSpace(BaseSpace):
+    """A two-dimensional square lattice: every lattice site holds at most one
+    agent. Agents move by Monte Carlo displacement trials, push their
+    neighbors when they divide, and sense the local density of their
+    neighborhood.
+
+    The number of lattice sites along each axis is ``size`` divided by
+    ``grid_spacing``; every size must be a multiple of the grid spacing. The
+    volume of a lattice site is ``grid_spacing**2 * thickness``. Agents
+    without a ``space.position`` attribute are placed on a random free site.
+
+    Parameters
+    ----------
+    size : tuple[tuple[float, str], tuple[float, str]]
+        The size of the domain along the two axes, for example
+        ``((750, 'um'), (750, 'um'))``
+    volume : tuple[float, str], optional
+        Not supported: a lattice space needs ``size``. Accepted only to keep
+        the arguments of all spaces the same.
+    thickness : tuple[float, str], optional
+        The thickness of the domain. Defaults to ``grid_spacing``.
+    grid_spacing : tuple[float, str], optional
+        The distance between neighboring lattice sites. Defaults to 20 um.
+    interval : tuple[float, str], optional
+        The time between two updates of the agents, for example ``(30, 'min')``
+    substrate_interval : tuple[float, str], optional
+        The time between two updates of the substrate fields
+
+    Raises
+    ------
+    ValueError
+        If the size is missing or not a multiple of the grid spacing, or the
+        volume is given
+    """
+
+    reads = (
+        'space.position',
+        'space.volume',
+        'space.division_requested',
+        'space.removal_requested',
+        'mechanics.motility',
+        'mechanics.binding_affinity',
+        'mechanics.displacement_limit',
+        'substrate.transport',
+    )
+    writes = (
+        'space.position',
+        'space.local_density',
+        'space.division_requested',
+        'space.division_completed',
+        'space.removal_requested',
+        'mechanics.motility',
+        'mechanics.binding_affinity',
+        'mechanics.displacement_limit',
+    )
+
     def __init__(
         self,
-        dimensions: tuple[int, int],
-        grid_spacing: int,
-        dt_agent: tuple[float, str] = None,
-        dt_substrate: tuple[float, str] = None,
+        size: tuple[tuple[float, str], ...] = None,
+        volume: tuple[float, str] = None,
+        thickness: tuple[float, str] = None,
+        grid_spacing: tuple[float, str] = (20, 'um'),
+        interval: tuple[float, str] = None,
+        substrate_interval: tuple[float, str] = None,
     ) -> None:
-        super().__init__(dt_agent=dt_agent, dt_substrate=dt_substrate)
-        if not dimensions:
-            raise ValueError('You must provide a valid dimension for the space size, for example (50, 70).')
-        self._dimensions = dimensions
-        self._grid_spacing = grid_spacing
+        super().__init__(
+            size=size,
+            volume=volume,
+            thickness=thickness,
+            grid_spacing=grid_spacing,
+            interval=interval,
+            substrate_interval=substrate_interval,
+        )
+        if volume is not None:
+            raise ValueError('A lattice space needs the size of the domain, the volume alone is not enough.')
+        if size is None or len(size) != 2:
+            raise ValueError("You must provide the size of the domain, for example ((750, 'um'), (750, 'um')).")
+        dimensions = []
+        for (value, unit), length in zip(size, self._size):
+            n_sites = length / self._grid_spacing
+            if not math.isclose(n_sites, round(n_sites)):
+                raise ValueError(
+                    f'The domain size {value} {unit} is not a multiple of the grid spacing '
+                    f'({self._grid_spacing:g} um).'
+                )
+            dimensions.append(round(n_sites))
+        self._dimensions = tuple(dimensions)
         self._agent_layer = np.empty(self._dimensions, dtype='object')
+        self._site_volume = self._grid_spacing**2 * self._thickness
 
     def add_agent(self, agent: Agent) -> None:
-        """TODO
+        """Places the specified agent, which is already part of the population,
+        on the lattice. Agents without a ``space.position`` attribute are placed
+        on a random free site.
 
         Parameters
         ----------
         agent : Agent
             The agent to be added
-        volume: int
-            TODO
-        position : tuple[int, int]
-            The column and row index describing the agent's position
-        motility : int, optional
-            Characteristic velocity of the agent, expressed in
-            micrometers per millisecond, by default 0
-        binding_affinity : int, optional
-            Scale factor that determines the binding strength between
-            the agent and other agents, by default 0
 
         Raises
         ------
         ValueError
-            If the position of the agent is out of the bounds of the domain
+            If the agent has no ``space.volume`` attribute, its position is out
+            of the bounds of the domain or already occupied, or the lattice is full
         """
-        self._validate_required_attributes(agent)
+        self._validate_volume(agent)
+        if not agent.has_attribute('space.position'):
+            agent.set_attribute('space.position', self._random_free_site())
+        self._validate_position(agent)
         self._validate_optional_attributes(agent)
         position = agent.get_attribute('space.position')
         self._agent_layer[tuple(position)] = agent
 
-    def _validate_required_attributes(self, agent: Agent) -> None:
-        if not agent.has_attribute('space.position'):
-            raise ValueError('The agent must have an attribute named \'space.position\'.')
-        if not agent.has_attribute('space.volume'):
-            raise ValueError('The agent must have an attribute named \'space.volume\'.')
+    def _validate_position(self, agent: Agent) -> None:
         position = agent.get_attribute('space.position')
         volume = agent.get_attribute('space.volume')
         if not self.is_valid_position(position):
             raise ValueError(f'Position {position} is out of the bounds of the domain.')
         if not self.is_empty_position(position):
             raise ValueError(f'Position {position} already occupied.')
-        if self.get_remaining_volume(position) < volume:
+        if self._site_volume < volume:
             warnings.warn(
-                'The agent\'s volume is larger than the volume assigned to '
-                'the domain chunks. This may lead to unexpected behavior.'
+                'The agent\'s volume is larger than the volume of a lattice site. '
+                'This may lead to unexpected behavior.'
             )
+
+    def _random_free_site(self) -> np.ndarray:
+        # Random draws are fast while the lattice is sparse; fall back to listing the free sites
+        for _ in range(100):
+            site = np.array([np.random.randint(n) for n in self._dimensions], dtype=np.int32)
+            if self._agent_layer[tuple(site)] is None:
+                return site
+        free_sites = np.argwhere(np.equal(self._agent_layer, None))
+        if len(free_sites) == 0:
+            raise ValueError('The lattice is full, there is no free site for the agent.')
+        return free_sites[np.random.randint(len(free_sites))].astype(np.int32)
 
     def _validate_optional_attributes(self, agent: Agent) -> None:
         for name in ('mechanics.binding_affinity', 'mechanics.displacement_limit'):
@@ -144,10 +223,10 @@ class Lattice2DSpace(BaseSpace):
         """
         return self._agent_layer[tuple(position)] is None
 
-    def get_remaining_volume(self, position: tuple[int, int]) -> int:
+    def get_remaining_volume(self, position: tuple[int, int]) -> float:
         if self.is_empty_position(position):
-            return self._grid_spacing**2
-        return self._grid_spacing**2 - self._agent_layer[tuple(position)].get_attribute('space.volume')
+            return self._site_volume
+        return self._site_volume - self._agent_layer[tuple(position)].get_attribute('space.volume')
 
     def _displacement_trials(self, dt: int) -> None:
         if len(self._population):

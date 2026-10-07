@@ -4,7 +4,7 @@ from lattics._context import UpdateContext
 from lattics._event import Event
 from lattics._population import Population
 from lattics._simulation import Simulation
-from lattics._units import convert_length, convert_time, convert_velocity
+from lattics._units import convert_length, convert_time, convert_velocity, convert_volume
 from lattics.spaces import HomogeneousSpace, Lattice2DSpace
 from lattics.substrates import SubstrateInfo, SubstrateNode
 from lattics.utils.create import create_agent, create_population, create_simulation_2d, populate_agents
@@ -23,6 +23,7 @@ __all__ = [
     'convert_length',
     'convert_time',
     'convert_velocity',
+    'convert_volume',
     'create_agent',
     'create_population',
     'create_simulation_2d',

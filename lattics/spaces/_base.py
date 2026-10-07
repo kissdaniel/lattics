@@ -1,32 +1,86 @@
+import math
 from abc import ABC, abstractmethod
 
 from lattics._agent import Agent
 from lattics._context import UpdateContext
 from lattics._population import Population
+from lattics._units import convert_length, convert_volume
 from lattics._updateinfo import UpdateInfo
 
 
 class BaseSpace(ABC):
     """Base class for the simulation spaces.
 
+    All spaces accept the same keyword arguments and compute the geometry of
+    the domain in the same way, so a simulation can switch between spaces by
+    replacing only the space class. Arguments a space does not need are
+    accepted and ignored.
+
+    The domain is given either by ``size`` (and ``thickness``) or by
+    ``volume``, but not by both. Spaces with a spatial structure need ``size``.
+
     The simulation calls :meth:`update` in every step. The base class keeps
     track of the update intervals, lets the subclass process the agents
     (:meth:`_update_agents`), registers the agents exchanging substrates, and
     updates the substrate fields.
 
+    The class attributes ``reads`` and ``writes`` list the names of the agent
+    attributes the space uses and sets.
+
     Parameters
     ----------
-    dt_agent : tuple[float, str], optional
+    size : tuple[tuple[float, str], ...], optional
+        The size of the domain along each axis, for example
+        ``((750, 'um'), (750, 'um'))``
+    volume : tuple[float, str], optional
+        The volume of the domain, for example ``(8.4375, 'mm3')``; an
+        alternative to ``size`` for spaces without spatial structure
+    thickness : tuple[float, str], optional
+        The thickness of a two-dimensional domain. Defaults to ``grid_spacing``.
+    grid_spacing : tuple[float, str], optional
+        The distance between neighboring lattice sites. Defaults to 20 um.
+    interval : tuple[float, str], optional
         The time between two updates of the agents, for example ``(30, 'min')``
-    dt_substrate : tuple[float, str], optional
+    substrate_interval : tuple[float, str], optional
         The time between two updates of the substrate fields
     """
 
-    def __init__(self, dt_agent: tuple[float, str] = None, dt_substrate: tuple[float, str] = None) -> None:
+    reads: tuple[str, ...] = ()
+    writes: tuple[str, ...] = ()
+
+    def __init__(
+        self,
+        size: tuple[tuple[float, str], ...] = None,
+        volume: tuple[float, str] = None,
+        thickness: tuple[float, str] = None,
+        grid_spacing: tuple[float, str] = (20, 'um'),
+        interval: tuple[float, str] = None,
+        substrate_interval: tuple[float, str] = None,
+    ) -> None:
+        if size is not None and volume is not None:
+            raise ValueError('Give either the size or the volume of the domain, not both.')
+        self._grid_spacing = convert_length(grid_spacing[0], grid_spacing[1], 'um')
+        self._thickness = convert_length(thickness[0], thickness[1], 'um') if thickness else self._grid_spacing
+        self._size = tuple(convert_length(value, unit, 'um') for value, unit in size) if size else None
+        if self._size:
+            self._volume = math.prod(self._size) * self._thickness
+        elif volume is not None:
+            self._volume = convert_volume(volume[0], volume[1], 'um3')
+        else:
+            self._volume = None
         self._population = None
         self._substrates = dict()
-        self._agent_update_info = UpdateInfo(dt_agent)
-        self._substrate_update_info = UpdateInfo(dt_substrate)
+        self._agent_update_info = UpdateInfo(interval)
+        self._substrate_update_info = UpdateInfo(substrate_interval)
+
+    @property
+    def volume(self) -> float | None:
+        """The volume of the domain in cubic micrometers, or ``None`` if neither size nor volume is given."""
+        return self._volume
+
+    def _validate_volume(self, agent: Agent) -> None:
+        if not agent.has_attribute('space.volume'):
+            raise ValueError('The agent must have an attribute named \'space.volume\'.')
 
     def _bind(self, population: Population) -> None:
         """Connects the space to the population of the simulation it is set to."""

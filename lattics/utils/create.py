@@ -1,10 +1,7 @@
-import math
-import random
 from typing import Any
 
 from lattics._agent import Agent
 from lattics._simulation import Simulation
-from lattics._units import convert_length
 from lattics.spaces import Lattice2DSpace
 
 
@@ -80,32 +77,22 @@ def create_simulation_2d(
     Parameters
     ----------
     dimensions : tuple[tuple[float, str], tuple[float, str]]
-        The size of the domain along the two axes, for example ``((1, 'mm'), (750, 'um'))``. Each size must be an
-        integer multiple of ``grid_spacing``.
+        The size of the domain along the two axes, for example ``((1, 'mm'), (750, 'um'))``. Each size must be a
+        multiple of ``grid_spacing``.
     grid_spacing : int
         The distance between neighboring lattice sites, in micrometers
 
     Raises
     ------
     ValueError
-        If the size is missing or not an integer multiple of the grid spacing
+        If the size is missing or not a multiple of the grid spacing
     """
-    if not dimensions:
-        raise ValueError("You must provide the size of the domain, for example ((1, 'mm'), (1, 'mm')).")
-    lattice_dimensions = []
-    for value, unit in dimensions:
-        n_sites = convert_length(value, unit, 'um') / grid_spacing
-        if not math.isclose(n_sites, round(n_sites)):
-            raise ValueError(
-                f'The domain size {value} {unit} is not a multiple of the grid spacing ({grid_spacing} um).'
-            )
-        lattice_dimensions.append(round(n_sites))
     simulation = Simulation(id=id)
     space = Lattice2DSpace(
-        dimensions=tuple(lattice_dimensions),
-        grid_spacing=grid_spacing,
-        dt_agent=dt_agent,
-        dt_substrate=dt_substrate,
+        size=dimensions,
+        grid_spacing=(grid_spacing, 'um'),
+        interval=dt_agent,
+        substrate_interval=dt_substrate,
     )
     simulation.set_space(space)
     return simulation
@@ -119,16 +106,25 @@ def populate_agents(
     map: str = None,
     attributes: dict[str, Any] = None,
 ) -> None:
+    """Adds new agents with the given attributes to the simulation. The space
+    places them: a lattice space puts them on random free sites.
+
+    Parameters
+    ----------
+    simulation : Simulation
+        The simulation to be populated
+    method : str
+        Only ``'count'`` is supported yet: adds ``count`` agents
+    count : int
+        The number of agents to be added
+    attributes : dict[str, Any]
+        The attributes of the new agents
+    """
     if not attributes:
         attributes = {}
     if method == 'count':
-        rows, cols = simulation._space._agent_layer.shape
-        all_coordinates = [(r, c) for r in range(rows) for c in range(cols)]
-        target_coordinates = random.sample(all_coordinates, k=count)
-        for tc in target_coordinates:
-            agent_attributes = attributes | {'space.position': tc}
-            agent = create_agent(attributes=agent_attributes)
-            simulation.add_agent(agent=agent)
+        for _ in range(count):
+            simulation.add_agent(agent=create_agent(attributes=attributes))
     if method == 'density':
         pass
     if method == 'map':

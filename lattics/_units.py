@@ -27,6 +27,26 @@ def convert_length(value: float, from_unit: str, to_unit: str) -> float:
     return value * LENGTH_UNITS[from_unit] / LENGTH_UNITS[to_unit]
 
 
+def convert_volume(value: float, from_unit: str, to_unit: str) -> float:
+    VOLUME_UNITS = {
+        'um3': 1,
+        'mm3': 10**9,
+        'cm3': 10**12,
+        'nL': 10**6,
+        'uL': 10**9,
+        'mL': 10**12,
+    }
+    if from_unit not in VOLUME_UNITS:
+        raise ValueError(
+            f"Invalid volume unit: '{from_unit}'. Supported units are: 'um3', 'mm3', 'cm3', 'nL', 'uL', 'mL'."
+        )
+    if to_unit not in VOLUME_UNITS:
+        raise ValueError(
+            f"Invalid volume unit: '{to_unit}'. Supported units are: 'um3', 'mm3', 'cm3', 'nL', 'uL', 'mL'."
+        )
+    return value * VOLUME_UNITS[from_unit] / VOLUME_UNITS[to_unit]
+
+
 def convert_velocity(value: float, from_unit: str, to_unit: str) -> float:
     VELOCITY_UNITS = {
         'um/ms': 1,

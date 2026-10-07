@@ -21,7 +21,7 @@ def test_custom_model_needs_only_update_agent():
     from lattics import Agent, HomogeneousSpace, Simulation
 
     sim = Simulation()
-    sim.set_space(HomogeneousSpace(dt_agent=(1, 'hour')))
+    sim.set_space(HomogeneousSpace(interval=(1, 'hour')))
     model = _recording_model_class()(update_interval=(1, 'hour'))
     sim.add_model(model)
     agent = Agent()
@@ -39,7 +39,7 @@ def test_model_added_after_agents_initializes_them():
     from lattics.models import TimeBasedCellCycleModel
 
     sim = Simulation()
-    sim.set_space(HomogeneousSpace(dt_agent=(1, 'hour')))
+    sim.set_space(HomogeneousSpace(interval=(1, 'hour')))
     agent = Agent()
     agent.set_attribute('space.volume', 1)
     agent.set_attribute('cellcycle.mean_length', (10, 'hour'))
