@@ -195,10 +195,163 @@ def test_exchange_with_an_undefined_substrate_is_reported():
     ]
 
 
-def test_lattice_fields_are_not_available_yet():
+# --- two-dimensional lattice field ---------------------------------------------------------------------------
+
+
+def _diffuse(concentration, r, steps=1):
+    from lattics._kernels.diffusion import implicit_diffusion_2d, thomas_factors
+
+    factors = (r, *thomas_factors(concentration.shape[0], r), *thomas_factors(concentration.shape[1], r))
+    for _ in range(steps):
+        concentration = implicit_diffusion_2d(concentration, *factors)
+    return concentration
+
+
+def test_diffusion_conserves_the_mass_and_keeps_a_uniform_field():
+    rng = np.random.default_rng(0)
+    field = rng.random((17, 23))
+    diffused = _diffuse(field, r=3.0, steps=5)
+    uniform = _diffuse(np.full((17, 23), 5.0), r=3.0)
+    assert math.isclose(diffused.sum(), field.sum(), rel_tol=1e-12) and diffused.min() >= 0
+    assert np.allclose(uniform, 5.0, rtol=1e-12, atol=0)
+
+
+def test_diffusion_is_symmetric_and_spreads_with_the_expected_variance():
+    # An implicit step on an unbounded line increases the variance by 2 r cells^2
+    field = np.zeros((101, 101))
+    field[50, 50] = 1.0
+    diffused = _diffuse(field, r=0.5, steps=4)
+    offsets = np.arange(101) - 50
+    variance = (diffused.sum(axis=1) * offsets**2).sum()
+    assert np.allclose(diffused, diffused[::-1, :]) and np.allclose(diffused, diffused[:, ::-1])
+    assert np.allclose(diffused, diffused.T) and math.isclose(variance, 2 * 0.5 * 4, rel_tol=1e-6)
+
+
+def _pk_scenario(space_class, with_agents=False):
+    from lattics import Agent, Event, Simulation, Substrate, SubstrateInfo, SubstrateNode
+    from lattics.kinetics import FirstOrderDecay, MichaelisMentenDecay
+
+    sim = Simulation(seed=3)
+    sim.set_space(space_class(size=((750, 'um'), (750, 'um')), grid_spacing=(15, 'um'), interval=(1, 'hour')))
+    kinetics = [FirstOrderDecay((0.05, '1/hour')), MichaelisMentenDecay((10.0, '1/hour'), km=50.0)]
+    sim.add_substrate(
+        Substrate('drug', diffusion_coefficient=(2.0, 'um2/sec'), kinetics=kinetics, interval=(1, 'min'))
+    )
+    vessels = SubstrateNode(
+        volume=(0.84375, 'mm3'), transport={'drug': SubstrateInfo(type='flux', passive_rate=0.5)}
+    )
+    organs = SubstrateNode(
+        volume=(8.4375, 'mm3'), transport={'drug': SubstrateInfo(type='flux', release_rate=1.0, uptake_rate=5.0)}
+    )
+    sim.add_substrate_node(vessels)
+    sim.add_substrate_node(organs)
+    if with_agents:
+        for _ in range(20):
+            agent = Agent()
+            agent.set_attribute('space.volume', 3000)
+            agent.set_attribute('substrate.transport', {'drug': SubstrateInfo(type='flux', uptake_rate=1e-2)})
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                sim.add_agent(agent)
+
+    def dose(simulation):
+        vessels.get_attribute('substrate.transport')['drug'].concentration = 1000.0
+
+    sim.add_event(Event(time=(0, 'hour'), handler=dose))
+    sim.run(time=(12, 'hour'), dt=(1, 'min'), verbosity=0)
+    return sim, vessels, organs
+
+
+def test_uniform_lattice_field_equals_the_homogeneous_field():
+    from lattics import HomogeneousSpace, Lattice2DSpace
+
+    results = []
+    for space_class in (HomogeneousSpace, Lattice2DSpace):
+        sim, vessels, organs = _pk_scenario(space_class)
+        field = np.asarray(sim.substrate_field('drug').concentration)
+        nodes = [n.get_attribute('substrate.transport')['drug'].concentration for n in (vessels, organs)]
+        results.append((field.mean(), *nodes))
+        if space_class is Lattice2DSpace:
+            assert field.max() - field.min() <= 1e-9 * field.mean()
+    homogeneous, lattice = results
+    assert all(math.isclose(h, la, rel_tol=1e-9) for h, la in zip(homogeneous, lattice))
+
+
+def test_agents_exchange_with_their_own_site():
+    from lattics import Lattice2DSpace
+
+    sim, _, _ = _pk_scenario(Lattice2DSpace, with_agents=True)
+    field = sim.substrate_field('drug').concentration
+    sites = [tuple(a.get_attribute('space.position')) for a in sim.agents]
+    # the agents take up the drug, so their sites are below the mean of the field
+    assert np.mean([field[s] for s in sites]) < field.mean()
+
+
+def test_exchange_and_diffusion_conserve_the_mass_on_the_lattice():
     import lattics
+    from lattics import Agent, Substrate, SubstrateInfo, SubstrateNode
+
+    sim = lattics.Simulation(seed=1)
+    sim.set_space(lattics.Lattice2DSpace(size=((200, 'um'), (200, 'um')), interval=(1, 'hour')))
+    sim.add_substrate(Substrate('drug', diffusion_coefficient=(1.0, 'um2/sec'), interval=(1, 'min')))
+    source = SubstrateNode(
+        volume=(1e5, 'um3'), transport={'drug': SubstrateInfo(type='flux', passive_rate=1.0)}, position=(0, 0)
+    )
+    source.get_attribute('substrate.transport')['drug'].concentration = 100.0
+    sim.add_substrate_node(source)
+    agent = Agent()
+    agent.set_attribute('space.volume', 3000)
+    agent.set_attribute('substrate.transport', {'drug': SubstrateInfo(type='flux', uptake_rate=1e-2)})
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        sim.add_agent(agent)
+    sim.run(time=(3, 'hour'), dt=(1, 'min'), verbosity=0)
+    field = sim.substrate_field('drug').concentration
+
+    def mass(item, volume):
+        return item.get_attribute('substrate.transport')['drug'].concentration * volume
+
+    total = field.sum() * 20 * 20 * 20 + mass(source, 1e5) + mass(agent, 3000)
+    assert math.isclose(total, 100.0 * 1e5, rel_tol=1e-9) and field[0, 0] > field[9, 9]
+
+
+def test_fixed_node_sets_the_concentration_of_its_site():
+    import lattics
+    from lattics import Substrate, SubstrateInfo, SubstrateNode
 
     sim = lattics.Simulation()
     sim.set_space(lattics.Lattice2DSpace(size=((200, 'um'), (200, 'um'))))
-    with pytest.raises(NotImplementedError):
-        sim.add_substrate(lattics.Substrate('drug'))
+    sim.add_substrate(Substrate('oxygen'))
+    sim.add_substrate_node(
+        SubstrateNode(transport={'oxygen': SubstrateInfo(type='fixed', concentration=7.0)}, position=(2, 3))
+    )
+    sim.run(time=(1, 'min'), dt=(1, 'min'), verbosity=0)
+    field = sim.substrate_field('oxygen')
+    assert field.concentration_at((2, 3)) == 7.0 and field.concentration.sum() == 7.0
+
+
+def test_node_outside_the_lattice_is_rejected():
+    import lattics
+    from lattics import Substrate, SubstrateInfo, SubstrateNode
+
+    sim = lattics.Simulation()
+    sim.set_space(lattics.Lattice2DSpace(size=((200, 'um'), (200, 'um'))))
+    sim.add_substrate(Substrate('oxygen'))
+    sim.add_substrate_node(
+        SubstrateNode(transport={'oxygen': SubstrateInfo(type='fixed', concentration=7.0)}, position=(10, 0))
+    )
+    with pytest.raises(ValueError, match='outside the lattice'):
+        sim.run(time=(1, 'min'), dt=(1, 'min'), verbosity=0)
+
+
+def test_summary_reports_nodes_spread_over_the_lattice(capsys):
+    import lattics
+    from lattics import Substrate, SubstrateInfo, SubstrateNode
+
+    sim = lattics.Simulation()
+    sim.set_space(lattics.Lattice2DSpace(size=((200, 'um'), (200, 'um'))))
+    sim.add_substrate(Substrate('drug'))
+    sim.add_substrate_node(SubstrateNode(volume=(1, 'mm3'), transport={'drug': SubstrateInfo(type='flux')}))
+    sim.run(time=(1, 'min'), dt=(1, 'min'), verbosity=1)
+    out = capsys.readouterr().out
+    assert "Substrate 'drug': 1 substrate nodes without a position are spread uniformly" in out

@@ -68,6 +68,17 @@ class BaseSubstrateField(ABC):
             The context of the update
         """
 
+    def collect_notes(self) -> list[str]:
+        """Returns the notes for the run summary, for example about nodes the
+        field treats in a special way.
+
+        Returns
+        -------
+        list[str]
+            The notes
+        """
+        return []
+
     def exchanging_nodes(self) -> list:
         """Returns the substrate nodes and then the agents that exchange the substrate, in this order.
 
@@ -82,3 +93,37 @@ class BaseSubstrateField(ABC):
             if agent.has_attribute('substrate.transport') and name in agent.get_attribute('substrate.transport'):
                 nodes.append(agent)
         return nodes
+
+
+def exchange(info, v_n: float, c_f: float, v_f: float, dt: float) -> tuple[float, float]:
+    """Exchange between a node (or an agent) and a compartment of a field over a time step, solved semi-implicitly.
+    The total mass is conserved.
+
+    Parameters
+    ----------
+    info : SubstrateInfo
+        The transport parameters and the concentration of the node
+    v_n : float
+        The volume of the node, in cubic micrometers
+    c_f : float
+        The concentration of the compartment
+    v_f : float
+        The volume of the compartment, in cubic micrometers
+    dt : float
+        The time step, in milliseconds
+
+    Returns
+    -------
+    tuple[float, float]
+        The new concentrations of the node and of the compartment
+    """
+    k_p = info.passive_rate
+    k_u = info.uptake_rate
+    k_r = info.release_rate
+    c_n_cur = info.concentration
+    m_t = c_n_cur * v_n + c_f * v_f
+    c_n_new = (c_n_cur + (dt / v_n) * (m_t / v_f) * (k_p + k_u)) / (
+        1 + (dt / v_n) * ((1 + (v_n / v_f)) * k_p + (v_n / v_f) * k_u + k_r)
+    )
+    c_f_new = (m_t - c_n_new * v_n) / v_f
+    return c_n_new, c_f_new

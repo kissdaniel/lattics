@@ -1,6 +1,6 @@
 from lattics._context import UpdateContext
 
-from ._base import BaseSubstrateField
+from ._base import BaseSubstrateField, exchange
 
 
 class HomogeneousSubstrateField(BaseSubstrateField):
@@ -32,19 +32,8 @@ class HomogeneousSubstrateField(BaseSubstrateField):
         for n in self.exchanging_nodes():
             info = n.get_attribute('substrate.transport')[name]
             if info.type == 'flux':
-                k_p = info.passive_rate
-                k_u = info.uptake_rate
-                k_r = info.release_rate
-                c_n_cur = info.concentration
                 v_n = n.get_attribute('space.volume')
-                c_f_cur = self._concentration
-                m_t = c_n_cur * v_n + c_f_cur * v_f
-                c_n_new = (c_n_cur + (dt / v_n) * (m_t / v_f) * (k_p + k_u)) / (
-                    1 + (dt / v_n) * ((1 + (v_n / v_f)) * k_p + (v_n / v_f) * k_u + k_r)
-                )
-                c_f_new = (m_t - c_n_new * v_n) / v_f
-                info.concentration = c_n_new
-                self._concentration = c_f_new
+                info.concentration, self._concentration = exchange(info, v_n, self._concentration, v_f, dt)
             elif info.type == 'fixed':
                 sum_fixed = sum_fixed + info.concentration
                 count_fixed = count_fixed + 1

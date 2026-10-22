@@ -377,7 +377,9 @@ class Simulation:
         problems, unused = self._check_attributes()
         if problems and self._strict:
             raise ValueError('The attributes of the agents are not consistent:\n' + '\n'.join(problems))
-        notes = self._space.collect_notes() if self._space else []
+        notes = [(type(self._space).__name__, note) for note in self._space.collect_notes()] if self._space else []
+        for name, field in self._fields.items():
+            notes += [(f'Substrate \'{name}\'', note) for note in field.collect_notes()]
         if verbosity >= 1:
             self._print_summary(time_ms, dt_ms, updates + ([recorder] if recorder else []), unused, notes)
         self._warn_invalid_intervals(updates)
@@ -460,7 +462,12 @@ class Simulation:
         return update
 
     def _print_summary(
-        self, duration: float, dt: float, updates: list[ScheduledUpdate], unused: list[str], notes: list[str]
+        self,
+        duration: float,
+        dt: float,
+        updates: list[ScheduledUpdate],
+        unused: list[str],
+        notes: list[tuple[str, str]],
     ) -> None:
         print(
             f'Simulation {self._id}: {_format_duration(duration)}, time step {_format_duration(dt)}, '
@@ -478,8 +485,8 @@ class Simulation:
                     f'(requested {_format_duration(update.interval)}, rounded to the time step)'
                 )
             print(f'  {update.name:<{width}}  {interval}')
-        for note in notes:
-            print(f'  {type(self._space).__name__}: {note}')
+        for source, note in notes:
+            print(f'  {source}: {note}')
         if unused:
             print(f'  Agent attributes not used by any component: {", ".join(unused)}')
 

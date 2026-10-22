@@ -8,6 +8,7 @@ from lattics._agent import Agent
 from lattics._context import UpdateContext
 from lattics._kernels.lattice import bresenham_2d, displacement_trial_2d
 from lattics.attributes import default_of
+from lattics.substrates import Lattice2DSubstrateField, Substrate, SubstrateNode
 
 from ._base import BaseSpace
 
@@ -181,8 +182,8 @@ class Lattice2DSpace(BaseSpace):
         position = agent.get_attribute('space.position')
         self._agent_layer[tuple(position)] = None
 
-    def create_field(self, substrate, nodes):
-        raise NotImplementedError('Substrate fields are not available in Lattice2DSpace yet.')
+    def create_field(self, substrate: Substrate, nodes: list[SubstrateNode]) -> Lattice2DSubstrateField:
+        return Lattice2DSubstrateField(substrate, self, nodes)
 
     def interval_warnings(self, period: float) -> list[str]:
         if not len(self._population):
