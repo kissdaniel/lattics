@@ -1,6 +1,7 @@
 import math
 import warnings
 
+import numpy as np
 import pytest
 
 SPACE_ARGUMENTS = dict(size=((200, 'um'), (200, 'um')), thickness=(15, 'um'), grid_spacing=(20, 'um'))
@@ -187,3 +188,41 @@ def test_division_sets_the_division_time_of_both_agents(space_name):
         for a in sim.agents
     ]
     assert actual == expected
+
+
+def _growing_lattice(limits):
+    import lattics
+    from lattics.models import MultiPhaseTimeBasedCellCycleModel
+
+    sim = lattics.Simulation(seed=4)
+    sim.set_space(lattics.Lattice2DSpace(size=((300, 'um'), (240, 'um')), interval=(30, 'min')))
+    sim.add_model(MultiPhaseTimeBasedCellCycleModel(update_interval=(30, 'min')))
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        for limit in limits:
+            attributes = dict(_cell_attributes(), **{'mechanics.motility': (5e-6, 'um/ms')})
+            attributes['mechanics.displacement_limit'] = limit
+            attributes['space.volume'] = (300, 'um3')
+            lattics.populate_agents(sim, count=8, attributes=attributes)
+    sim.run(time=(2, 'day'), dt=(30, 'min'), verbosity=0)
+    return sim
+
+
+def test_occupied_sites_follow_the_agents():
+    sim = _growing_lattice(limits=(1, 2))
+    space = sim._space
+    expected = np.not_equal(space._agent_layer, None)
+    positions = sorted(tuple(int(v) for v in a.get_attribute('space.position')) for a in sim.agents)
+    assert np.array_equal(space._occupied, expected) and positions == sorted(map(tuple, np.argwhere(expected)))
+
+
+def test_local_density_equals_the_occupied_fraction_of_the_disk():
+    sim = _growing_lattice(limits=(1, 2, 3))
+    occupied = sim._space._occupied
+    i, j = np.ogrid[: occupied.shape[0], : occupied.shape[1]]
+    for agent in sim.agents:
+        x, y = agent.get_attribute('space.position')
+        limit = agent.get_attribute('mechanics.displacement_limit')
+        disk = (i - x) ** 2 + (j - y) ** 2 <= limit**2
+        expected = (np.sum(disk & occupied) - 1) / (np.sum(disk) - 1)
+        assert agent.get_attribute('space.local_density') == expected

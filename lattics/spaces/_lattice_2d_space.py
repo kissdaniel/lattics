@@ -97,6 +97,9 @@ class Lattice2DSpace(BaseSpace):
             dimensions.append(round(n_sites))
         self._dimensions = tuple(dimensions)
         self._agent_layer = np.empty(self._dimensions, dtype='object')
+        # Kept in step with the agent layer: vectorized operations need a plain array of the occupied sites
+        self._occupied = np.zeros(self._dimensions, dtype=bool)
+        self._neighborhood_sizes = dict()
         self._randomly_placed = 0
         self._site_volume = self._grid_spacing**2 * self._thickness
 
@@ -122,8 +125,12 @@ class Lattice2DSpace(BaseSpace):
             self._randomly_placed += 1
         self._validate_position(agent)
         self._validate_optional_attributes(agent)
-        position = agent.get_attribute('space.position')
-        self._agent_layer[tuple(position)] = agent
+        self._set_site(agent.get_attribute('space.position'), agent)
+
+    def _set_site(self, position, agent: Agent | None) -> None:
+        site = tuple(position)
+        self._agent_layer[site] = agent
+        self._occupied[site] = agent is not None
 
     def _validate_position(self, agent: Agent) -> None:
         position = agent.get_attribute('space.position')
@@ -149,9 +156,9 @@ class Lattice2DSpace(BaseSpace):
         # Random draws are fast while the lattice is sparse; fall back to listing the free sites
         for _ in range(100):
             site = np.array([self._rng.integers(n) for n in self._dimensions], dtype=np.int32)
-            if self._agent_layer[tuple(site)] is None:
+            if not self._occupied[tuple(site)]:
                 return site
-        free_sites = np.argwhere(np.equal(self._agent_layer, None))
+        free_sites = np.argwhere(~self._occupied)
         if len(free_sites) == 0:
             raise ValueError('The lattice is full, there is no free site for the agent.')
         return free_sites[self._rng.integers(len(free_sites))].astype(np.int32)
@@ -179,8 +186,7 @@ class Lattice2DSpace(BaseSpace):
         agent : Agent
             The agent to be removed
         """
-        position = agent.get_attribute('space.position')
-        self._agent_layer[tuple(position)] = None
+        self._set_site(agent.get_attribute('space.position'), None)
 
     def create_field(self, substrate: Substrate, nodes: list[SubstrateNode]) -> Lattice2DSubstrateField:
         return Lattice2DSubstrateField(substrate, self, nodes)
@@ -233,7 +239,7 @@ class Lattice2DSpace(BaseSpace):
         bool
             ``True`` if the lattice point is empty, ``False`` otherwise
         """
-        return self._agent_layer[tuple(position)] is None
+        return not self._occupied[tuple(position)]
 
     def get_remaining_volume(self, position: tuple[int, int]) -> float:
         if self.is_empty_position(position):
@@ -271,8 +277,8 @@ class Lattice2DSpace(BaseSpace):
                     pos_old = agents[i].get_attribute('space.position')
                     agent_new = self._agent_layer[pos_new[0], pos_new[1]]
                     agent_old = self._agent_layer[pos_old[0], pos_old[1]]
-                    self._agent_layer[tuple(pos_new)] = agent_old
-                    self._agent_layer[tuple(pos_old)] = agent_new
+                    self._set_site(pos_new, agent_old)
+                    self._set_site(pos_old, agent_new)
                     if agent_new:
                         agent_new.set_attribute('space.position', pos_old)
                     if agent_old:
@@ -296,15 +302,19 @@ class Lattice2DSpace(BaseSpace):
     def _perform_cell_division(self, agent: Agent, ctx: UpdateContext) -> None:
         current_position = agent.get_attribute('space.position')
         displacement_limit = agent.get_attribute('mechanics.displacement_limit')
-        coverage_mask = np.where(self._agent_layer, float('inf'), 0)
-        if np.any(coverage_mask == 0):
-            source_map = np.ones(self._agent_layer.shape)
-            source_map[tuple(current_position)] = 0
-            distance_map = ndimage.distance_transform_edt(source_map)
-            distance_map = distance_map + coverage_mask
+        # The daughter goes to the nearest free site within the displacement limit, so only the window around
+        # the agent that holds those sites is searched
+        x, y = int(current_position[0]), int(current_position[1])
+        reach = int(math.floor(displacement_limit))
+        x0, x1 = max(0, x - reach), min(self._dimensions[0], x + reach + 1)
+        y0, y1 = max(0, y - reach), min(self._dimensions[1], y + reach + 1)
+        free = ~self._occupied[x0:x1, y0:y1]
+        if free.any():
+            squared = (np.arange(x0, x1) - x)[:, None] ** 2 + (np.arange(y0, y1) - y)[None, :] ** 2
+            distance_map = np.where(free, np.sqrt(squared.astype(np.float64)), np.inf)
             min_distance = np.min(distance_map)
             if min_distance <= displacement_limit:
-                target_sites = np.argwhere(distance_map == min_distance)
+                target_sites = np.argwhere(distance_map == min_distance) + np.array([x0, y0])
                 target_position = target_sites[self._rng.integers(target_sites.shape[0])]
                 x1, y1 = current_position[:2]
                 x2, y2 = target_position[:2]
@@ -314,10 +324,10 @@ class Lattice2DSpace(BaseSpace):
                         a_old_x, a_old_y = path[i, :2]
                         a_new_x, a_new_y = path[i + 1, :2]
                         agent_to_move = self._agent_layer[a_old_x, a_old_y]
-                        self._agent_layer[a_new_x, a_new_y] = agent_to_move
+                        self._set_site((a_new_x, a_new_y), agent_to_move)
                         agent_to_move.set_attribute('space.position', path[i + 1])
                 clone_position = path[1]
-                self._agent_layer[tuple(clone_position)] = None
+                self._set_site(clone_position, None)
                 agent.set_attribute('space.division_requested', False)
                 agent.set_attribute('space.last_division_time', ctx.time)
                 new_agent = agent.clone()
@@ -325,14 +335,29 @@ class Lattice2DSpace(BaseSpace):
                 ctx.add_agent(new_agent)
 
     def _update_local_densities(self) -> None:
-        coverage_map = np.where(self._agent_layer, 1, 0)
-        i_indices, j_indices = np.ogrid[: coverage_map.shape[0], : coverage_map.shape[1]]
+        """The local density of an agent is the occupied fraction of the other
+        sites within its displacement limit (a disk, cut at the boundary).
+        For every limit in use, the occupied sites in the disk around every
+        site are counted at once by a convolution.
+        """
+        occupied = self._occupied.astype(np.int64)
+        counts = dict()
         for agent in self._population:
-            current_position = agent.get_attribute('space.position')
-            displacement_limit = agent.get_attribute('mechanics.displacement_limit')
-            mask = (i_indices - current_position[0]) ** 2 + (
-                j_indices - current_position[1]
-            ) ** 2 <= displacement_limit**2
-            mask_covered = (mask) & (coverage_map == 1)
-            density = (np.sum(mask_covered) - 1) / (np.sum(mask) - 1)
+            position = agent.get_attribute('space.position')
+            limit = agent.get_attribute('mechanics.displacement_limit')
+            if limit not in counts:
+                disk = _disk(limit)
+                counts[limit] = ndimage.convolve(occupied, disk, mode='constant')
+                if limit not in self._neighborhood_sizes:
+                    ones = np.ones(self._dimensions, dtype=np.int64)
+                    self._neighborhood_sizes[limit] = ndimage.convolve(ones, disk, mode='constant')
+            site = (int(position[0]), int(position[1]))
+            density = (counts[limit][site] - 1) / (self._neighborhood_sizes[limit][site] - 1)
             agent.set_attribute('space.local_density', density)
+
+
+def _disk(radius: float) -> np.ndarray:
+    """The sites within the given Euclidean distance from the center, as a kernel of ones and zeros."""
+    reach = int(math.floor(radius))
+    offsets = np.arange(-reach, reach + 1)
+    return (offsets[:, None] ** 2 + offsets[None, :] ** 2 <= radius**2).astype(np.int64)
