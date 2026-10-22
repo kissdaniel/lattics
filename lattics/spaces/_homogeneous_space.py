@@ -52,6 +52,8 @@ class HomogeneousSpace(BaseSpace):
             interval=interval,
         )
         self._has_free_volume = True
+        # The total volume of the agents while the divisions of an update are processed, None otherwise
+        self._division_total = None
 
     def add_agent(self, agent: Agent) -> None:
         """Initializes the attributes of the specified agent, which is already
@@ -69,7 +71,13 @@ class HomogeneousSpace(BaseSpace):
         """
         self._validate_volume(agent)
         self._initialize_attributes(agent)
-        if not self._fits(self._get_total_agent_volume()):
+        if self._division_total is not None:
+            # A daughter: it is the last agent of the population, so this equals the sum over all agents
+            self._division_total += agent.get_attribute('space.volume')
+            total = self._division_total
+        else:
+            total = self._get_total_agent_volume()
+        if not self._fits(total):
             warnings.warn('The total volume of agents exceeded the capacity of the domain.')
 
     def remove_agent(self, agent: Agent) -> None:
@@ -100,9 +108,15 @@ class HomogeneousSpace(BaseSpace):
         for a in self._population:
             if a.get_attribute('space.removal_requested'):
                 ctx.remove_agent(a)
-        for a in self._population:
-            if a.get_attribute('space.division_requested'):
-                self._process_agent_division(a, ctx)
+        # Only the divisions change the population from here on, so the total volume is kept up to date
+        # instead of being summed again for every division
+        self._division_total = self._get_total_agent_volume()
+        try:
+            for a in self._population:
+                if a.get_attribute('space.division_requested'):
+                    self._process_agent_division(a, ctx)
+        finally:
+            self._division_total = None
         self._update_local_densities()
 
     def _initialize_attributes(self, agent: Agent) -> None:
@@ -118,7 +132,7 @@ class HomogeneousSpace(BaseSpace):
     def _process_agent_division(self, agent: Agent, ctx: UpdateContext) -> None:
         if not self._has_free_volume:
             return
-        sum_volumes = self._get_total_agent_volume()
+        sum_volumes = self._division_total
         agent_volume = agent.get_attribute('space.volume')
         if self._fits(sum_volumes + agent_volume):
             agent.set_attribute('space.division_requested', False)

@@ -259,9 +259,7 @@ class Lattice2DSpace(BaseSpace):
             )
             # 3D array containing identifiers (idx) at those elements occupied by agents
             idx_array = np.full((self._agent_layer.shape[0], self._agent_layer.shape[1]), -1, dtype='int32')
-            for i, a in enumerate(agents):
-                position = a.get_attribute('space.position')
-                idx_array[tuple(position)] = np.int32(i)
+            idx_array[positions[:, 0], positions[:, 1]] = np.arange(len(agents), dtype=np.int32)
             # Indicates whether a certain agent changed its position during the MC trial
             change_flags = np.full(len(agents), False, dtype='bool')
 

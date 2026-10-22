@@ -226,3 +226,23 @@ def test_local_density_equals_the_occupied_fraction_of_the_disk():
         disk = (i - x) ** 2 + (j - y) ** 2 <= limit**2
         expected = (np.sum(disk & occupied) - 1) / (np.sum(disk) - 1)
         assert agent.get_attribute('space.local_density') == expected
+
+
+def test_homogeneous_divisions_stop_at_the_capacity():
+    from lattics import Agent, HomogeneousSpace, Simulation
+
+    sim = Simulation()
+    # room for exactly ten agents of 1.5 um3
+    sim.set_space(HomogeneousSpace(volume=(15, 'um3'), interval=(1, 'hour')))
+    for _ in range(4):
+        agent = Agent()
+        agent.set_attribute('space.volume', (1.5, 'um3'))
+        sim.add_agent(agent)
+    counts = []
+    for _ in range(3):
+        for agent in sim.agents:
+            agent.set_attribute('space.division_requested', True)
+        sim.run(time=(1, 'hour'), dt=(1, 'hour'), verbosity=0)
+        counts.append(len(sim.agents))
+    densities = {a.get_attribute('space.local_density') for a in sim.agents}
+    assert counts == [8, 10, 10] and densities == {(15 - 1.5) / (15 - 1.5)}
