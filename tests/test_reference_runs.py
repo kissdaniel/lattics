@@ -47,15 +47,15 @@ def run_lattice_growth() -> dict:
             update_interval=(30, 'min'),
             condition=('cellcycle.current_phase', 'G0'),
             end_states={'space.removal_requested': True},
-            rate=1.0,
+            rate=(1.0, '1/day'),
         )
     )
     for site in np.random.default_rng(SEED).choice(LATTICE_SIZE**2, 60, replace=False):
         agent = Agent()
         attributes = {
             'space.position': np.array(divmod(int(site), LATTICE_SIZE), dtype=np.int32),
-            'space.volume': 300,
-            'mechanics.motility': 5e-6,
+            'space.volume': (300, 'um3'),
+            'mechanics.motility': (5e-6, 'um/ms'),
             'mechanics.binding_affinity': 1.0,
             'mechanics.displacement_limit': 3,
             'cellcycle.phase_g1_mean': (10, 'hour'),
@@ -108,24 +108,29 @@ def run_homogeneous_drug_treatment() -> dict:
     )
 
     vessels = SubstrateNode(
-        volume=(8.4375e5, 'um3'), transport={'drug': SubstrateInfo(type='flux', passive_rate=0.5)}
+        volume=(8.4375e5, 'um3'), transport={'drug': SubstrateInfo(type='flux', passive_rate=(0.5, 'um3/ms'))}
     )
     simulation.add_substrate_node(vessels)
     organs = SubstrateNode(
         volume=(8.4375e6, 'um3'),
-        transport={'drug': SubstrateInfo(type='flux', release_rate=1.0, uptake_rate=5.0)},
+        transport={'drug': SubstrateInfo(type='flux', release_rate=(1.0, 'um3/ms'), uptake_rate=(5.0, 'um3/ms'))},
     )
     simulation.add_substrate_node(organs)
 
     simulation.add_model(
         ConcentrationDependentToxicityModel(
-            update_interval=(1, 'hour'), substrate_name='drug', max_rate=1.0, median_effective_concentration=1e4
+            update_interval=(1, 'hour'),
+            substrate_name='drug',
+            max_rate=(1.0, '1/day'),
+            median_effective_concentration=1e4,
         )
     )
     for _ in range(100):
         agent = Agent()
-        agent.set_attribute('space.volume', 3375)
-        agent.set_attribute('substrate.transport', {'drug': SubstrateInfo(type='flux', passive_rate=1e-3)})
+        agent.set_attribute('space.volume', (3375, 'um3'))
+        agent.set_attribute(
+            'substrate.transport', {'drug': SubstrateInfo(type='flux', passive_rate=(1e-3, 'um3/ms'))}
+        )
         simulation.add_agent(agent)
     for day, dose in [(0, 1e6), (1, 5e5)]:
         simulation.add_event(

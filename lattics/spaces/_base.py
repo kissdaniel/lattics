@@ -7,7 +7,7 @@ import numpy as np
 from lattics._agent import Agent
 from lattics._context import UpdateContext
 from lattics._population import Population
-from lattics._units import convert_length, convert_time, convert_volume
+from lattics._units import convert_length, convert_time, convert_volume, from_quantity
 
 if TYPE_CHECKING:
     from lattics.substrates import BaseSubstrateField, Substrate, SubstrateNode
@@ -62,19 +62,32 @@ class BaseSpace(ABC):
     ) -> None:
         if size is not None and volume is not None:
             raise ValueError('Give either the size or the volume of the domain, not both.')
-        self._grid_spacing = convert_length(grid_spacing[0], grid_spacing[1], 'um')
-        self._thickness = convert_length(thickness[0], thickness[1], 'um') if thickness else self._grid_spacing
-        self._size = tuple(convert_length(value, unit, 'um') for value, unit in size) if size else None
+        self._grid_spacing = from_quantity(grid_spacing, convert_length, 'um', 'grid spacing', "(20, 'um')")
+        self._thickness = (
+            from_quantity(thickness, convert_length, 'um', 'thickness', "(15, 'um')")
+            if thickness
+            else self._grid_spacing
+        )
+        self._size = (
+            tuple(
+                from_quantity(length, convert_length, 'um', 'size', "((750, 'um'), (750, 'um'))")
+                for length in size
+            )
+            if size
+            else None
+        )
         if self._size:
             self._volume = math.prod(self._size) * self._thickness
         elif volume is not None:
-            self._volume = convert_volume(volume[0], volume[1], 'um3')
+            self._volume = from_quantity(volume, convert_volume, 'um3', 'volume', "(8.4, 'mm3')")
         else:
             self._volume = None
         self._population = None
         self._rng = None
         self._notes = list()
-        self.interval = convert_time(interval[0], interval[1], 'ms') if interval else None
+        self.interval = (
+            from_quantity(interval, convert_time, 'ms', 'interval', "(30, 'min')") if interval else None
+        )
 
     @property
     def volume(self) -> float | None:

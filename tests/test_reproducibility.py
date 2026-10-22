@@ -15,12 +15,12 @@ def _run_lattice(seed=None):
             update_interval=(30, 'min'),
             condition=('cellcycle.current_phase', 'G0'),
             end_states={'space.removal_requested': True},
-            rate=1.0,
+            rate=(1.0, '1/day'),
         )
     )
     attributes = {
-        'space.volume': 3000,
-        'mechanics.motility': 5e-6,
+        'space.volume': (3000, 'um3'),
+        'mechanics.motility': (5e-6, 'um/ms'),
         'mechanics.binding_affinity': 1.0,
         'mechanics.displacement_limit': 2,
         'cellcycle.phase_g1_mean': (6, 'hour'),

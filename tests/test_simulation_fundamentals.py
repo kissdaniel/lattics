@@ -61,7 +61,7 @@ def test_removed_agents_are_kept_for_the_latest_time_point():
     sim.set_space(HomogeneousSpace())
     agents = [Agent() for _ in range(2)]
     for agent in agents:
-        agent.set_attribute('space.volume', 1)
+        agent.set_attribute('space.volume', (1, 'um3'))
         sim.add_agent(agent)
     sim.add_event(Event(time=(1, 'hour'), handler=lambda simulation: simulation.remove_agent(agents[0])))
     sim.add_event(Event(time=(2, 'hour'), handler=lambda simulation: simulation.remove_agent(agents[1])))

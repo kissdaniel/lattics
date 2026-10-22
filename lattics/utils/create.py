@@ -22,7 +22,7 @@ def create_agent(attributes: dict[str, Any]) -> Agent:
     --------
     >>> agent = lattics.create_agent(
     ...     attributes={
-    ...         'space.volume': 2000,
+    ...         'space.volume': (2000, 'um3'),
     ...         'space.position': (0, 0),
     ...         'my_custom_attribute': 'High'
     ...         }
@@ -55,7 +55,7 @@ def create_population(size: int, attributes: dict[str, Any]) -> list[Agent]:
     --------
     >>> agents = lattics.create_population(
     ...     size=100,
-    ...     attributes={'space.volume': 2000}
+    ...     attributes={'space.volume': (2000, 'um3')}
     ...     )
     """
     agents = []
@@ -68,7 +68,7 @@ def create_population(size: int, attributes: dict[str, Any]) -> list[Agent]:
 def create_simulation_2d(
     id: str = None,
     dimensions: tuple[tuple[float, str], tuple[float, str]] = None,
-    grid_spacing: int = 20,
+    grid_spacing: tuple[float, str] = (20, 'um'),
     dt_agent: tuple = (30, 'sec'),
     seed: int = None,
 ) -> Simulation:
@@ -79,8 +79,8 @@ def create_simulation_2d(
     dimensions : tuple[tuple[float, str], tuple[float, str]]
         The size of the domain along the two axes, for example ``((1, 'mm'), (750, 'um'))``. Each size must be a
         multiple of ``grid_spacing``.
-    grid_spacing : int
-        The distance between neighboring lattice sites, in micrometers
+    grid_spacing : tuple[float, str]
+        The distance between neighboring lattice sites
     seed : int, optional
         The seed of the random number generator of the simulation
 
@@ -92,7 +92,7 @@ def create_simulation_2d(
     simulation = Simulation(id=id, seed=seed)
     space = Lattice2DSpace(
         size=dimensions,
-        grid_spacing=(grid_spacing, 'um'),
+        grid_spacing=grid_spacing,
         interval=dt_agent,
     )
     simulation.set_space(space)

@@ -57,7 +57,7 @@ def test_homogeneous_space_without_volume_limit():
     sim = Simulation()
     sim.set_space(HomogeneousSpace(interval=(1, 'hour')))
     agent = Agent()
-    agent.set_attribute('space.volume', 1000)
+    agent.set_attribute('space.volume', (1000, 'um3'))
     agent.set_attribute('space.division_requested', True)
     sim.add_agent(agent)
     sim.run(time=(2, 'hour'), dt=(1, 'hour'), verbosity=0)

@@ -8,13 +8,13 @@ SPACE_ARGUMENTS = dict(size=((200, 'um'), (200, 'um')), thickness=(15, 'um'), gr
 
 def _cell_attributes():
     return {
-        'space.volume': 3000,
+        'space.volume': (3000, 'um3'),
         'cellcycle.phase_g1_mean': (10, 'hour'),
         'cellcycle.phase_s_mean': (6, 'hour'),
         'cellcycle.phase_g2_mean': (3, 'hour'),
         'cellcycle.phase_m_mean': (1, 'hour'),
         'cellcycle.inhibition_density_limit': 0.8,
-        'mechanics.motility': 0,
+        'mechanics.motility': (0, 'um/ms'),
         'mechanics.binding_affinity': 0,
         'mechanics.displacement_limit': 1,
     }
@@ -70,7 +70,7 @@ def test_lattice_places_agents_without_position_on_free_sites():
     sim.set_space(lattics.Lattice2DSpace(**SPACE_ARGUMENTS))
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        lattics.populate_agents(sim, count=100, attributes={'space.volume': 3000})
+        lattics.populate_agents(sim, count=100, attributes={'space.volume': (3000, 'um3')})
     positions = {tuple(int(v) for v in a.get_attribute('space.position')) for a in sim.agents}
     assert len(positions) == 100 and all(0 <= x < 10 and 0 <= y < 10 for x, y in positions)
 
@@ -82,9 +82,9 @@ def test_lattice_raises_when_full():
     sim.set_space(lattics.Lattice2DSpace(size=((40, 'um'), (40, 'um')), grid_spacing=(20, 'um')))
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        lattics.populate_agents(sim, count=4, attributes={'space.volume': 3000})
+        lattics.populate_agents(sim, count=4, attributes={'space.volume': (3000, 'um3')})
         with pytest.raises(ValueError):
-            lattics.populate_agents(sim, count=1, attributes={'space.volume': 3000})
+            lattics.populate_agents(sim, count=1, attributes={'space.volume': (3000, 'um3')})
 
 
 def test_agents_added_before_the_space_are_placed():
@@ -93,7 +93,7 @@ def test_agents_added_before_the_space_are_placed():
     sim = lattics.Simulation()
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        lattics.populate_agents(sim, count=3, attributes={'space.volume': 3000})
+        lattics.populate_agents(sim, count=3, attributes={'space.volume': (3000, 'um3')})
         sim.set_space(lattics.Lattice2DSpace(**SPACE_ARGUMENTS))
     assert all(a.has_attribute('space.position') for a in sim.agents)
 
@@ -105,7 +105,7 @@ def test_homogeneous_local_density_is_the_occupied_fraction_of_the_free_volume()
     sim.set_space(
         lattics.HomogeneousSpace(size=((10, 'um'), (10, 'um')), thickness=(10, 'um'), interval=(1, 'hour'))
     )
-    lattics.populate_agents(sim, count=2, attributes={'space.volume': 100})
+    lattics.populate_agents(sim, count=2, attributes={'space.volume': (100, 'um3')})
     sim.run(time=(1, 'hour'), dt=(1, 'hour'), verbosity=0)
     # (200 - 100) / (1000 - 100): the other agent's volume relative to the volume free for this agent
     expected = 1 / 9
@@ -160,7 +160,7 @@ def test_removal_comes_before_division(space_name):
     sim.set_space(getattr(lattics, space_name)(interval=(1, 'hour'), **SPACE_ARGUMENTS))
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        lattics.populate_agents(sim, count=3, attributes={'space.volume': 3000})
+        lattics.populate_agents(sim, count=3, attributes={'space.volume': (3000, 'um3')})
     doomed = sim.agents[0]
     doomed.set_attribute('space.removal_requested', True)
     doomed.set_attribute('space.division_requested', True)
@@ -176,7 +176,7 @@ def test_division_sets_the_division_time_of_both_agents(space_name):
     sim.set_space(getattr(lattics, space_name)(interval=(1, 'hour'), **SPACE_ARGUMENTS))
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        lattics.populate_agents(sim, count=1, attributes={'space.volume': 3000})
+        lattics.populate_agents(sim, count=1, attributes={'space.volume': (3000, 'um3')})
     sim.run(time=(1, 'hour'), dt=(1, 'hour'), verbosity=0)
     mother = sim.agents[0]
     mother.set_attribute('space.division_requested', True)

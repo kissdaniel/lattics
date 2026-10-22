@@ -24,7 +24,7 @@ def _recording_simulation(update_interval):
     model = Recording(update_interval)
     sim.add_model(model)
     agent = Agent()
-    agent.set_attribute('space.volume', 1)
+    agent.set_attribute('space.volume', (1, 'um3'))
     sim.add_agent(agent)
     return sim, model
 
@@ -109,7 +109,7 @@ def test_cell_division_is_not_delayed():
         sim.set_space(HomogeneousSpace(interval=(1, 'hour')))
         sim.add_model(TimeBasedCellCycleModel(update_interval=(1, 'hour'), distribution='fixed'))
         agent = Agent()
-        agent.set_attribute('space.volume', 1)
+        agent.set_attribute('space.volume', (1, 'um3'))
         agent.set_attribute('cellcycle.mean_length', (10, 'hour'))
         sim.add_agent(agent)
         sim.run(time=(hours, 'hour'), dt=(1, 'hour'), verbosity=0)
@@ -126,7 +126,9 @@ def test_time_step_below_the_substrate_interval_does_not_change_the_result():
         sim = Simulation()
         sim.set_space(HomogeneousSpace(volume=(1, 'mm3'), interval=(1, 'hour')))
         sim.add_substrate(Substrate('drug', kinetics=FirstOrderDecay(rate=(1e-7, '1/ms')), interval=(30, 'sec')))
-        node = SubstrateNode(volume=(1e8, 'um3'), transport={'drug': SubstrateInfo(type='flux', passive_rate=0.5)})
+        node = SubstrateNode(
+            volume=(1e8, 'um3'), transport={'drug': SubstrateInfo(type='flux', passive_rate=(0.5, 'um3/ms'))}
+        )
         sim.add_substrate_node(node)
 
         def dose(simulation):
@@ -153,7 +155,9 @@ def test_lattice_warns_when_motility_is_truncated():
     sim.set_space(lattics.Lattice2DSpace(size=((200, 'um'), (200, 'um')), interval=(1, 'hour')))
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        lattics.populate_agents(sim, count=5, attributes={'space.volume': 1000, 'mechanics.motility': 1e-4})
+        lattics.populate_agents(
+            sim, count=5, attributes={'space.volume': (1000, 'um3'), 'mechanics.motility': (1e-4, 'um/ms')}
+        )
     # 1e-4 um/ms * 1 hour / 20 um = 18 > 1
     with pytest.warns(UserWarning, match='displacement probability'):
         sim.run(time=(1, 'hour'), dt=(1, 'hour'), verbosity=0)

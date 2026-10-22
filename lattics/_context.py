@@ -138,7 +138,7 @@ class UpdateContext:
         agent : Agent
             The agent to be added
         """
-        self._require_simulation().add_agent(agent)
+        self._require_simulation()._add_agent(agent)
 
     def remove_agent(self, agent: 'Agent') -> None:
         """Removes an agent from the simulation.

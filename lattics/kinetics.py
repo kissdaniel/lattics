@@ -13,7 +13,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from lattics._units import convert_rate
+from lattics._units import convert_rate, from_quantity
 
 
 class Kinetics(ABC):
@@ -92,6 +92,4 @@ class MichaelisMentenDecay(Kinetics):
 
 
 def _to_rate(value: tuple[float, str], name: str) -> float:
-    if not isinstance(value, tuple) or len(value) != 2:
-        raise TypeError(f'The {name} must be given as (value, unit), for example (0.1, \'1/hour\').')
-    return convert_rate(value[0], value[1], '1/ms')
+    return from_quantity(value, convert_rate, '1/ms', name, "(0.1, '1/hour')")

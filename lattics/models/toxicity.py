@@ -2,12 +2,27 @@ import numpy as np
 
 from lattics._agent import Agent
 from lattics._context import UpdateContext
-from lattics._units import convert_time
+from lattics._units import convert_rate, from_quantity
 
 from ._base import BaseModel
 
 
 class ConcentrationDependentToxicityModel(BaseModel):
+    """Necrosis with a rate that depends on the concentration of a substrate
+    inside the agent: ``max_rate * c / (median_effective_concentration + c)``.
+
+    Parameters
+    ----------
+    update_interval : tuple[float, str]
+        The time between two updates of the model
+    substrate_name : str
+        The name of the substrate
+    max_rate : tuple[float, str]
+        The maximal rate of necrosis, for example ``(1.0, '1/day')``
+    median_effective_concentration : float
+        The concentration at which the rate is half of the maximum
+    """
+
     reads = ('substrate.transport',)
     writes = (
         'toxicity.state',
@@ -21,12 +36,12 @@ class ConcentrationDependentToxicityModel(BaseModel):
         self,
         update_interval: tuple[float, str],
         substrate_name: str,
-        max_rate: float,
+        max_rate: tuple[float, str],
         median_effective_concentration: float,
     ) -> None:
         super().__init__(update_interval)
         self._substrate_name = substrate_name
-        self._max_rate = max_rate / convert_time(1, 'day', 'ms')
+        self._max_rate = from_quantity(max_rate, convert_rate, '1/ms', 'max_rate', "(1.0, '1/day')")
         self._ed50 = median_effective_concentration
 
     def update_agent(self, agent: Agent, ctx: UpdateContext) -> None:

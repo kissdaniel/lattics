@@ -107,12 +107,14 @@ def test_exchange_conserves_the_mass():
 
     sim = _homogeneous_simulation()
     sim.add_substrate(Substrate('drug', interval=(1, 'min')))
-    node = SubstrateNode(volume=(0.1, 'mm3'), transport={'drug': SubstrateInfo(type='flux', passive_rate=1.0)})
+    node = SubstrateNode(
+        volume=(0.1, 'mm3'), transport={'drug': SubstrateInfo(type='flux', passive_rate=(1.0, 'um3/ms'))}
+    )
     node.get_attribute('substrate.transport')['drug'].concentration = 100.0
     sim.add_substrate_node(node)
     agent = Agent()
-    agent.set_attribute('space.volume', 3000)
-    agent.set_attribute('substrate.transport', {'drug': SubstrateInfo(type='flux', passive_rate=1e-3)})
+    agent.set_attribute('space.volume', (3000, 'um3'))
+    agent.set_attribute('substrate.transport', {'drug': SubstrateInfo(type='flux', passive_rate=(1e-3, 'um3/ms'))})
     sim.add_agent(agent)
     sim.run(time=(2, 'hour'), dt=(1, 'min'), verbosity=0)
 
@@ -131,8 +133,8 @@ def test_removed_agents_stop_exchanging():
     node = SubstrateNode(volume=(1, 'mm3'), transport={'drug': SubstrateInfo(type='fixed', concentration=10.0)})
     sim.add_substrate_node(node)
     agent = Agent()
-    agent.set_attribute('space.volume', 3000)
-    agent.set_attribute('substrate.transport', {'drug': SubstrateInfo(type='flux', uptake_rate=1e-3)})
+    agent.set_attribute('space.volume', (3000, 'um3'))
+    agent.set_attribute('substrate.transport', {'drug': SubstrateInfo(type='flux', uptake_rate=(1e-3, 'um3/ms'))})
     sim.add_agent(agent)
     sim.add_event(Event(time=(10, 'min'), handler=lambda simulation: simulation.remove_agent(agent)))
     sim.run(time=(10, 'min'), dt=(1, 'min'), verbosity=0)
@@ -158,7 +160,7 @@ def test_models_reach_the_fields_through_the_context():
     model = Sensing()
     sim.add_model(model)
     agent = Agent()
-    agent.set_attribute('space.volume', 1)
+    agent.set_attribute('space.volume', (1, 'um3'))
     sim.add_agent(agent)
     sim.run(time=(1, 'hour'), dt=(1, 'hour'), verbosity=0)
     assert model.seen == [0.0]
@@ -182,7 +184,7 @@ def test_exchange_with_an_undefined_substrate_is_reported():
     sim = _homogeneous_simulation()
     sim.add_substrate(Substrate('drug'))
     agent = Agent()
-    agent.set_attribute('space.volume', 1)
+    agent.set_attribute('space.volume', (1, 'um3'))
     agent.set_attribute('substrate.transport', {'drgu': SubstrateInfo(type='flux')})
     sim.add_agent(agent)
     with warnings.catch_warnings(record=True) as caught:
@@ -238,18 +240,21 @@ def _pk_scenario(space_class, with_agents=False):
         Substrate('drug', diffusion_coefficient=(2.0, 'um2/sec'), kinetics=kinetics, interval=(1, 'min'))
     )
     vessels = SubstrateNode(
-        volume=(0.84375, 'mm3'), transport={'drug': SubstrateInfo(type='flux', passive_rate=0.5)}
+        volume=(0.84375, 'mm3'), transport={'drug': SubstrateInfo(type='flux', passive_rate=(0.5, 'um3/ms'))}
     )
     organs = SubstrateNode(
-        volume=(8.4375, 'mm3'), transport={'drug': SubstrateInfo(type='flux', release_rate=1.0, uptake_rate=5.0)}
+        volume=(8.4375, 'mm3'),
+        transport={'drug': SubstrateInfo(type='flux', release_rate=(1.0, 'um3/ms'), uptake_rate=(5.0, 'um3/ms'))},
     )
     sim.add_substrate_node(vessels)
     sim.add_substrate_node(organs)
     if with_agents:
         for _ in range(20):
             agent = Agent()
-            agent.set_attribute('space.volume', 3000)
-            agent.set_attribute('substrate.transport', {'drug': SubstrateInfo(type='flux', uptake_rate=1e-2)})
+            agent.set_attribute('space.volume', (3000, 'um3'))
+            agent.set_attribute(
+                'substrate.transport', {'drug': SubstrateInfo(type='flux', uptake_rate=(1e-2, 'um3/ms'))}
+            )
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore')
                 sim.add_agent(agent)
@@ -295,13 +300,15 @@ def test_exchange_and_diffusion_conserve_the_mass_on_the_lattice():
     sim.set_space(lattics.Lattice2DSpace(size=((200, 'um'), (200, 'um')), interval=(1, 'hour')))
     sim.add_substrate(Substrate('drug', diffusion_coefficient=(1.0, 'um2/sec'), interval=(1, 'min')))
     source = SubstrateNode(
-        volume=(1e5, 'um3'), transport={'drug': SubstrateInfo(type='flux', passive_rate=1.0)}, position=(0, 0)
+        volume=(1e5, 'um3'),
+        transport={'drug': SubstrateInfo(type='flux', passive_rate=(1.0, 'um3/ms'))},
+        position=(0, 0),
     )
     source.get_attribute('substrate.transport')['drug'].concentration = 100.0
     sim.add_substrate_node(source)
     agent = Agent()
-    agent.set_attribute('space.volume', 3000)
-    agent.set_attribute('substrate.transport', {'drug': SubstrateInfo(type='flux', uptake_rate=1e-2)})
+    agent.set_attribute('space.volume', (3000, 'um3'))
+    agent.set_attribute('substrate.transport', {'drug': SubstrateInfo(type='flux', uptake_rate=(1e-2, 'um3/ms'))})
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
         sim.add_agent(agent)

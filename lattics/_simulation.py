@@ -16,7 +16,7 @@ from ._population import Population
 from ._scheduler import EPSILON, ScheduledUpdate, effective_period, next_grid_point
 from ._units import convert_time
 from ._validation import check_attributes
-from .attributes import MISSING, known_names
+from .attributes import _UNITS, MISSING, known_names
 
 if TYPE_CHECKING:
     from .models._base import BaseModel
@@ -49,7 +49,9 @@ class Simulation:
             At the start of every run the attributes of the agents are
             checked against the attributes the models and the space read
             and write. The problems found are reported as warnings, or, if
-            ``strict`` is ``True``, raise a ``ValueError``.
+            ``strict`` is ``True``, raise a ``ValueError``. The same applies
+            to physical quantities given without a unit when an agent or a
+            substrate node is added.
         """
         self._id = self._get_id(id)
         self._seed = seed if seed is not None else np.random.SeedSequence().entropy
@@ -168,9 +170,26 @@ class Simulation:
         ----------
         agent : Agent
             The agent to be added
+
+        Notes
+        -----
+        Attributes with a physical unit (see :func:`lattics.attributes.internal_unit`)
+        are given as ``(value, unit)`` tuples and converted to the internal
+        unit here. A number without a unit is taken in the internal unit;
+        the simulation warns about it, or raises a ``ValueError`` if it is
+        strict.
         """
+        self._report_unitless(_unitless_attributes(agent))
+        self._add_agent(agent)
+
+    def _add_agent(self, agent: Agent) -> None:
+        # Also used for the agents created during the run (daughters), whose values are already converted
         self._population.add(agent)
         self._apply_declared_defaults(agent)
+        for name, (unit, converter) in _UNITS.items():
+            if agent.has_attribute(name) and isinstance(agent.get_attribute(name), tuple):
+                value, given_unit = agent.get_attribute(name)
+                agent.set_attribute(name, converter(value, given_unit, unit))
         if self._space:
             self._space.add_agent(agent)
         else:
@@ -282,6 +301,7 @@ class Simulation:
         node : SubstrateNode
             The node to be added
         """
+        self._report_unitless(_unitless_rates(node))
         self._substrate_nodes.append(node)
 
     def substrate_field(self, name: str) -> 'BaseSubstrateField':
@@ -496,6 +516,12 @@ class Simulation:
             list(self._population), components, self._declared, self._substrates, self._substrate_nodes
         )
 
+    def _report_unitless(self, messages: list[str]) -> None:
+        if messages and self._strict:
+            raise ValueError('\n'.join(messages))
+        for message in messages:
+            warnings.warn(message)
+
     def _apply_declared_defaults(self, agent: Agent) -> None:
         for name, default in self._declared.items():
             if default is not MISSING and not agent.has_attribute(name):
@@ -536,6 +562,30 @@ class Simulation:
 
     def _get_id(self, identifier):
         return identifier if identifier else str(uuid.uuid4())
+
+
+def _unitless_attributes(agent: Agent) -> list[str]:
+    messages = []
+    for name, (unit, _) in _UNITS.items():
+        if agent.has_attribute(name) and not isinstance(agent.get_attribute(name), tuple):
+            messages.append(
+                f'The agent attribute \'{name}\' is given without a unit, it is taken in {unit}. '
+                f'Give it as (value, unit), for example (1, \'{unit}\').'
+            )
+    return messages + _unitless_rates(agent)
+
+
+def _unitless_rates(item) -> list[str]:
+    messages = []
+    if item.has_attribute('substrate.transport'):
+        for substrate, info in item.get_attribute('substrate.transport').items():
+            if getattr(info, 'unitless_rates', ()):
+                messages.append(
+                    f'The rates {", ".join(info.unitless_rates)} of the SubstrateInfo of \'{substrate}\' are '
+                    'given without a unit, they are taken in um3/ms. Give them as (value, unit), for example '
+                    '(0.5, \'um3/sec\').'
+                )
+    return messages
 
 
 def _format_duration(milliseconds: float) -> str:

@@ -14,7 +14,7 @@ def _simulation(models=(), strict=False, space=None, **agent_attributes):
         sim.add_model(model)
     for _ in range(3):
         agent = Agent()
-        agent.set_attribute('space.volume', 1)
+        agent.set_attribute('space.volume', (1, 'um3'))
         for name, value in agent_attributes.items():
             agent.set_attribute(name.replace('__', '.'), value)
         with warnings.catch_warnings():
@@ -97,7 +97,7 @@ def test_declared_default_is_given_to_every_agent():
     sim = _simulation()
     sim.declare('experiment.doses', default=[])
     agent = Agent()
-    agent.set_attribute('space.volume', 1)
+    agent.set_attribute('space.volume', (1, 'um3'))
     sim.add_agent(agent)
     doses = [a.get_attribute('experiment.doses') for a in sim.agents]
     doses[0].append(1)
@@ -137,7 +137,7 @@ def test_missing_required_attribute_is_named():
     sim.set_space(HomogeneousSpace())
     sim.add_model(TimeBasedCellCycleModel())
     agent = Agent()
-    agent.set_attribute('space.volume', 1)
+    agent.set_attribute('space.volume', (1, 'um3'))
     with pytest.raises(
         AttributeError, match="TimeBasedCellCycleModel requires the agent attribute.*'cellcycle.mean_length'"
     ):

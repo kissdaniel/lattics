@@ -9,7 +9,7 @@ def test_time_based_cell_cycle_divides_in_homogeneous_space():
     sim.set_space(HomogeneousSpace(interval=(1, 'hour')))
     sim.add_model(TimeBasedCellCycleModel(update_interval=(1, 'hour'), distribution='fixed'))
     agent = Agent()
-    agent.set_attribute('space.volume', 1)
+    agent.set_attribute('space.volume', (1, 'um3'))
     agent.set_attribute('cellcycle.mean_length', (10, 'hour'))
     sim.add_agent(agent)
     sim.run(time=(3, 'day'), dt=(1, 'hour'), verbosity=0)
@@ -23,7 +23,10 @@ def test_toxicity_stops_the_cell_cycle():
     from lattics.models import ConcentrationDependentToxicityModel
 
     model = ConcentrationDependentToxicityModel(
-        update_interval=(1, 'hour'), substrate_name='drug', max_rate=1e9, median_effective_concentration=1.0
+        update_interval=(1, 'hour'),
+        substrate_name='drug',
+        max_rate=(1e9, '1/day'),
+        median_effective_concentration=1.0,
     )
     agent = Agent()
     agent.set_attribute('substrate.transport', {'drug': SubstrateInfo(type='flux', concentration=1e6)})
@@ -49,7 +52,7 @@ def _cell_cycle_simulation(mean_length, space_volume=None):
     sim.set_space(HomogeneousSpace(volume=space_volume, interval=(1, 'hour')))
     sim.add_model(TimeBasedCellCycleModel(update_interval=(1, 'hour'), distribution='fixed'))
     agent = Agent()
-    agent.set_attribute('space.volume', 1)
+    agent.set_attribute('space.volume', (1, 'um3'))
     agent.set_attribute('cellcycle.mean_length', mean_length)
     sim.add_agent(agent)
     return sim, agent

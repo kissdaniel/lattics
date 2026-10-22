@@ -6,6 +6,7 @@ from lattics._population import Population
 from lattics._simulation import Simulation
 from lattics._units import (
     convert_diffusivity,
+    convert_flow_rate,
     convert_length,
     convert_rate,
     convert_time,
@@ -29,6 +30,7 @@ __all__ = [
     'UpdateContext',
     'attributes',
     'convert_diffusivity',
+    'convert_flow_rate',
     'convert_length',
     'convert_rate',
     'convert_time',

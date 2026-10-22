@@ -4,9 +4,16 @@ Attributes are referred to by plain names everywhere, for example ``agent.get_at
 Every built-in name carries the prefix of the subsystem (model) that defines its meaning, even if other models
 read it. Agents accept any other name as well, so users can freely introduce their own attributes.
 
-This module lists the built-in names together with their default values. Custom attributes can be declared with
-:meth:`lattics.Simulation.declare`; the validation at the start of a run then treats them as intentional.
+This module lists the built-in names together with their default values and, for attributes with a physical
+unit, their internal unit. Such attributes are given as ``(value, unit)`` tuples, for example
+``agent.set_attribute('space.volume', (3000, 'um3'))``; the simulation converts them to the internal unit when
+the agent is added, so afterwards they are read as plain numbers in the internal unit.
+
+Custom attributes can be declared with :meth:`lattics.Simulation.declare`; the validation at the start of a run
+then treats them as intentional.
 """
+
+from lattics._units import convert_velocity, convert_volume
 
 
 class _Missing:
@@ -56,6 +63,13 @@ _REGISTRY = {
 }
 
 
+# Attributes with a physical unit: the internal unit and the converter of the (value, unit) tuples
+_UNITS = {
+    'space.volume': ('um3', convert_volume),
+    'mechanics.motility': ('um/ms', convert_velocity),
+}
+
+
 # Names used by earlier versions of LattiCS, reported by the validation at the start of a run
 _RENAMED = {
     'position': 'space.position',
@@ -100,3 +114,19 @@ def default_of(name: str):
         The default value, or :data:`MISSING` if the attribute has no default or is not a built-in attribute
     """
     return _REGISTRY.get(name, MISSING)
+
+
+def internal_unit(name: str) -> str | None:
+    """Returns the internal unit of the given attribute.
+
+    Parameters
+    ----------
+    name : str
+        The name of the attribute
+
+    Returns
+    -------
+    str or None
+        The unit, or ``None`` if the attribute has no physical unit
+    """
+    return _UNITS[name][0] if name in _UNITS else None
