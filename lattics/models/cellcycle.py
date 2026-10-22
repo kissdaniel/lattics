@@ -54,7 +54,7 @@ class TimeBasedCellCycleModel(BaseModel):
 
     def update_agent(self, agent: Agent, ctx: UpdateContext) -> None:
         if ctx.divided_since_last_update(agent):
-            self.reset_attributes(agent)
+            self.reset_attributes(agent, ctx)
         # An inactive cell does not progress; a completed cycle waits until the space divides the cell
         if not agent.get_attribute('cellcycle.is_active') or agent.get_attribute('space.division_requested'):
             return
@@ -63,7 +63,7 @@ class TimeBasedCellCycleModel(BaseModel):
         if agent.get_attribute('cellcycle.length') <= updated_time:
             agent.set_attribute('space.division_requested', True)
 
-    def reset_attributes(self, agent: Agent) -> None:
+    def reset_attributes(self, agent: Agent, ctx: UpdateContext) -> None:
         """Starts a new cycle after a division. The time by which the previous
         cycle overshot its length is carried over, so the update interval
         does not lengthen the cycles.
@@ -72,36 +72,36 @@ class TimeBasedCellCycleModel(BaseModel):
         agent.set_attribute('cellcycle.current_time', max(0, overshoot))
         attr = agent.get_attribute('cellcycle.mean_length')
         mean_length = convert_time(attr[0], attr[1], 'ms')
-        length = self._generate_cellcycle_length(mean_length)
+        length = self._generate_cellcycle_length(mean_length, ctx.rng)
         agent.set_attribute('cellcycle.length', length)
 
-    def _generate_cellcycle_length(self, mean_length) -> int:
+    def _generate_cellcycle_length(self, mean_length: float, rng: np.random.Generator) -> float:
         if self._distribution == 'fixed':
             return mean_length
         if self._distribution == 'erlang':
             shape = self._distribution_param
             scale = mean_length / shape
-            return np.random.gamma(shape=shape, scale=scale)
+            return rng.gamma(shape=shape, scale=scale)
         if self._distribution == 'normal':
             loc = mean_length
             scale = self._distribution_param
-            return np.random.normal(loc=loc, scale=scale)
+            return rng.normal(loc=loc, scale=scale)
 
-    def _initialize_required_attributes(self, agent: Agent) -> None:
+    def _initialize_required_attributes(self, agent: Agent, ctx: UpdateContext) -> None:
         if not agent.has_attribute('cellcycle.mean_length'):
             raise AttributeError()
         attr = agent.get_attribute('cellcycle.mean_length')
         mean_length = convert_time(attr[0], attr[1], 'ms')
-        length = self._generate_cellcycle_length(mean_length)
+        length = self._generate_cellcycle_length(mean_length, ctx.rng)
         agent.set_attribute('cellcycle.length', length)
 
-    def _initialize_optional_attributes(self, agent: Agent) -> None:
+    def _initialize_optional_attributes(self, agent: Agent, ctx: UpdateContext) -> None:
         if agent.has_attribute('cellcycle.random_initial'):
             length = agent.get_attribute('cellcycle.length')
-            cc_time = np.random.uniform(low=0, high=length)
+            cc_time = ctx.rng.uniform(low=0, high=length)
             agent.set_attribute('cellcycle.current_time', cc_time)
 
-    def _initialize_attributes_default_values(self, agent: Agent) -> None:
+    def _initialize_attributes_default_values(self, agent: Agent, ctx: UpdateContext) -> None:
         for name in (
             'cellcycle.is_active',
             'cellcycle.current_time',
@@ -154,7 +154,7 @@ class MultiPhaseTimeBasedCellCycleModel(BaseModel):
 
     def update_agent(self, agent: Agent, ctx: UpdateContext) -> None:
         if ctx.divided_since_last_update(agent):
-            self.reset_attributes(agent)
+            self.reset_attributes(agent, ctx)
         # An inactive cell does not progress; a completed cycle waits until the space divides the cell
         if not agent.get_attribute('cellcycle.is_active') or agent.get_attribute('space.division_requested'):
             return
@@ -173,7 +173,7 @@ class MultiPhaseTimeBasedCellCycleModel(BaseModel):
             agent.set_attribute('cellcycle.current_time', updated_time)
             self._update_cellcycle_phase(agent)
 
-    def reset_attributes(self, agent: Agent) -> None:
+    def reset_attributes(self, agent: Agent, ctx: UpdateContext) -> None:
         """Starts a new cycle in G1 after a division. The time by which the
         previous cycle overshot its length is carried over, so the update
         interval does not lengthen the cycles.
@@ -190,9 +190,9 @@ class MultiPhaseTimeBasedCellCycleModel(BaseModel):
         overshoot = agent.get_attribute('cellcycle.current_time') - length
         agent.set_attribute('cellcycle.current_time', max(0, overshoot))
         agent.set_attribute('cellcycle.current_phase', 'G1')
-        self._set_cellcycle_phase_lengths(agent)
+        self._set_cellcycle_phase_lengths(agent, ctx.rng)
 
-    def _set_cellcycle_phase_lengths(self, agent: Agent) -> None:
+    def _set_cellcycle_phase_lengths(self, agent: Agent, rng: np.random.Generator) -> None:
         attributes = [
             ('cellcycle.phase_g1_mean', 'cellcycle.phase_g1_sd', 'cellcycle.phase_g1_length'),
             ('cellcycle.phase_s_mean', 'cellcycle.phase_s_sd', 'cellcycle.phase_s_length'),
@@ -206,7 +206,7 @@ class MultiPhaseTimeBasedCellCycleModel(BaseModel):
                 sd_ms = convert_time(sd[0], sd[1], 'ms')
             mean = agent.get_attribute(attr[0])
             mean_ms = convert_time(mean[0], mean[1], 'ms')
-            length = self._generate_cellcycle_phase_length(mean_ms, sd_ms)
+            length = self._generate_cellcycle_phase_length(mean_ms, sd_ms, rng)
             agent.set_attribute(attr[2], length)
 
     def _update_cellcycle_phase(self, agent: Agent) -> None:
@@ -228,14 +228,16 @@ class MultiPhaseTimeBasedCellCycleModel(BaseModel):
         if div_checkpoint <= current_time:
             agent.set_attribute('space.division_requested', True)
 
-    def _generate_cellcycle_phase_length(self, length_mean, length_sd) -> int:
+    def _generate_cellcycle_phase_length(
+        self, length_mean: float, length_sd: float, rng: np.random.Generator
+    ) -> float:
         if length_sd == 0.0:
             return length_mean
         shape = length_mean**2 / length_sd**2
         scale = length_sd**2 / length_mean
-        return np.random.gamma(shape=shape, scale=scale)
+        return rng.gamma(shape=shape, scale=scale)
 
-    def _initialize_required_attributes(self, agent: Agent) -> None:
+    def _initialize_required_attributes(self, agent: Agent, ctx: UpdateContext) -> None:
         if not agent.has_attribute('cellcycle.phase_g1_mean'):
             raise AttributeError()
         if not agent.has_attribute('cellcycle.phase_s_mean'):
@@ -244,20 +246,20 @@ class MultiPhaseTimeBasedCellCycleModel(BaseModel):
             raise AttributeError()
         if not agent.has_attribute('cellcycle.phase_m_mean'):
             raise AttributeError()
-        self._set_cellcycle_phase_lengths(agent)
+        self._set_cellcycle_phase_lengths(agent, ctx.rng)
 
-    def _initialize_optional_attributes(self, agent: Agent) -> None:
+    def _initialize_optional_attributes(self, agent: Agent, ctx: UpdateContext) -> None:
         if agent.has_attribute('cellcycle.random_initial') and agent.get_attribute('cellcycle.random_initial'):
             g1_length = agent.get_attribute('cellcycle.phase_g1_length')
             s_length = agent.get_attribute('cellcycle.phase_s_length')
             g2_length = agent.get_attribute('cellcycle.phase_g2_length')
             m_length = agent.get_attribute('cellcycle.phase_m_length')
             length = g1_length + s_length + g2_length + m_length
-            cc_time = np.random.uniform(low=0, high=length)
+            cc_time = ctx.rng.uniform(low=0, high=length)
             agent.set_attribute('cellcycle.current_time', cc_time)
             self._update_cellcycle_phase(agent)
 
-    def _initialize_attributes_default_values(self, agent: Agent) -> None:
+    def _initialize_attributes_default_values(self, agent: Agent, ctx: UpdateContext) -> None:
         for name in (
             'cellcycle.is_active',
             'cellcycle.current_time',

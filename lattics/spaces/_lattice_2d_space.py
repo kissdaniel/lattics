@@ -142,13 +142,13 @@ class Lattice2DSpace(BaseSpace):
     def _random_free_site(self) -> np.ndarray:
         # Random draws are fast while the lattice is sparse; fall back to listing the free sites
         for _ in range(100):
-            site = np.array([np.random.randint(n) for n in self._dimensions], dtype=np.int32)
+            site = np.array([self._rng.integers(n) for n in self._dimensions], dtype=np.int32)
             if self._agent_layer[tuple(site)] is None:
                 return site
         free_sites = np.argwhere(np.equal(self._agent_layer, None))
         if len(free_sites) == 0:
             raise ValueError('The lattice is full, there is no free site for the agent.')
-        return free_sites[np.random.randint(len(free_sites))].astype(np.int32)
+        return free_sites[self._rng.integers(len(free_sites))].astype(np.int32)
 
     def _validate_optional_attributes(self, agent: Agent) -> None:
         for name in ('mechanics.binding_affinity', 'mechanics.displacement_limit'):
@@ -243,7 +243,7 @@ class Lattice2DSpace(BaseSpace):
     def _displacement_trials(self, dt: int) -> None:
         if len(self._population):
             agents = list(self._population)
-            np.random.shuffle(agents)
+            self._rng.shuffle(agents)
             positions = np.array([a.get_attribute('space.position') for a in agents], dtype='int32')
             disp_probs = np.array(
                 [a.get_attribute('mechanics.motility') * dt / self._grid_spacing for a in agents],
@@ -262,8 +262,8 @@ class Lattice2DSpace(BaseSpace):
 
             for i, dprob in enumerate(disp_probs):
                 # Check if trial is needed based on the displacement probability
-                if np.random.random() < dprob:
-                    displacement_trial_2d(i, positions, binding_affs, idx_array, change_flags)
+                if self._rng.random() < dprob:
+                    displacement_trial_2d(i, positions, binding_affs, idx_array, change_flags, self._rng)
 
             for i, cflag in enumerate(change_flags):
                 if cflag:
@@ -281,14 +281,14 @@ class Lattice2DSpace(BaseSpace):
     def _cell_removal_trials(self, ctx: UpdateContext) -> None:
         agents_temp = list(self._population)
         # TODO: check if shuffle is needed here
-        np.random.shuffle(agents_temp)
+        self._rng.shuffle(agents_temp)
         for a in agents_temp:
             if a.get_attribute('space.removal_requested'):
                 ctx.remove_agent(a)
 
     def _cell_division_trials(self, ctx: UpdateContext) -> None:
         agents_temp = list(self._population)
-        np.random.shuffle(agents_temp)
+        self._rng.shuffle(agents_temp)
         for a in agents_temp:
             if a.get_attribute('space.division_requested'):
                 self._perform_cell_division(a, ctx)
@@ -305,7 +305,7 @@ class Lattice2DSpace(BaseSpace):
             min_distance = np.min(distance_map)
             if min_distance <= displacement_limit:
                 target_sites = np.argwhere(distance_map == min_distance)
-                target_position = target_sites[np.random.randint(target_sites.shape[0])]
+                target_position = target_sites[self._rng.integers(target_sites.shape[0])]
                 x1, y1 = current_position[:2]
                 x2, y2 = target_position[:2]
                 path = bresenham_2d(x1, y1, x2, y2)

@@ -71,6 +71,7 @@ def create_simulation_2d(
     grid_spacing: int = 20,
     dt_agent: tuple = (30, 'sec'),
     dt_substrate: tuple = (1, 'sec'),
+    seed: int = None,
 ) -> Simulation:
     """Creates a :class:`~lattics.Simulation` with a :class:`~lattics.Lattice2DSpace` of the given physical size.
 
@@ -81,13 +82,15 @@ def create_simulation_2d(
         multiple of ``grid_spacing``.
     grid_spacing : int
         The distance between neighboring lattice sites, in micrometers
+    seed : int, optional
+        The seed of the random number generator of the simulation
 
     Raises
     ------
     ValueError
         If the size is missing or not a multiple of the grid spacing
     """
-    simulation = Simulation(id=id)
+    simulation = Simulation(id=id, seed=seed)
     space = Lattice2DSpace(
         size=dimensions,
         grid_spacing=(grid_spacing, 'um'),

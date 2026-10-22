@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+import numpy as np
+
 from ._scheduler import EPSILON
 
 if TYPE_CHECKING:
@@ -33,9 +35,12 @@ class UpdateContext:
     last_update_time : float, optional
         The time of the previous update of the component, in milliseconds;
         ``None`` before its first update
+    rng : numpy.random.Generator, optional
+        The random number generator of the simulation. Without it the
+        context creates an unseeded generator.
     """
 
-    __slots__ = ('_time', '_dt', '_population', '_space', '_simulation', '_last_update_time')
+    __slots__ = ('_time', '_dt', '_population', '_space', '_simulation', '_last_update_time', '_rng')
 
     def __init__(
         self,
@@ -45,6 +50,7 @@ class UpdateContext:
         space: 'BaseSpace' = None,
         simulation: 'Simulation' = None,
         last_update_time: float = None,
+        rng: np.random.Generator = None,
     ) -> None:
         self._time = time
         self._dt = dt
@@ -52,6 +58,7 @@ class UpdateContext:
         self._space = space
         self._simulation = simulation
         self._last_update_time = last_update_time
+        self._rng = rng if rng is not None else np.random.default_rng()
 
     @property
     def time(self) -> float:
@@ -67,6 +74,13 @@ class UpdateContext:
     def last_update_time(self) -> float | None:
         """The time of the previous update of the component, in milliseconds; ``None`` before its first update."""
         return self._last_update_time
+
+    @property
+    def rng(self) -> np.random.Generator:
+        """The random number generator of the simulation. Components should draw
+        every random number from it, so that a seeded simulation is reproducible.
+        """
+        return self._rng
 
     @property
     def population(self) -> 'Population':

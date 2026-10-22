@@ -30,9 +30,9 @@ class StochasticTransitionModel(BaseModel):
         if agent.get_attribute(attr_name) == attr_value:
             dt = ctx.dt
             prob = 1 - np.exp(-self._rate * dt)
-            if np.random.random() < prob:
+            if ctx.rng.random() < prob:
                 for s_name, s_value in self._end_states.items():
                     agent.set_attribute(s_name, s_value)
 
-    def reset_attributes(self, agent: Agent) -> None:
+    def reset_attributes(self, agent: Agent, ctx: UpdateContext) -> None:
         pass

@@ -20,8 +20,6 @@ from lattics.models import (
     StochasticTransitionModel,
 )
 
-from .helpers import seed_everything
-
 REFERENCE_DIR = pathlib.Path(__file__).parent / 'reference'
 SEED = 12345
 LATTICE_SIZE = 40
@@ -30,8 +28,7 @@ LATTICE_SIZE = 40
 def run_lattice_growth() -> dict:
     """2D lattice: multi-phase cell cycle with contact inhibition, displacement trials, cell division, and
     removal of inhibited (G0) cells."""
-    seed_everything(SEED)
-    simulation = Simulation(id='reference_lattice_growth')
+    simulation = Simulation(id='reference_lattice_growth', seed=SEED)
     space = Lattice2DSpace(size=((800, 'um'), (800, 'um')), grid_spacing=(20, 'um'), interval=(30, 'min'))
     simulation.set_space(space)
     simulation.add_model(MultiPhaseTimeBasedCellCycleModel(update_interval=(30, 'min')))
@@ -43,7 +40,7 @@ def run_lattice_growth() -> dict:
             rate=1.0,
         )
     )
-    for site in np.random.choice(LATTICE_SIZE**2, 60, replace=False):
+    for site in np.random.default_rng(SEED).choice(LATTICE_SIZE**2, 60, replace=False):
         agent = Agent()
         attributes = {
             'space.position': np.array(divmod(int(site), LATTICE_SIZE), dtype=np.int32),
@@ -89,8 +86,7 @@ def _set_node_concentration(simulation, node, name, concentration):
 def run_homogeneous_drug_treatment() -> dict:
     """Homogeneous space: drug pharmacokinetics (two static nodes, two doses given by events), drug uptake by
     the agents, and concentration-dependent necrosis."""
-    seed_everything(SEED)
-    simulation = Simulation(id='reference_homogeneous_drug_treatment')
+    simulation = Simulation(id='reference_homogeneous_drug_treatment', seed=SEED)
     space = HomogeneousSpace(volume=(8.4375e6, 'um3'), interval=(1, 'hour'), substrate_interval=(30, 'sec'))
     simulation.set_space(space)
     space.add_substrate(name='drug', diffusion_coefficient=2e-3, decay_coefficient=1e-8)

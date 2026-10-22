@@ -17,6 +17,9 @@ class BaseModel(abc.ABC):
     The class attributes ``reads`` and ``writes`` list the names of the agent
     attributes the model uses and sets.
 
+    Models draw random numbers from ``ctx.rng``, the generator of the
+    simulation, so that a seeded simulation is reproducible.
+
     Parameters
     ----------
     update_interval : tuple[float, str], optional
@@ -41,9 +44,9 @@ class BaseModel(abc.ABC):
         ctx : UpdateContext
             The context of the simulation
         """
-        self._initialize_required_attributes(agent)
-        self._initialize_optional_attributes(agent)
-        self._initialize_attributes_default_values(agent)
+        self._initialize_required_attributes(agent, ctx)
+        self._initialize_optional_attributes(agent, ctx)
+        self._initialize_attributes_default_values(agent, ctx)
 
     def update(self, population: Iterable[Agent], ctx: UpdateContext) -> None:
         """Updates every agent of the population.
@@ -73,14 +76,14 @@ class BaseModel(abc.ABC):
         """
         raise NotImplementedError
 
-    def reset_attributes(self, agent: Agent) -> None:
+    def reset_attributes(self, agent: Agent, ctx: UpdateContext) -> None:
         pass
 
-    def _initialize_required_attributes(self, agent: Agent) -> None:
+    def _initialize_required_attributes(self, agent: Agent, ctx: UpdateContext) -> None:
         pass
 
-    def _initialize_optional_attributes(self, agent: Agent) -> None:
+    def _initialize_optional_attributes(self, agent: Agent, ctx: UpdateContext) -> None:
         pass
 
-    def _initialize_attributes_default_values(self, agent: Agent) -> None:
+    def _initialize_attributes_default_values(self, agent: Agent, ctx: UpdateContext) -> None:
         pass

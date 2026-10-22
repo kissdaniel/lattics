@@ -34,14 +34,14 @@ class ConcentrationDependentToxicityModel(BaseModel):
         rate = self._mm_fun(x=concentration, vmax=self._max_rate, ed50=self._ed50)
         dt = ctx.dt
         prob = 1 - np.exp(-rate * dt)
-        if np.random.random() < prob:
+        if ctx.rng.random() < prob:
             agent.set_attribute('toxicity.state', 'necrotic')
             agent.set_attribute('cellcycle.is_active', False)
             agent.set_attribute('space.division_requested', False)
             agent.set_attribute('mechanics.motility', 0)
             agent.set_attribute('mechanics.binding_affinity', 0)
 
-    def _initialize_required_attributes(self, agent: Agent) -> None:
+    def _initialize_required_attributes(self, agent: Agent, ctx: UpdateContext) -> None:
         if not agent.has_attribute('substrate.transport'):
             raise AttributeError()
 

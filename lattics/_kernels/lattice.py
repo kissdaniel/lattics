@@ -1,6 +1,6 @@
 import numba
 import numpy as np
-from numba import boolean, float32, int32, types, void
+from numba import float32, int32, types, void
 
 
 @numba.njit(int32[:, :](int32, int32, int32, int32), cache=True)
@@ -154,8 +154,9 @@ def total_interaction_energy_2d(idx, agent_pos, bind_affs, agent_idx_array):
     return energy
 
 
-@numba.njit(void(int32, int32[:, :], float32[:], int32[:, :], boolean[:]), cache=True)
-def displacement_trial_2d(idx, positions, binding_affs, agent_idx_array, change_flags):
+# No explicit signature: the random number generator argument is typed when the function is first called
+@numba.njit(cache=True)
+def displacement_trial_2d(idx, positions, binding_affs, agent_idx_array, change_flags, rng):
     """Performs a displacement trial with a given agent assuming 2D coordinates.
 
     Args:
@@ -166,11 +167,13 @@ def displacement_trial_2d(idx, positions, binding_affs, agent_idx_array, change_
             based on their positions
         change_flags (array of bools): indicating whether an agent was
             relocated during the trial
+        rng (numpy.random.Generator): the random number generator of the
+            simulation
     """
     current_pos = np.copy(positions[idx])
     current_energy = total_interaction_energy_2d(idx, current_pos, binding_affs, agent_idx_array)
     neighborhood = get_neighborhood_2d('von_neumann')
-    n_idx = np.random.randint(neighborhood.shape[0])
+    n_idx = rng.integers(0, neighborhood.shape[0])
     target_pos = np.add(positions[idx], neighborhood[n_idx])
     tx = target_pos[0]
     ty = target_pos[1]
@@ -181,7 +184,7 @@ def displacement_trial_2d(idx, positions, binding_affs, agent_idx_array, change_
         if target_idx == -1:
             displace_agent_2d(positions, idx, target_pos, agent_idx_array)
             target_energy = total_interaction_energy_2d(idx, target_pos, binding_affs, agent_idx_array)
-            if not np.random.random() < np.exp(-(target_energy - current_energy)):
+            if not rng.random() < np.exp(-(target_energy - current_energy)):
                 displace_agent_2d(positions, idx, current_pos, agent_idx_array)
             else:
                 change_flags[idx] = bool(True)

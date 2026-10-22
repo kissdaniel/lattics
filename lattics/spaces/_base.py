@@ -1,6 +1,8 @@
 import math
 from abc import ABC, abstractmethod
 
+import numpy as np
+
 from lattics._agent import Agent
 from lattics._context import UpdateContext
 from lattics._population import Population
@@ -67,6 +69,7 @@ class BaseSpace(ABC):
         else:
             self._volume = None
         self._population = None
+        self._rng = None
         self._substrates = dict()
         self.interval = convert_time(interval[0], interval[1], 'ms') if interval else None
         self.substrate_interval = (
@@ -82,11 +85,12 @@ class BaseSpace(ABC):
         if not agent.has_attribute('space.volume'):
             raise ValueError('The agent must have an attribute named \'space.volume\'.')
 
-    def _bind(self, population: Population) -> None:
-        """Connects the space to the population of the simulation it is set to."""
+    def _bind(self, population: Population, rng: np.random.Generator) -> None:
+        """Connects the space to the population and the random number generator of the simulation it is set to."""
         if self._population is not None:
             raise RuntimeError('The space is already set to a simulation.')
         self._population = population
+        self._rng = rng
 
     @abstractmethod
     def add_agent(self, agent: Agent) -> None:

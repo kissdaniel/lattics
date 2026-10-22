@@ -5,6 +5,7 @@ import uuid
 import warnings
 from typing import TYPE_CHECKING
 
+import numpy as np
 import tqdm
 
 from ._agent import Agent
@@ -26,7 +27,7 @@ class Simulation:
     The class provides high-level access to configure and execute a simulation.
     """
 
-    def __init__(self, id=None) -> None:
+    def __init__(self, id: str = None, seed: int = None) -> None:
         """Constructor method.
 
         Parameters
@@ -34,8 +35,16 @@ class Simulation:
         id : str
             The identifier for the simulation instance. If not provided, a
             random identifier will be generated.
+        seed : int
+            The seed of the random number generator of the simulation. Every
+            random number of the models and the space is drawn from this
+            generator, so the same seed gives the same results. If not
+            provided, a random seed is generated; it can be read from
+            :attr:`seed` to repeat the simulation.
         """
         self._id = self._get_id(id)
+        self._seed = seed if seed is not None else np.random.SeedSequence().entropy
+        self._rng = np.random.default_rng(self._seed)
         self._population = Population()
         self._space = None
         self._events = list()
@@ -86,6 +95,29 @@ class Simulation:
             The population of the simulation
         """
         return self._population
+
+    @property
+    def seed(self) -> int:
+        """Get the seed of the random number generator of the simulation.
+
+        Returns
+        -------
+        int
+            The seed given to the constructor, or the generated one
+        """
+        return self._seed
+
+    @property
+    def rng(self) -> np.random.Generator:
+        """Get the random number generator of the simulation, for example to
+        draw random numbers in event handlers.
+
+        Returns
+        -------
+        numpy.random.Generator
+            The random number generator
+        """
+        return self._rng
 
     @property
     def removed_agents(self) -> list[Agent]:
@@ -147,7 +179,7 @@ class Simulation:
         """
         if self._space:
             raise AttributeError('Simulation space is already set and cannot be modified.')
-        space._bind(self._population)
+        space._bind(self._population, self._rng)
         self._space = space
         for agent in self._population:
             space.add_agent(agent)
@@ -330,7 +362,10 @@ class Simulation:
         return update
 
     def _print_summary(self, duration: float, dt: float, updates: list[ScheduledUpdate]) -> None:
-        print(f'Simulation {self._id}: {_format_duration(duration)}, time step {_format_duration(dt)}')
+        print(
+            f'Simulation {self._id}: {_format_duration(duration)}, time step {_format_duration(dt)}, '
+            f'seed {self._seed}'
+        )
         width = max(len(update.name) for update in updates) if updates else 0
         for update in updates:
             if update.interval is None:
@@ -374,6 +409,7 @@ class Simulation:
             space=self._space,
             simulation=self,
             last_update_time=last_update_time,
+            rng=self._rng,
         )
 
     def _get_id(self, identifier):
