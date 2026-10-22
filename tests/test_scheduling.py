@@ -119,24 +119,22 @@ def test_cell_division_is_not_delayed():
 
 
 def test_time_step_below_the_substrate_interval_does_not_change_the_result():
-    from lattics import Event, HomogeneousSpace, Simulation, SubstrateInfo, SubstrateNode
+    from lattics import Event, HomogeneousSpace, Simulation, Substrate, SubstrateInfo, SubstrateNode
+    from lattics.kinetics import FirstOrderDecay
 
     def run(dt):
         sim = Simulation()
-        space = HomogeneousSpace(volume=(1, 'mm3'), interval=(1, 'hour'), substrate_interval=(30, 'sec'))
-        sim.set_space(space)
-        space.add_substrate(name='drug', decay_coefficient=1e-7)
-        node = SubstrateNode()
-        node.set_attribute('space.volume', 1e8)
-        node.get_attribute('substrate.transport')['drug'] = SubstrateInfo(type='flux', passive_rate=0.5)
-        space._substrates['drug'].add_static_substrate_node(node)
+        sim.set_space(HomogeneousSpace(volume=(1, 'mm3'), interval=(1, 'hour')))
+        sim.add_substrate(Substrate('drug', kinetics=FirstOrderDecay(rate=(1e-7, '1/ms')), interval=(30, 'sec')))
+        node = SubstrateNode(volume=(1e8, 'um3'), transport={'drug': SubstrateInfo(type='flux', passive_rate=0.5)})
+        sim.add_substrate_node(node)
 
         def dose(simulation):
             node.get_attribute('substrate.transport')['drug'].concentration = 1000.0
 
         sim.add_event(Event(time=(0, 'sec'), handler=dose))
         sim.run(time=(2, 'hour'), dt=dt, verbosity=0)
-        return space._substrates['drug'].get_concentration()
+        return sim.substrate_field('drug').concentration
 
     assert run((10, 'sec')) == run((30, 'sec'))
 

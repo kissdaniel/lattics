@@ -13,7 +13,17 @@ import pickle
 import numpy as np
 import pytest
 
-from lattics import Agent, Event, HomogeneousSpace, Lattice2DSpace, Simulation, SubstrateInfo, SubstrateNode
+from lattics import (
+    Agent,
+    Event,
+    HomogeneousSpace,
+    Lattice2DSpace,
+    Simulation,
+    Substrate,
+    SubstrateInfo,
+    SubstrateNode,
+)
+from lattics.kinetics import FirstOrderDecay
 from lattics.models import (
     ConcentrationDependentToxicityModel,
     MultiPhaseTimeBasedCellCycleModel,
@@ -87,21 +97,25 @@ def run_homogeneous_drug_treatment() -> dict:
     """Homogeneous space: drug pharmacokinetics (two static nodes, two doses given by events), drug uptake by
     the agents, and concentration-dependent necrosis."""
     simulation = Simulation(id='reference_homogeneous_drug_treatment', seed=SEED)
-    space = HomogeneousSpace(volume=(8.4375e6, 'um3'), interval=(1, 'hour'), substrate_interval=(30, 'sec'))
-    simulation.set_space(space)
-    space.add_substrate(name='drug', diffusion_coefficient=2e-3, decay_coefficient=1e-8)
-    field = space._substrates['drug']
-
-    vessels = SubstrateNode()
-    vessels.set_attribute('space.volume', 8.4375e5)
-    vessels.get_attribute('substrate.transport')['drug'] = SubstrateInfo(type='flux', passive_rate=0.5)
-    field.add_static_substrate_node(vessels)
-    organs = SubstrateNode()
-    organs.set_attribute('space.volume', 8.4375e6)
-    organs.get_attribute('substrate.transport')['drug'] = SubstrateInfo(
-        type='flux', release_rate=1.0, uptake_rate=5.0
+    simulation.set_space(HomogeneousSpace(volume=(8.4375e6, 'um3'), interval=(1, 'hour')))
+    simulation.add_substrate(
+        Substrate(
+            'drug',
+            diffusion_coefficient=(2e-3, 'um2/ms'),
+            kinetics=FirstOrderDecay(rate=(1e-8, '1/ms')),
+            interval=(30, 'sec'),
+        )
     )
-    field.add_static_substrate_node(organs)
+
+    vessels = SubstrateNode(
+        volume=(8.4375e5, 'um3'), transport={'drug': SubstrateInfo(type='flux', passive_rate=0.5)}
+    )
+    simulation.add_substrate_node(vessels)
+    organs = SubstrateNode(
+        volume=(8.4375e6, 'um3'),
+        transport={'drug': SubstrateInfo(type='flux', release_rate=1.0, uptake_rate=5.0)},
+    )
+    simulation.add_substrate_node(organs)
 
     simulation.add_model(
         ConcentrationDependentToxicityModel(
@@ -123,7 +137,7 @@ def run_homogeneous_drug_treatment() -> dict:
 
     history = [pickle.loads(entry) for entry in simulation._history]
     return {
-        'field_concentrations': [float(state._space._substrates['drug']._concentration) for state in history],
+        'field_concentrations': [float(state.substrate_field('drug').concentration) for state in history],
         'necrotic_counts': [
             sum(
                 a.has_attribute('toxicity.state') and a.get_attribute('toxicity.state') == 'necrotic'

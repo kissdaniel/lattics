@@ -37,8 +37,6 @@ class Lattice2DSpace(BaseSpace):
         The distance between neighboring lattice sites. Defaults to 20 um.
     interval : tuple[float, str], optional
         The time between two updates of the agents, for example ``(30, 'min')``
-    substrate_interval : tuple[float, str], optional
-        The time between two updates of the substrate fields
 
     Raises
     ------
@@ -75,7 +73,6 @@ class Lattice2DSpace(BaseSpace):
         thickness: tuple[float, str] = None,
         grid_spacing: tuple[float, str] = (20, 'um'),
         interval: tuple[float, str] = None,
-        substrate_interval: tuple[float, str] = None,
     ) -> None:
         super().__init__(
             size=size,
@@ -83,7 +80,6 @@ class Lattice2DSpace(BaseSpace):
             thickness=thickness,
             grid_spacing=grid_spacing,
             interval=interval,
-            substrate_interval=substrate_interval,
         )
         if volume is not None:
             raise ValueError('A lattice space needs the size of the domain, the volume alone is not enough.')
@@ -142,7 +138,7 @@ class Lattice2DSpace(BaseSpace):
             )
 
     def collect_notes(self) -> list[str]:
-        notes = []
+        notes = super().collect_notes()
         if self._randomly_placed:
             notes.append(f'{self._randomly_placed} agents without \'space.position\' placed on random free sites')
             self._randomly_placed = 0
@@ -185,14 +181,8 @@ class Lattice2DSpace(BaseSpace):
         position = agent.get_attribute('space.position')
         self._agent_layer[tuple(position)] = None
 
-    def add_substrate(self, name: str, diffusion_coefficient: float = 0.0, decay_coefficient: float = 0.0) -> None:
-        # substrate = Lattice2DSubstrateField(domain=self,
-        #                                     substrate_name=name,
-        #                                     diffusion_coefficient=diffusion_coefficient,
-        #                                     decay_coefficient=decay_coefficient
-        #                                     )
-        # self._substrates[name] = substrate
-        pass
+    def create_field(self, substrate, nodes):
+        raise NotImplementedError('Substrate fields are not available in Lattice2DSpace yet.')
 
     def interval_warnings(self, period: float) -> list[str]:
         if not len(self._population):

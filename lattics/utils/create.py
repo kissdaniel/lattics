@@ -70,7 +70,6 @@ def create_simulation_2d(
     dimensions: tuple[tuple[float, str], tuple[float, str]] = None,
     grid_spacing: int = 20,
     dt_agent: tuple = (30, 'sec'),
-    dt_substrate: tuple = (1, 'sec'),
     seed: int = None,
 ) -> Simulation:
     """Creates a :class:`~lattics.Simulation` with a :class:`~lattics.Lattice2DSpace` of the given physical size.
@@ -95,7 +94,6 @@ def create_simulation_2d(
         size=dimensions,
         grid_spacing=(grid_spacing, 'um'),
         interval=dt_agent,
-        substrate_interval=dt_substrate,
     )
     simulation.set_space(space)
     return simulation

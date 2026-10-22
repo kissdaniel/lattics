@@ -1,47 +1,36 @@
-import numpy as np
+from lattics._context import UpdateContext
 
 from ._base import BaseSubstrateField
 
 
 class HomogeneousSubstrateField(BaseSubstrateField):
-    def __init__(
-        self,
-        domain,
-        substrate_name: str,
-        diffusion_coefficient: float = 0.0,
-        decay_coefficient: float = 0.0,
-        decay_kinetics: str = 'first-order',
-        mm_constant: float = None,
-    ) -> None:
-        super().__init__(
-            domain=domain,
-            substrate_name=substrate_name,
-            diffusion_coefficient=diffusion_coefficient,
-            decay_coefficient=decay_coefficient,
-        )
-        self._concentration = 0.0
-        if decay_kinetics == 'first-order':
-            self._decay_function = self._decay_first_order
-        if decay_kinetics == 'second-order':
-            self._decay_function = self._decay_second_order
-        if decay_kinetics == 'michaelis-menten':
-            self._decay_function = self._decay_michaelis_menten
-            self._mm_constant = mm_constant
+    """The concentration field of a substrate in a perfectly mixed space: a
+    single concentration for the whole domain. Created by
+    :class:`~lattics.HomogeneousSpace`.
+    """
 
-    def get_concentration(self, position=None) -> float:
+    def __init__(self, substrate, space, nodes) -> None:
+        super().__init__(substrate, space, nodes)
+        self._concentration = 0.0
+
+    @property
+    def concentration(self) -> float:
         return self._concentration
 
-    def update(self, dt: int) -> None:
-        self.update_nodes(dt)
-        self.diffusion_decay(dt)
+    def concentration_at(self, position=None) -> float:
+        return self._concentration
 
-    def update_nodes(self, dt: int) -> None:
+    def update(self, ctx: UpdateContext) -> None:
+        self._exchange(ctx.dt)
+        self._concentration = self._substrate.apply_kinetics(self._concentration, ctx.dt)
+
+    def _exchange(self, dt: float) -> None:
+        name = self._substrate.name
         count_fixed = 0
         sum_fixed = 0
-        v_f = self._domain._volume
-        all_nodes = self._static_nodes + self._dynamic_nodes
-        for n in all_nodes:
-            info = n.get_attribute('substrate.transport')[self._substrate_name]
+        v_f = self._space.volume
+        for n in self.exchanging_nodes():
+            info = n.get_attribute('substrate.transport')[name]
             if info.type == 'flux':
                 k_p = info.passive_rate
                 k_u = info.uptake_rate
@@ -61,23 +50,3 @@ class HomogeneousSubstrateField(BaseSubstrateField):
                 count_fixed = count_fixed + 1
         if 0 < count_fixed:
             self._concentration = sum_fixed / count_fixed
-
-    def diffusion_decay(self, dt: int) -> None:
-        self._decay_function(dt)
-
-    def _decay_first_order(self, dt: int) -> None:
-        C = self._concentration
-        d = self._decay_coefficient
-        self._concentration = C * np.exp(-d * dt)
-
-    def _decay_second_order(self, dt: int) -> None:
-        C = self._concentration
-        d = self._decay_coefficient
-        self._concentration = 1 / ((1 / C) + d * dt)
-
-    def _decay_michaelis_menten(self, dt: int) -> None:
-        C = self._concentration
-        v_max = self._decay_coefficient
-        k_M = self._mm_constant
-        x = k_M - C + dt * v_max
-        self._concentration = (-x + (x**2 + 4 * k_M * C) ** 0.5) / 2

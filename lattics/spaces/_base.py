@@ -1,5 +1,6 @@
 import math
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -7,6 +8,9 @@ from lattics._agent import Agent
 from lattics._context import UpdateContext
 from lattics._population import Population
 from lattics._units import convert_length, convert_time, convert_volume
+
+if TYPE_CHECKING:
+    from lattics.substrates import BaseSubstrateField, Substrate, SubstrateNode
 
 
 class BaseSpace(ABC):
@@ -20,9 +24,9 @@ class BaseSpace(ABC):
     The domain is given either by ``size`` (and ``thickness``) or by
     ``volume``, but not by both. Spaces with a spatial structure need ``size``.
 
-    The simulation schedules two parts of the space separately: the agents
-    (:meth:`update_agents`, every ``interval``) and the substrate fields
-    (:meth:`update_substrates`, every ``substrate_interval``).
+    The simulation updates the agents of the space (:meth:`update_agents`)
+    every ``interval``. The space also creates the concentration fields of
+    the substrates (:meth:`create_field`), of the type that suits it.
 
     The class attributes list the names of the agent attributes the space
     uses: ``reads`` the attributes it needs, ``optional_reads`` the ones it
@@ -42,8 +46,6 @@ class BaseSpace(ABC):
         The distance between neighboring lattice sites. Defaults to 20 um.
     interval : tuple[float, str], optional
         The time between two updates of the agents, for example ``(30, 'min')``
-    substrate_interval : tuple[float, str], optional
-        The time between two updates of the substrate fields
     """
 
     reads: tuple[str, ...] = ()
@@ -57,7 +59,6 @@ class BaseSpace(ABC):
         thickness: tuple[float, str] = None,
         grid_spacing: tuple[float, str] = (20, 'um'),
         interval: tuple[float, str] = None,
-        substrate_interval: tuple[float, str] = None,
     ) -> None:
         if size is not None and volume is not None:
             raise ValueError('Give either the size or the volume of the domain, not both.')
@@ -72,11 +73,8 @@ class BaseSpace(ABC):
             self._volume = None
         self._population = None
         self._rng = None
-        self._substrates = dict()
+        self._notes = list()
         self.interval = convert_time(interval[0], interval[1], 'ms') if interval else None
-        self.substrate_interval = (
-            convert_time(substrate_interval[0], substrate_interval[1], 'ms') if substrate_interval else None
-        )
 
     @property
     def volume(self) -> float | None:
@@ -96,7 +94,8 @@ class BaseSpace(ABC):
         list[str]
             The notes
         """
-        return []
+        notes, self._notes = self._notes, list()
+        return notes
 
     def _bind(self, population: Population, rng: np.random.Generator) -> None:
         """Connects the space to the population and the random number generator of the simulation it is set to."""
@@ -129,19 +128,26 @@ class BaseSpace(ABC):
         pass
 
     @abstractmethod
-    def add_substrate(
-        self,
-        name: str,
-        diffusion_coefficient: float = 0.0,
-        decay_coefficient: float = 0.0,
-        decay_kinetics: str = 'first-order',
-    ) -> None:
-        pass
+    def create_field(self, substrate: 'Substrate', nodes: list['SubstrateNode']) -> 'BaseSubstrateField':
+        """Creates the concentration field of the substrate in this space.
+        Called by the simulation.
+
+        Parameters
+        ----------
+        substrate : Substrate
+            The definition of the substrate
+        nodes : list[SubstrateNode]
+            The substrate nodes of the simulation
+
+        Returns
+        -------
+        BaseSubstrateField
+            The field
+        """
 
     def update_agents(self, ctx: UpdateContext) -> None:
-        """Processes the agents: division and removal requests and the
-        space-specific behaviour (for example movement), then registers the
-        agents exchanging substrates.
+        """Processes the agents: removal and division requests and the
+        space-specific behaviour (for example movement).
 
         Parameters
         ----------
@@ -150,22 +156,6 @@ class BaseSpace(ABC):
             ``ctx.time + ctx.dt``
         """
         self._update_agents(ctx, ctx.dt)
-        self._register_substrate_nodes()
-
-    def update_substrates(self, ctx: UpdateContext) -> None:
-        """Advances the substrate fields from ``ctx.time`` to ``ctx.time + ctx.dt``.
-
-        Parameters
-        ----------
-        ctx : UpdateContext
-            The context of the update
-        """
-        for s in self._substrates.values():
-            s.update(ctx.dt)
-
-    def has_substrates(self) -> bool:
-        """Indicates whether the space has substrate fields to update."""
-        return bool(self._substrates)
 
     def interval_warnings(self, period: float) -> list[str]:
         """Checks whether the agents can be updated with the given period
@@ -197,11 +187,3 @@ class BaseSpace(ABC):
             The time step of the update, in milliseconds
         """
         pass
-
-    def _register_substrate_nodes(self) -> None:
-        for s in self._substrates.values():
-            s.clear_dynamic_nodes()
-        for a in self._population:
-            if a.has_attribute('substrate.transport'):
-                for name in a.get_attribute('substrate.transport').keys():
-                    self._substrates[name].add_dynamic_substrate_node(a)

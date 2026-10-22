@@ -21,6 +21,7 @@ from .attributes import MISSING, known_names
 if TYPE_CHECKING:
     from .models._base import BaseModel
     from .spaces._base import BaseSpace
+    from .substrates import BaseSubstrateField, Substrate, SubstrateNode
 
 
 class Simulation:
@@ -60,6 +61,9 @@ class Simulation:
         self._events = list()
         self._event_count = 0
         self._models = list()
+        self._substrates = dict()
+        self._substrate_nodes = list()
+        self._fields = dict()
         self._history = list()
         self._schedule_state = dict()
         self._removed_agents = list()
@@ -219,6 +223,8 @@ class Simulation:
         self._space = space
         for agent in self._population:
             space.add_agent(agent)
+        for substrate in self._substrates.values():
+            self._fields[substrate.name] = space.create_field(substrate, self._substrate_nodes)
 
     def add_event(self, event: Event) -> None:
         """Schedules the event. Events are executed at their exact time;
@@ -246,10 +252,60 @@ class Simulation:
         for a in self._population:
             model.initialize(a, ctx)
 
-    def add_substrate(self, name: str, substrate) -> None:
-        if not self._space:
-            raise AttributeError('A simulation domain has to be set to add substrates.')
-        self._domain.add_substrate_field(substrate)
+    def add_substrate(self, substrate: 'Substrate') -> None:
+        """Adds a substrate. The space of the simulation creates its
+        concentration field, now or when the space is set.
+
+        Parameters
+        ----------
+        substrate : Substrate
+            The definition of the substrate
+
+        Raises
+        ------
+        ValueError
+            If a substrate with the same name is already added
+        """
+        if substrate.name in self._substrates:
+            raise ValueError(f'A substrate named \'{substrate.name}\' is already added.')
+        self._substrates[substrate.name] = substrate
+        if self._space:
+            self._fields[substrate.name] = self._space.create_field(substrate, self._substrate_nodes)
+
+    def add_substrate_node(self, node: 'SubstrateNode') -> None:
+        """Adds a substrate node, a source or sink of substrates that is not an
+        agent. It exchanges the substrates listed in its ``substrate.transport``
+        attribute.
+
+        Parameters
+        ----------
+        node : SubstrateNode
+            The node to be added
+        """
+        self._substrate_nodes.append(node)
+
+    def substrate_field(self, name: str) -> 'BaseSubstrateField':
+        """Returns the concentration field of the substrate.
+
+        Parameters
+        ----------
+        name : str
+            The name of the substrate
+
+        Returns
+        -------
+        BaseSubstrateField
+            The field
+
+        Raises
+        ------
+        KeyError
+            If there is no field for the substrate
+        """
+        if name not in self._fields:
+            reason = 'is not added' if name not in self._substrates else 'has no field, the space is not set'
+            raise KeyError(f'The substrate \'{name}\' {reason}.')
+        return self._fields[name]
 
     def remove_agent(self, agent: Agent) -> None:
         """Removes the specified agent from the simulation and from its space.
@@ -387,15 +443,15 @@ class Simulation:
                     lambda now, period, last: self._space.update_agents(self._context(period, last)),
                 )
             )
-            if self._space.has_substrates():
-                updates.append(
-                    ScheduledUpdate(
-                        ('substrates', self._space),
-                        f'{space_name} (substrates)',
-                        self._space.substrate_interval,
-                        lambda now, period, last: self._space.update_substrates(self._context(period, last)),
-                    )
+        for name, field in self._fields.items():
+            updates.append(
+                ScheduledUpdate(
+                    ('substrate', name),
+                    f'Substrate \'{name}\'',
+                    self._substrates[name].interval,
+                    lambda now, period, last, field=field: field.update(self._context(period, last)),
                 )
+            )
         return updates
 
     def _prepare_update(self, update: ScheduledUpdate, dt: float, start: float) -> ScheduledUpdate:
@@ -429,7 +485,9 @@ class Simulation:
 
     def _check_attributes(self) -> tuple[list[str], list[str]]:
         components = self._models + ([self._space] if self._space else [])
-        return check_attributes(list(self._population), components, self._declared)
+        return check_attributes(
+            list(self._population), components, self._declared, self._substrates, self._substrate_nodes
+        )
 
     def _apply_declared_defaults(self, agent: Agent) -> None:
         for name, default in self._declared.items():

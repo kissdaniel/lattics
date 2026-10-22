@@ -8,7 +8,7 @@ def test_all_public_names_exist():
 def test_names_used_in_documentation_example():
     import lattics
 
-    expected = ['Event', 'HomogeneousSpace', 'Simulation', 'SubstrateInfo', 'SubstrateNode']
+    expected = ['Event', 'HomogeneousSpace', 'Simulation', 'Substrate', 'SubstrateInfo', 'SubstrateNode']
     actual = [name for name in expected if hasattr(lattics, name)]
     assert actual == expected
 

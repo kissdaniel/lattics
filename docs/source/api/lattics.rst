@@ -15,6 +15,6 @@ Module contents
 
 .. automodule:: lattics
    :members:
-   :exclude-members: HomogeneousSpace, Lattice2DSpace, SubstrateInfo, SubstrateNode
+   :exclude-members: HomogeneousSpace, Lattice2DSpace, Substrate, SubstrateInfo, SubstrateNode
    :show-inheritance:
    :undoc-members:

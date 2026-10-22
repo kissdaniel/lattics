@@ -1,37 +1,35 @@
 import numpy as np
 
+from lattics._context import UpdateContext
 from lattics._kernels.diffusion import diffusion_solver_lod_2d
 
 from ._base import BaseSubstrateField
 
 
+# Not used by Lattice2DSpace yet: the field is reworked and connected in step 5.2
 class Lattice2DSubstrateField(BaseSubstrateField):
-    def __init__(
-        self, domain, substrate_name: str, diffusion_coefficient: float = 0.0, decay_coefficient: float = 0.0
-    ) -> None:
-        super().__init__(
-            domain=domain,
-            substrate_name=substrate_name,
-            diffusion_coefficient=diffusion_coefficient,
-            decay_coefficient=decay_coefficient,
-        )
-        self._dim_x = self._domain._dimensions[0]
-        self._dim_y = self._domain._dimensions[1]
-        self._dx = self._domain._grid_spacing
+    def __init__(self, substrate, space, nodes) -> None:
+        super().__init__(substrate, space, nodes)
+        self._dim_x = self._space._dimensions[0]
+        self._dim_y = self._space._dimensions[1]
+        self._dx = self._space._grid_spacing
         self._concentration = np.zeros((self._dim_x, self._dim_y), dtype=np.float32)
 
-    def get_concentration(self, position) -> float:
-        return self._concentration[position]
+    @property
+    def concentration(self) -> np.ndarray:
+        return self._concentration
 
-    def update(self, dt: int) -> None:
-        self.update_nodes(dt)
-        self.diffusion_decay(dt)
+    def concentration_at(self, position=None) -> float:
+        return self._concentration[tuple(position)]
+
+    def update(self, ctx: UpdateContext) -> None:
+        self.update_nodes(ctx.dt)
+        self.diffusion_decay(ctx.dt)
 
     def update_nodes(self, dt: int) -> None:
         v_f = self._dx**2
-        all_nodes = self._static_nodes + self._dynamic_nodes
-        for n in all_nodes:
-            info = n.get_attribute('substrate.transport')[self._substrate_name]
+        for n in self.exchanging_nodes():
+            info = n.get_attribute('substrate.transport')[self._substrate.name]
             pos = n.get_attribute('space.position')
             if info.type == 'flux':
                 k_p = info.passive_rate
@@ -50,7 +48,7 @@ class Lattice2DSubstrateField(BaseSubstrateField):
 
     def diffusion_decay(self, dt: int) -> None:
         C = self._concentration
-        D = self._diffusion_coefficient
-        d = self._decay_coefficient
+        D = self._substrate.diffusion_coefficient
         dx = self._dx
-        self._concentration = diffusion_solver_lod_2d(C, D, d, np.float32(dt), dx)
+        C = diffusion_solver_lod_2d(C, np.float32(D), np.float32(0.0), np.float32(dt), np.float32(dx))
+        self._concentration = self._substrate.apply_kinetics(C, dt).astype(np.float32)

@@ -3,7 +3,7 @@ import warnings
 from lattics._agent import Agent
 from lattics._context import UpdateContext
 from lattics.attributes import default_of
-from lattics.substrates import HomogeneousSubstrateField
+from lattics.substrates import HomogeneousSubstrateField, Substrate, SubstrateNode
 
 from ._base import BaseSpace
 
@@ -43,7 +43,6 @@ class HomogeneousSpace(BaseSpace):
         thickness: tuple[float, str] = None,
         grid_spacing: tuple[float, str] = (20, 'um'),
         interval: tuple[float, str] = None,
-        substrate_interval: tuple[float, str] = None,
     ) -> None:
         super().__init__(
             size=size,
@@ -51,7 +50,6 @@ class HomogeneousSpace(BaseSpace):
             thickness=thickness,
             grid_spacing=grid_spacing,
             interval=interval,
-            substrate_interval=substrate_interval,
         )
         self._has_free_volume = True
 
@@ -86,26 +84,12 @@ class HomogeneousSpace(BaseSpace):
         if self._fits(self._get_total_agent_volume()):
             self._has_free_volume = True
 
-    # TODO: create a Substrate class to store the data below (name, diffusion_coeff, etc.)
-    def add_substrate(
-        self,
-        name: str,
-        diffusion_coefficient: float = 0.0,
-        decay_coefficient: float = 0.0,
-        decay_kinetics: str = 'first-order',
-        mm_constant: float = None,
-    ) -> None:
+    def create_field(self, substrate: Substrate, nodes: list[SubstrateNode]) -> HomogeneousSubstrateField:
         if self._volume is None:
             raise ValueError('A substrate needs a domain with a volume: set the size or the volume of the space.')
-        substrate = HomogeneousSubstrateField(
-            domain=self,
-            substrate_name=name,
-            diffusion_coefficient=diffusion_coefficient,
-            decay_coefficient=decay_coefficient,
-            decay_kinetics=decay_kinetics,
-            mm_constant=mm_constant,
-        )
-        self._substrates[name] = substrate
+        if substrate.diffusion_coefficient:
+            self._notes.append(f'the diffusion coefficient of \'{substrate.name}\' is not used')
+        return HomogeneousSubstrateField(substrate, self, nodes)
 
     def _update_agents(self, ctx: UpdateContext, dt: float) -> None:
         """Agents labeled as ``space.removal_requested`` are removed first. Then

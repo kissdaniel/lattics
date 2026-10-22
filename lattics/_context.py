@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from ._population import Population
     from ._simulation import Simulation
     from .spaces._base import BaseSpace
+    from .substrates._base import BaseSubstrateField
 
 
 class UpdateContext:
@@ -114,6 +115,21 @@ class UpdateContext:
         # previous update happened after that update
         return division_time is not None and division_time >= self._last_update_time - EPSILON
 
+    def substrate(self, name: str) -> 'BaseSubstrateField':
+        """Returns the concentration field of the substrate.
+
+        Parameters
+        ----------
+        name : str
+            The name of the substrate
+
+        Returns
+        -------
+        BaseSubstrateField
+            The field
+        """
+        return self._require_simulation().substrate_field(name)
+
     def add_agent(self, agent: 'Agent') -> None:
         """Adds a new agent to the simulation, for example the daughter cell of a division.
 
@@ -136,5 +152,5 @@ class UpdateContext:
 
     def _require_simulation(self) -> 'Simulation':
         if self._simulation is None:
-            raise RuntimeError('This context is not attached to a simulation, so it cannot add or remove agents.')
+            raise RuntimeError('This context is not attached to a simulation.')
         return self._simulation

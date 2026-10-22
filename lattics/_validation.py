@@ -5,7 +5,9 @@ from collections.abc import Iterable
 from .attributes import _RENAMED, known_names
 
 
-def check_attributes(agents: list, components: Iterable, declared: Iterable[str]) -> tuple[list[str], list[str]]:
+def check_attributes(
+    agents: list, components: Iterable, declared: Iterable[str], substrates: Iterable[str] = (), nodes: list = ()
+) -> tuple[list[str], list[str]]:
     """Compares the attributes of the agents with the attributes the components (models and the space) read and
     write.
 
@@ -17,6 +19,10 @@ def check_attributes(agents: list, components: Iterable, declared: Iterable[str]
         The models and the space; their ``reads``, ``optional_reads`` and ``writes`` are compared
     declared : Iterable[str]
         The names declared with :meth:`Simulation.declare`
+    substrates : Iterable[str]
+        The names of the substrates added to the simulation
+    nodes : list[SubstrateNode]
+        The substrate nodes of the simulation
 
     Returns
     -------
@@ -58,6 +64,8 @@ def check_attributes(agents: list, components: Iterable, declared: Iterable[str]
             suggested.add(match[0])
         problems.append(message)
 
+    problems += _check_substrate_names(agents, nodes, set(substrates))
+
     unused = []
     for name in unknown:
         if name in suggested:
@@ -76,3 +84,25 @@ def check_attributes(agents: list, components: Iterable, declared: Iterable[str]
         else:
             unused.append(name)
     return problems, unused
+
+
+def _check_substrate_names(agents: list, nodes: list, substrates: set) -> list[str]:
+    users = Counter()
+    for kind, items in (('agents', agents), ('substrate nodes', nodes)):
+        for item in items:
+            if item.has_attribute('substrate.transport'):
+                for name in item.get_attribute('substrate.transport'):
+                    if name not in substrates:
+                        users[(name, kind)] += 1
+    problems = []
+    for name in sorted({name for name, _ in users}):
+        counts = ' and '.join(
+            f'{users[(name, kind)]} {kind}' for kind in ('agents', 'substrate nodes') if users[(name, kind)]
+        )
+        message = f'The substrate \'{name}\' is exchanged by {counts}, but it is not added to the simulation.'
+        # Few, explicitly added names: a lower cutoff still finds swapped letters in short names
+        match = difflib.get_close_matches(name, sorted(substrates), n=1, cutoff=0.6)
+        if match:
+            message += f' Did you mean \'{match[0]}\'?'
+        problems.append(message)
+    return problems

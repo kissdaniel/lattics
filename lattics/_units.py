@@ -73,3 +73,43 @@ def convert_velocity(value: float, from_unit: str, to_unit: str) -> float:
             "'mm/ms', 'mm/sec', 'mm/min', 'mm/hour', 'cm/ms', 'cm/sec', 'cm/min', 'cm/hour'."
         )
     return value * VELOCITY_UNITS[from_unit] / VELOCITY_UNITS[to_unit]
+
+
+_TIME_UNITS = {
+    'ms': 1,
+    'sec': 1000,
+    'min': 60 * 1000,
+    'hour': 60 * 60 * 1000,
+    'day': 24 * 60 * 60 * 1000,
+    'week': 7 * 24 * 60 * 60 * 1000,
+}
+_LENGTH_UNITS = {'um': 1, 'mm': 1000, 'cm': 10 * 1000}
+_RATE_UNITS = {f'1/{t}': 1 / factor for t, factor in _TIME_UNITS.items()}
+_DIFFUSIVITY_UNITS = {
+    f'{length}2/{t}': length_factor**2 / time_factor
+    for length, length_factor in _LENGTH_UNITS.items()
+    for t, time_factor in _TIME_UNITS.items()
+}
+
+
+def convert_rate(value: float, from_unit: str, to_unit: str) -> float:
+    """Converts a rate (an amount per time) between units of the form ``'1/<time unit>'``, for example
+    ``convert_rate(0.1, '1/hour', '1/ms')``.
+    """
+    for unit in (from_unit, to_unit):
+        if unit not in _RATE_UNITS:
+            raise ValueError(f"Invalid rate unit: '{unit}'. Supported units are: {', '.join(_RATE_UNITS)}.")
+    return value * _RATE_UNITS[from_unit] / _RATE_UNITS[to_unit]
+
+
+def convert_diffusivity(value: float, from_unit: str, to_unit: str) -> float:
+    """Converts a diffusion coefficient between units of the form ``'<length unit>2/<time unit>'``, for example
+    ``convert_diffusivity(2.0, 'um2/sec', 'um2/ms')``.
+    """
+    for unit in (from_unit, to_unit):
+        if unit not in _DIFFUSIVITY_UNITS:
+            raise ValueError(
+                f"Invalid diffusion coefficient unit: '{unit}'. Use '<length>2/<time>' with the length units "
+                f"{', '.join(_LENGTH_UNITS)} and the time units {', '.join(_TIME_UNITS)}, for example 'um2/sec'."
+            )
+    return value * _DIFFUSIVITY_UNITS[from_unit] / _DIFFUSIVITY_UNITS[to_unit]
