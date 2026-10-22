@@ -52,3 +52,20 @@ def test_simulation_run_elapsed_time(time, dt, expected):
     sim.run(time=(time, 'ms'), dt=(dt, 'ms'), verbosity=0)
     actual = sim.time
     assert actual == expected
+
+
+def test_removed_agents_are_kept_for_the_latest_time_point():
+    from lattics import Agent, Event, HomogeneousSpace, Simulation
+
+    sim = Simulation()
+    sim.set_space(HomogeneousSpace())
+    agents = [Agent() for _ in range(2)]
+    for agent in agents:
+        agent.set_attribute('space.volume', 1)
+        sim.add_agent(agent)
+    sim.add_event(Event(time=(1, 'hour'), handler=lambda simulation: simulation.remove_agent(agents[0])))
+    sim.add_event(Event(time=(2, 'hour'), handler=lambda simulation: simulation.remove_agent(agents[1])))
+    sim.run(time=(2, 'hour'), dt=(1, 'hour'), verbosity=0)
+    assert sim.removed_agents == [agents[0]]
+    sim.run(time=(1, 'hour'), dt=(1, 'hour'), verbosity=0)
+    assert sim.removed_agents == [agents[1]]

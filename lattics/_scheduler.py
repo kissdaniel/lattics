@@ -24,11 +24,12 @@ class ScheduledUpdate:
     interval : float or None
         The requested time between two updates, in milliseconds; ``None``
         means every time step
-    action : Callable[[float, float], None]
-        Called with the current time and the period when the update runs
+    action : Callable[[float, float, float | None], None]
+        Called with the current time, the period and the time of the
+        previous run (``None`` before the first run) when the update runs
     """
 
-    __slots__ = ('key', 'name', 'interval', 'action', 'period', 'next_due')
+    __slots__ = ('key', 'name', 'interval', 'action', 'period', 'next_due', 'last_run')
 
     def __init__(
         self, key: object, name: str, interval: float | None, action: Callable[[float, float], None]
@@ -39,12 +40,14 @@ class ScheduledUpdate:
         self.action = action
         self.period = None
         self.next_due = None
+        self.last_run = None
 
     def is_due(self, time: float) -> bool:
         return self.next_due <= time + EPSILON
 
     def run(self, time: float) -> None:
-        self.action(time, self.period)
+        self.action(time, self.period, self.last_run)
+        self.last_run = time
         self.next_due = time + self.period
 
 

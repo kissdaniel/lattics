@@ -32,7 +32,7 @@ class HomogeneousSpace(BaseSpace):
     writes = (
         'space.local_density',
         'space.division_requested',
-        'space.division_completed',
+        'space.last_division_time',
         'space.removal_requested',
     )
 
@@ -108,22 +108,23 @@ class HomogeneousSpace(BaseSpace):
         self._substrates[name] = substrate
 
     def _update_agents(self, ctx: UpdateContext, dt: float) -> None:
-        """Agents labeled as ``space.division_requested`` are duplicated based on
-        the available space in the domain, constrained by its volume; agents
-        labeled as ``space.removal_requested`` are removed. Finally the local
-        densities are updated.
+        """Agents labeled as ``space.removal_requested`` are removed first. Then
+        the agents labeled as ``space.division_requested`` are duplicated based
+        on the available space in the domain, constrained by its volume.
+        Finally the local densities are updated.
         """
+        for a in self._population:
+            if a.get_attribute('space.removal_requested'):
+                ctx.remove_agent(a)
         for a in self._population:
             if a.get_attribute('space.division_requested'):
                 self._process_agent_division(a, ctx)
-            if a.get_attribute('space.removal_requested'):
-                ctx.remove_agent(a)
         self._update_local_densities()
 
     def _initialize_attributes(self, agent: Agent) -> None:
         for name in (
             'space.division_requested',
-            'space.division_completed',
+            'space.last_division_time',
             'space.removal_requested',
             'space.local_density',
         ):
@@ -137,7 +138,7 @@ class HomogeneousSpace(BaseSpace):
         agent_volume = agent.get_attribute('space.volume')
         if self._fits(sum_volumes + agent_volume):
             agent.set_attribute('space.division_requested', False)
-            agent.set_attribute('space.division_completed', True)
+            agent.set_attribute('space.last_division_time', ctx.time)
             new_agent = agent.clone()
             ctx.add_agent(new_agent)
         else:

@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from ._scheduler import EPSILON
+
 if TYPE_CHECKING:
     from ._agent import Agent
     from ._population import Population
@@ -28,9 +30,12 @@ class UpdateContext:
         The simulation that adds and removes agents on behalf of
         :meth:`add_agent` and :meth:`remove_agent`. It may be omitted, for
         example when a model is tested on its own.
+    last_update_time : float, optional
+        The time of the previous update of the component, in milliseconds;
+        ``None`` before its first update
     """
 
-    __slots__ = ('_time', '_dt', '_population', '_space', '_simulation')
+    __slots__ = ('_time', '_dt', '_population', '_space', '_simulation', '_last_update_time')
 
     def __init__(
         self,
@@ -39,12 +44,14 @@ class UpdateContext:
         population: 'Population' = None,
         space: 'BaseSpace' = None,
         simulation: 'Simulation' = None,
+        last_update_time: float = None,
     ) -> None:
         self._time = time
         self._dt = dt
         self._population = population
         self._space = space
         self._simulation = simulation
+        self._last_update_time = last_update_time
 
     @property
     def time(self) -> float:
@@ -57,6 +64,11 @@ class UpdateContext:
         return self._dt
 
     @property
+    def last_update_time(self) -> float | None:
+        """The time of the previous update of the component, in milliseconds; ``None`` before its first update."""
+        return self._last_update_time
+
+    @property
     def population(self) -> 'Population':
         """The agents of the simulation."""
         return self._population
@@ -65,6 +77,28 @@ class UpdateContext:
     def space(self) -> 'BaseSpace':
         """The space of the simulation."""
         return self._space
+
+    def divided_since_last_update(self, agent: 'Agent') -> bool:
+        """Tells whether the space divided the agent since the previous update
+        of the component. Both the mother and the daughter agent count as
+        divided. Before the first update of the component it is ``False``.
+
+        Parameters
+        ----------
+        agent : Agent
+            The agent to be checked
+
+        Returns
+        -------
+        bool
+            ``True`` if the agent was divided since the previous update
+        """
+        if self._last_update_time is None or not agent.has_attribute('space.last_division_time'):
+            return False
+        division_time = agent.get_attribute('space.last_division_time')
+        # The space is updated after the models at the same time point, so a division at the time of the
+        # previous update happened after that update
+        return division_time is not None and division_time >= self._last_update_time - EPSILON
 
     def add_agent(self, agent: 'Agent') -> None:
         """Adds a new agent to the simulation, for example the daughter cell of a division.

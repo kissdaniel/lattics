@@ -14,9 +14,10 @@ class TimeBasedCellCycleModel(BaseModel):
 
     =============================  ====  ========
     *space.division_requested*     bool  The model sets this to `True` once the cell cycle is complete, signaling
-                                         that the agent is ready for replication.
-    *space.division_completed*     bool  The simulation environment sets this to `True` once the agent has been
-                                         successfully copied, indicating that the replication process is finished.
+                                         that the agent is ready for replication. The space clears it when it
+                                         divides the agent; until then the cell cycle waits.
+    *space.last_division_time*     float The space sets this to the time of the division; the model then starts
+                                         a new cycle and carries over the time the previous one overshot.
     cellcycle.is_active            bool  Signals if the agent is proliferating (i.e. proceeds through the cell
                                          cycle)
     cellcycle.mean_length          int   Az ágens sejtciklus hosszának átlagos értéke ms-ban kifejezve.
@@ -35,14 +36,13 @@ class TimeBasedCellCycleModel(BaseModel):
         'cellcycle.mean_length',
         'cellcycle.random_initial',
         'cellcycle.is_active',
-        'space.division_completed',
+        'space.division_requested',
+        'space.last_division_time',
     )
     writes = (
         'cellcycle.length',
         'cellcycle.current_time',
-        'cellcycle.is_active',
         'space.division_requested',
-        'space.division_completed',
     )
 
     def __init__(
@@ -53,21 +53,23 @@ class TimeBasedCellCycleModel(BaseModel):
         self._distribution_param = distribution_param
 
     def update_agent(self, agent: Agent, ctx: UpdateContext) -> None:
-        if agent.get_attribute('space.division_completed'):
+        if ctx.divided_since_last_update(agent):
             self.reset_attributes(agent)
-        if agent.get_attribute('cellcycle.is_active'):
-            current_time = agent.get_attribute('cellcycle.current_time')
-            time_since_last_update = ctx.dt
-            updated_time = current_time + time_since_last_update
-            agent.set_attribute('cellcycle.current_time', updated_time)
-            if agent.get_attribute('cellcycle.length') <= updated_time:
-                agent.set_attribute('space.division_requested', True)
+        # An inactive cell does not progress; a completed cycle waits until the space divides the cell
+        if not agent.get_attribute('cellcycle.is_active') or agent.get_attribute('space.division_requested'):
+            return
+        updated_time = agent.get_attribute('cellcycle.current_time') + ctx.dt
+        agent.set_attribute('cellcycle.current_time', updated_time)
+        if agent.get_attribute('cellcycle.length') <= updated_time:
+            agent.set_attribute('space.division_requested', True)
 
     def reset_attributes(self, agent: Agent) -> None:
-        agent.set_attribute('cellcycle.is_active', True)
-        agent.set_attribute('cellcycle.current_time', 0)
-        agent.set_attribute('space.division_requested', False)
-        agent.set_attribute('space.division_completed', False)
+        """Starts a new cycle after a division. The time by which the previous
+        cycle overshot its length is carried over, so the update interval
+        does not lengthen the cycles.
+        """
+        overshoot = agent.get_attribute('cellcycle.current_time') - agent.get_attribute('cellcycle.length')
+        agent.set_attribute('cellcycle.current_time', max(0, overshoot))
         attr = agent.get_attribute('cellcycle.mean_length')
         mean_length = convert_time(attr[0], attr[1], 'ms')
         length = self._generate_cellcycle_length(mean_length)
@@ -104,7 +106,7 @@ class TimeBasedCellCycleModel(BaseModel):
             'cellcycle.is_active',
             'cellcycle.current_time',
             'space.division_requested',
-            'space.division_completed',
+            'space.last_division_time',
         ):
             if not agent.has_attribute(name):
                 agent.set_attribute(name, default_of(name))
@@ -131,8 +133,10 @@ class MultiPhaseTimeBasedCellCycleModel(BaseModel):
         'cellcycle.phase_m_sd',
         'cellcycle.random_initial',
         'cellcycle.inhibition_density_limit',
+        'cellcycle.is_active',
         'space.local_density',
-        'space.division_completed',
+        'space.division_requested',
+        'space.last_division_time',
     )
     writes = (
         'cellcycle.phase_g1_length',
@@ -143,15 +147,17 @@ class MultiPhaseTimeBasedCellCycleModel(BaseModel):
         'cellcycle.current_phase',
         'cellcycle.inhibition_density_limit',
         'space.division_requested',
-        'space.division_completed',
     )
 
     def __init__(self, update_interval: tuple[float, str] = None) -> None:
         super().__init__(update_interval)
 
     def update_agent(self, agent: Agent, ctx: UpdateContext) -> None:
-        if agent.get_attribute('space.division_completed'):
+        if ctx.divided_since_last_update(agent):
             self.reset_attributes(agent)
+        # An inactive cell does not progress; a completed cycle waits until the space divides the cell
+        if not agent.get_attribute('cellcycle.is_active') or agent.get_attribute('space.division_requested'):
+            return
 
         limit = agent.get_attribute('cellcycle.inhibition_density_limit')
         if agent.get_attribute('cellcycle.current_phase') == 'G1':
@@ -163,18 +169,27 @@ class MultiPhaseTimeBasedCellCycleModel(BaseModel):
                 agent.set_attribute('cellcycle.current_phase', 'G1')
 
         if not agent.get_attribute('cellcycle.current_phase') == 'G0':
-            current_time = agent.get_attribute('cellcycle.current_time')
-            time_since_last_update = ctx.dt
-            updated_time = current_time + time_since_last_update
+            updated_time = agent.get_attribute('cellcycle.current_time') + ctx.dt
             agent.set_attribute('cellcycle.current_time', updated_time)
             self._update_cellcycle_phase(agent)
 
     def reset_attributes(self, agent: Agent) -> None:
-        # agent.set_attribute('cellcycle.is_proliferating', True)
-        agent.set_attribute('cellcycle.current_time', 0)
+        """Starts a new cycle in G1 after a division. The time by which the
+        previous cycle overshot its length is carried over, so the update
+        interval does not lengthen the cycles.
+        """
+        length = sum(
+            agent.get_attribute(name)
+            for name in (
+                'cellcycle.phase_g1_length',
+                'cellcycle.phase_s_length',
+                'cellcycle.phase_g2_length',
+                'cellcycle.phase_m_length',
+            )
+        )
+        overshoot = agent.get_attribute('cellcycle.current_time') - length
+        agent.set_attribute('cellcycle.current_time', max(0, overshoot))
         agent.set_attribute('cellcycle.current_phase', 'G1')
-        agent.set_attribute('space.division_requested', False)
-        agent.set_attribute('space.division_completed', False)
         self._set_cellcycle_phase_lengths(agent)
 
     def _set_cellcycle_phase_lengths(self, agent: Agent) -> None:
@@ -244,10 +259,11 @@ class MultiPhaseTimeBasedCellCycleModel(BaseModel):
 
     def _initialize_attributes_default_values(self, agent: Agent) -> None:
         for name in (
+            'cellcycle.is_active',
             'cellcycle.current_time',
             'cellcycle.current_phase',
             'space.division_requested',
-            'space.division_completed',
+            'space.last_division_time',
             'cellcycle.inhibition_density_limit',
         ):
             if not agent.has_attribute(name):

@@ -21,7 +21,7 @@ _REGISTRY = {
     'space.position': MISSING,
     'space.volume': MISSING,
     'space.division_requested': False,
-    'space.division_completed': False,
+    'space.last_division_time': None,
     'space.removal_requested': False,
     'space.local_density': 0.0,
     # Mechanics of the lattice spaces

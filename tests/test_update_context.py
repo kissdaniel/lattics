@@ -74,3 +74,52 @@ def test_space_is_created_without_simulation_and_set_once():
     Simulation().set_space(space)
     with pytest.raises(RuntimeError):
         Simulation().set_space(space)
+
+
+@pytest.mark.parametrize(
+    'division_time, last_update_time, expected',
+    [
+        (None, 0, False),  # never divided
+        (5000, None, False),  # first update of the component
+        (5000, 5000, True),  # divided by the space right after the previous update
+        (6000, 5000, True),
+        (4000, 5000, False),  # already seen at the previous update
+    ],
+)
+def test_divided_since_last_update(division_time, last_update_time, expected):
+    from lattics import Agent, UpdateContext
+
+    agent = Agent()
+    agent.set_attribute('space.last_division_time', division_time)
+    ctx = UpdateContext(time=10000, dt=5000, last_update_time=last_update_time)
+    assert ctx.divided_since_last_update(agent) is expected
+
+
+def test_agent_without_division_time_has_not_divided():
+    from lattics import Agent, UpdateContext
+
+    assert UpdateContext(time=10, dt=5, last_update_time=5).divided_since_last_update(Agent()) is False
+
+
+def test_models_receive_the_time_of_their_previous_update():
+    from lattics import Agent, HomogeneousSpace, Simulation
+    from lattics.models import BaseModel
+
+    class Recording(BaseModel):
+        def __init__(self):
+            super().__init__((1, 'hour'))
+            self.previous = []
+
+        def update_agent(self, agent, ctx):
+            self.previous.append(ctx.last_update_time)
+
+    sim = Simulation()
+    sim.set_space(HomogeneousSpace())
+    model = Recording()
+    sim.add_model(model)
+    agent = Agent()
+    agent.set_attribute('space.volume', 1)
+    sim.add_agent(agent)
+    sim.run(time=(2, 'hour'), dt=(1, 'hour'), verbosity=0)
+    sim.run(time=(1, 'hour'), dt=(1, 'hour'), verbosity=0)
+    assert model.previous == [None, 0, 3600000.0]

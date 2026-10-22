@@ -43,6 +43,7 @@ class Simulation:
         self._models = list()
         self._history = list()
         self._schedule_state = dict()
+        self._removed_agents = list()
         self._time = 0
 
     def __getstate__(self):
@@ -51,6 +52,7 @@ class Simulation:
         del state['_models']
         del state['_history']
         del state['_schedule_state']
+        del state['_removed_agents']
         return state
 
     def __setstate__(self, state):
@@ -59,6 +61,7 @@ class Simulation:
         self._models = list()
         self._history = list()
         self._schedule_state = dict()
+        self._removed_agents = list()
 
     @property
     def agents(self) -> list[Agent]:
@@ -83,6 +86,19 @@ class Simulation:
             The population of the simulation
         """
         return self._population
+
+    @property
+    def removed_agents(self) -> list[Agent]:
+        """Get the agents removed at the latest time point of the simulation,
+        in the order of their removal. The list is renewed at every time
+        point, after the history is recorded.
+
+        Returns
+        -------
+        list[Agent]
+            The removed agents
+        """
+        return list(self._removed_agents)
 
     @property
     def time(self) -> int:
@@ -168,7 +184,15 @@ class Simulation:
         self._domain.add_substrate_field(substrate)
 
     def remove_agent(self, agent: Agent) -> None:
+        """Removes the specified agent from the simulation and from its space.
+
+        Parameters
+        ----------
+        agent : Agent
+            The agent to be removed
+        """
         self._population.remove(agent)
+        self._removed_agents.append(agent)
         if self._space:
             self._space.remove_agent(agent)
 
@@ -190,7 +214,8 @@ class Simulation:
 
         At each time point the history is recorded first, then the due events
         are executed, then the due models, the agents of the space and the
-        substrate fields are updated, in this order.
+        substrate fields are updated, in this order. The space removes the
+        agents that request it before it divides the agents.
 
         Parameters
         ----------
@@ -221,7 +246,7 @@ class Simulation:
                 'history',
                 'History',
                 convert_time(dt_history[0], dt_history[1], 'ms'),
-                lambda now, period: self._make_history_entry(save_mode),
+                lambda now, period, last: self._make_history_entry(save_mode),
             )
             self._prepare_update(recorder, dt_ms, t0)
 
@@ -239,6 +264,7 @@ class Simulation:
             self._time = now
             if recorder and recorder.is_due(now):
                 recorder.run(now)
+            self._removed_agents = list()
             self._execute_events(now)
             for update in updates:
                 if update.is_due(now):
@@ -259,7 +285,7 @@ class Simulation:
         if recorder and recorder.is_due(t_end):
             recorder.run(t_end)
         for update in updates + ([recorder] if recorder else []):
-            self._schedule_state[update.key] = update.next_due
+            self._schedule_state[update.key] = (update.next_due, update.last_run)
         if verbosity >= 1:
             progressbar.close()
 
@@ -273,7 +299,7 @@ class Simulation:
                 ('model', model),
                 type(model).__name__,
                 model.interval,
-                lambda now, period, model=model: model.update(self._population, self._context(period)),
+                lambda now, period, last, model=model: model.update(self._population, self._context(period, last)),
             )
             for model in self._models
         ]
@@ -284,7 +310,7 @@ class Simulation:
                     ('agents', self._space),
                     f'{space_name} (agents)',
                     self._space.interval,
-                    lambda now, period: self._space.update_agents(self._context(period)),
+                    lambda now, period, last: self._space.update_agents(self._context(period, last)),
                 )
             )
             if self._space.has_substrates():
@@ -293,14 +319,14 @@ class Simulation:
                         ('substrates', self._space),
                         f'{space_name} (substrates)',
                         self._space.substrate_interval,
-                        lambda now, period: self._space.update_substrates(self._context(period)),
+                        lambda now, period, last: self._space.update_substrates(self._context(period, last)),
                     )
                 )
         return updates
 
     def _prepare_update(self, update: ScheduledUpdate, dt: float, start: float) -> ScheduledUpdate:
         update.period = effective_period(update.interval, dt)
-        update.next_due = self._schedule_state.get(update.key, start)
+        update.next_due, update.last_run = self._schedule_state.get(update.key, (start, None))
         return update
 
     def _print_summary(self, duration: float, dt: float, updates: list[ScheduledUpdate]) -> None:
@@ -340,9 +366,14 @@ class Simulation:
         with open(filename, 'wb') as f:
             pickle.dump(self._history, f)
 
-    def _context(self, dt: float) -> UpdateContext:
+    def _context(self, dt: float, last_update_time: float = None) -> UpdateContext:
         return UpdateContext(
-            time=self._time, dt=dt, population=self._population, space=self._space, simulation=self
+            time=self._time,
+            dt=dt,
+            population=self._population,
+            space=self._space,
+            simulation=self,
+            last_update_time=last_update_time,
         )
 
     def _get_id(self, identifier):

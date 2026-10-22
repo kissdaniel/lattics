@@ -150,3 +150,40 @@ def test_volume_conversion():
     expected = [1e9, 1.0, 1e3]
     actual = [convert_volume(1, 'mm3', 'um3'), convert_volume(1, 'uL', 'mm3'), convert_volume(1, 'mL', 'uL')]
     assert actual == expected
+
+
+@pytest.mark.parametrize('space_name', ['HomogeneousSpace', 'Lattice2DSpace'])
+def test_removal_comes_before_division(space_name):
+    import lattics
+
+    sim = lattics.Simulation()
+    sim.set_space(getattr(lattics, space_name)(interval=(1, 'hour'), **SPACE_ARGUMENTS))
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        lattics.populate_agents(sim, count=3, attributes={'space.volume': 3000})
+    doomed = sim.agents[0]
+    doomed.set_attribute('space.removal_requested', True)
+    doomed.set_attribute('space.division_requested', True)
+    sim.run(time=(1, 'hour'), dt=(1, 'hour'), verbosity=0)
+    assert len(sim.agents) == 2 and sim.removed_agents == [doomed]
+
+
+@pytest.mark.parametrize('space_name', ['HomogeneousSpace', 'Lattice2DSpace'])
+def test_division_sets_the_division_time_of_both_agents(space_name):
+    import lattics
+
+    sim = lattics.Simulation()
+    sim.set_space(getattr(lattics, space_name)(interval=(1, 'hour'), **SPACE_ARGUMENTS))
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        lattics.populate_agents(sim, count=1, attributes={'space.volume': 3000})
+    sim.run(time=(1, 'hour'), dt=(1, 'hour'), verbosity=0)
+    mother = sim.agents[0]
+    mother.set_attribute('space.division_requested', True)
+    sim.run(time=(1, 'hour'), dt=(1, 'hour'), verbosity=0)
+    expected = [(False, 3600000.0), (False, 3600000.0)]
+    actual = [
+        (a.get_attribute('space.division_requested'), a.get_attribute('space.last_division_time'))
+        for a in sim.agents
+    ]
+    assert actual == expected

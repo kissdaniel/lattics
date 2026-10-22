@@ -61,7 +61,7 @@ class Lattice2DSpace(BaseSpace):
         'space.position',
         'space.local_density',
         'space.division_requested',
-        'space.division_completed',
+        'space.last_division_time',
         'space.removal_requested',
         'mechanics.motility',
         'mechanics.binding_affinity',
@@ -155,7 +155,7 @@ class Lattice2DSpace(BaseSpace):
             if not agent.has_attribute(name):
                 agent.set_attribute(name, default_of(name))
                 warnings.warn(f'Agent attribute \'{name}\' was not defined, a default value is used.')
-        for name in ('space.division_completed', 'space.division_requested'):
+        for name in ('space.last_division_time', 'space.division_requested'):
             if not agent.has_attribute(name):
                 agent.set_attribute(name, default_of(name))
         if not agent.has_attribute('mechanics.motility'):
@@ -199,8 +199,8 @@ class Lattice2DSpace(BaseSpace):
 
     def _update_agents(self, ctx: UpdateContext, dt: float) -> None:
         self._displacement_trials(dt)
-        self._cell_division_trials(ctx)
         self._cell_removal_trials(ctx)
+        self._cell_division_trials(ctx)
         self._update_local_densities()
 
     def is_valid_position(self, position: tuple[int, int]) -> bool:
@@ -319,7 +319,7 @@ class Lattice2DSpace(BaseSpace):
                 clone_position = path[1]
                 self._agent_layer[tuple(clone_position)] = None
                 agent.set_attribute('space.division_requested', False)
-                agent.set_attribute('space.division_completed', True)
+                agent.set_attribute('space.last_division_time', ctx.time)
                 new_agent = agent.clone()
                 new_agent.set_attribute('space.position', clone_position)
                 ctx.add_agent(new_agent)
