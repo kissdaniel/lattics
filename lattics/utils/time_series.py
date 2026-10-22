@@ -4,12 +4,35 @@ import numpy as np
 
 from lattics._units import convert_time
 
+# Tolerance for matching time points, in milliseconds
+_TIME_TOLERANCE = 1e-6
+
 
 class TimeSeries:
+    """A series of values recorded at time points, for example by a recorder.
+
+    Parameters
+    ----------
+    timepoints : list[float]
+        The time points
+    values : list
+        The values
+    time_unit : str, optional
+        The unit of the time points; recorders use milliseconds
+    """
+
     def __init__(self, timepoints, values, time_unit='ms'):
-        self.timepoints = timepoints
-        self.values = values
+        self.timepoints = list(timepoints)
+        self.values = list(values)
         self.time_unit = time_unit
+
+    def __len__(self) -> int:
+        return len(self.timepoints)
+
+    def append(self, timepoint: float, value) -> None:
+        """Appends a value recorded at the given time point."""
+        self.timepoints.append(timepoint)
+        self.values.append(value)
 
     def get_timepoints(self, time_unit: str = None) -> list[float]:
         if not time_unit:
@@ -20,14 +43,42 @@ class TimeSeries:
         return self.values
 
     def sse(self, other: 'TimeSeries', interpolation: str = 'no') -> float:
+        """The sum of squared differences at the time points the two series have in common."""
         if interpolation == 'no':
-            return self._sse_nointerpolation(other)
+            return sum(diff**2 for diff in self._common_differences(other))
+        raise ValueError(f'Unknown interpolation \'{interpolation}\'.')
 
     def rmse(self, other: 'TimeSeries', interpolation: str = 'no') -> float:
-        n = len(self.timepoints)
-        if interpolation == 'no':
-            sse = self._sse_nointerpolation(other)
-            return np.sqrt(sse / n)
+        """The root mean squared difference at the time points the two series have in common.
+
+        Raises
+        ------
+        ValueError
+            If the series have no time point in common
+        """
+        if interpolation != 'no':
+            raise ValueError(f'Unknown interpolation \'{interpolation}\'.')
+        differences = self._common_differences(other)
+        if not differences:
+            raise ValueError('The time series have no time point in common.')
+        return float(np.sqrt(sum(diff**2 for diff in differences) / len(differences)))
+
+    def to_csv(self, file_path: str, time_unit: str = None) -> None:
+        """Writes the series to a CSV file with a header, readable with :meth:`from_csv`.
+
+        Parameters
+        ----------
+        file_path : str
+            The path of the file
+        time_unit : str, optional
+            The unit of the written time points; defaults to the unit of the series
+        """
+        unit = time_unit or self.time_unit
+        with open(file_path, mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow([f'time [{unit}]', 'value'])
+            for t, value in zip(self.get_timepoints(unit), self.values):
+                writer.writerow([repr(float(t)), repr(value)])
 
     @staticmethod
     def from_csv(file_path: str, time_unit: str = 'ms', skip_header: bool = True) -> 'TimeSeries':
@@ -43,29 +94,25 @@ class TimeSeries:
                 except StopIteration:
                     return TimeSeries([], [], time_unit)
 
-            for i, row in enumerate(reader, start=2 if skip_header else 1):
-                time = int(row[0].strip())
-                value = float(row[1].strip())
-
-                timepoints.append(time)
-                values.append(value)
+            for row in reader:
+                timepoints.append(float(row[0].strip()))
+                values.append(float(row[1].strip()))
 
         return TimeSeries(timepoints, values, time_unit)
 
-    def _sse_nointerpolation(self, other: 'TimeSeries') -> float:
+    def _common_differences(self, other: 'TimeSeries') -> list[float]:
         i = 0
         j = 0
-        total_squared_diff = 0.0
+        differences = []
         while i < len(self.timepoints) and j < len(other.timepoints):
             self_timepoint = convert_time(self.timepoints[i], self.time_unit, 'ms')
             other_timepoint = convert_time(other.timepoints[j], other.time_unit, 'ms')
-            if self_timepoint < other_timepoint:
+            if self_timepoint < other_timepoint - _TIME_TOLERANCE:
                 i += 1
-            elif other_timepoint < self_timepoint:
+            elif other_timepoint < self_timepoint - _TIME_TOLERANCE:
                 j += 1
             else:
-                diff = self.values[i] - other.values[j]
-                total_squared_diff += diff**2
+                differences.append(self.values[i] - other.values[j])
                 i += 1
                 j += 1
-        return total_squared_diff
+        return differences

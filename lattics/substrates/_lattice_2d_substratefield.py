@@ -48,6 +48,9 @@ class Lattice2DSubstrateField(BaseSubstrateField):
             return [f'{spread} substrate nodes without a position are spread uniformly over the field']
         return []
 
+    def set_concentration(self, value: float) -> None:
+        self._concentration[:] = value
+
     def update(self, ctx: UpdateContext) -> None:
         dt = ctx.dt
         self._exchange(dt)

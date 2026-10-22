@@ -1,136 +1,88 @@
-import pickle
-
-import numpy as np
-
-from lattics._simulation import Simulation
-
-from .time_series import TimeSeries
+from lattics._units import convert_time
+from lattics.recorders import Snapshot
 
 
-def get_agent_numbers_from_file(filename: str, filter=None) -> TimeSeries:
-    times = []
-    values = []
-    with open(filename, 'rb') as f:
-        history = pickle.load(f)
-        for entry in history:
-            sim_state = pickle.loads(entry)
-            times.append(sim_state.time)
-            if filter:
-                attribute = filter[0]
-                condition = filter[1]
-                values.append(sum([1 for a in sim_state.agents if a.get_attribute(attribute) == condition]))
-            else:
-                values.append(sum([1 for a in sim_state.agents]))
-    return TimeSeries(times, values)
-
-
-def get_agent_numbers_from_history(simulation: Simulation, filter=None) -> TimeSeries:
-    times = []
-    values = []
-    history = simulation._history
-    for entry in history:
-        sim_state = pickle.loads(entry)
-        times.append(sim_state.time)
-        if filter:
-            attribute = filter[0]
-            condition = filter[1]
-            values.append(sum([1 for a in sim_state.agents if a.get_attribute(attribute) == condition]))
-        else:
-            values.append(sum([1 for a in sim_state.agents]))
-    return TimeSeries(times, values)
-
-
-def get_substrate_concentration(filename: str, name: str, means_only: bool = False, **params) -> TimeSeries:
-    times = []
-    values = []
-    with open(filename, 'rb') as f:
-        history = pickle.load(f)
-        for entry in history:
-            sim_state = pickle.loads(entry)
-            times.append(sim_state.time)
-            if means_only:
-                values.append(np.mean(sim_state.substrate_field(name).concentration))
-            else:
-                if 'position' in params:
-                    values.append(sim_state.substrate_field(name).concentration[params['position']])
-                else:
-                    values.append(sim_state.substrate_field(name).concentration)
-    return TimeSeries(times, values)
+def _pyplot():
+    try:
+        import matplotlib
+        import matplotlib.pyplot as plt
+    except ImportError as error:
+        raise ImportError('Visualization needs matplotlib. Install it with: pip install "lattics[viz]"') from error
+    return matplotlib, plt
 
 
 def show_agents_and_substrates_2d(
-    simulation: Simulation,
-    times: tuple[int] | str,
+    snapshot: Snapshot,
+    times: tuple[tuple[float, str], ...] | str = 'all',
     color_by: str = None,
     cmap: str = 'viridis',
     color_mapping: dict = None,
     vmin: float = 0.0,
     vmax: float = 1.0,
     substrate: str = None,
+    substrate_vmax: float = None,
     filename: str = None,
     show: bool = True,
-):
-    import matplotlib.pyplot as plt
+) -> None:
+    """Draws the agents (and a substrate field) of the frames of a snapshot
+    recorded in a :class:`~lattics.Lattice2DSpace`.
 
-    counter = 0
-    history = simulation._history
-    dims = simulation._space._dimensions
-    for entry in history:
-        sim_state = pickle.loads(entry)
-        if times == 'all' or sim_state.time in times:
-            fig, ax = plt.subplots()
-            if substrate:
-                s = sim_state.substrate_field(substrate).concentration
-                s_ax = ax.imshow(s, vmin=0, vmax=0.035, cmap='inferno')
-                plt.colorbar(s_ax)
-            agent_patches = []
-            for a in sim_state.agents:
-                pos = a.get_attribute('space.position')
-                if color_by:
-                    value = a.get_attribute(color_by)
-                    if isinstance(value, str):
-                        color = color_mapping[value]
-                    else:
-                        value_norm = (value - vmin) / (vmax - vmin)
-                        color = plt.cm.get_cmap(cmap)(value_norm)
+    Parameters
+    ----------
+    snapshot : Snapshot
+        The recorded frames
+    times : tuple[tuple[float, str], ...] or str, optional
+        The times of the frames to draw, for example ``((1, 'day'), (2, 'day'))``,
+        or ``'all'``
+    color_by : str, optional
+        The attribute that sets the color of the agents
+    cmap : str, optional
+        The colormap for numeric attributes
+    color_mapping : dict, optional
+        The colors of the values of a non-numeric attribute
+    vmin, vmax : float, optional
+        The range of a numeric attribute
+    substrate : str, optional
+        The substrate whose field is drawn below the agents
+    substrate_vmax : float, optional
+        The upper limit of the color scale of the field
+    filename : str, optional
+        Save every figure as ``<filename>_<index>.png``
+    show : bool, optional
+        Show the figures
+    """
+    matplotlib, plt = _pyplot()
+    if snapshot.dimensions is None:
+        raise ValueError('The snapshot was not recorded in a lattice space.')
+    frames = snapshot.frames if times == 'all' else [snapshot.frame_at(time) for time in times]
+    colormap = matplotlib.colormaps[cmap]
+    dims = snapshot.dimensions
+    for counter, frame in enumerate(frames):
+        fig, ax = plt.subplots()
+        if substrate:
+            # Transposed, so that site (i, j) is drawn at x = i, y = j like the agents
+            field = frame.fields[substrate].T
+            s_ax = ax.imshow(field, origin='lower', vmin=0, vmax=substrate_vmax, cmap='inferno')
+            plt.colorbar(s_ax)
+        for agent in frame.agents:
+            if color_by:
+                value = agent[color_by]
+                if isinstance(value, str):
+                    color = color_mapping[value]
                 else:
-                    color = 'blue'
-                patch = plt.Circle(pos, 0.4, edgecolor='black', facecolor=color, linewidth=0.2)
-                agent_patches.append(patch)
-                ax.add_patch(patch)
-            plt.title(f't = {sim_state.time / 3600000} h')
-            plt.axis('off')
-            plt.tight_layout()
-
-            ax.set_xlim((-0.5, dims[0] - 0.5))
-            ax.set_ylim((-0.5, dims[1] - 0.5))
-            ax.set_aspect('equal')
-            if filename:
-                plt.savefig(f'{filename}_{counter}.png', dpi=100)
-            if show:
-                plt.show()
-            plt.close()
-            counter += 1
-
-
-# def show_agents_and_substrates_2d(filename: str, times: tuple[int], substrate: str):
-#     import matplotlib.pyplot as plt
-#     counter = 0
-#     with open(filename, 'rb') as f:
-#         history = pickle.load(f)
-#         for entry in history:
-#             sim_state = pickle.loads(entry)
-#             if sim_state.time in times:
-#                 fig, ax = plt.subplots()
-#                 s = sim_state.substrate_field(substrate).concentration
-#                 s_ax = ax.imshow(s, vmin=0, vmax=0.035, cmap='inferno')
-#                 for a in sim_state.agents:
-#                     pos = a.get_attribute('position')
-#                     color = 'blue' if a.get_attribute('state') == 'malignant' else 'red'
-#                     patch = plt.Circle(pos, 0.35, edgecolor='black', facecolor=color, linewidth=0.5)
-#                     ax.add_patch(patch)
-#                 plt.axis('off')
-#                 plt.colorbar(s_ax)
-#                 plt.savefig(f'{counter}.png', dpi=100)
-#                 plt.close()
-#                 counter += 1
+                    color = colormap((value - vmin) / (vmax - vmin))
+            else:
+                color = 'blue'
+            patch = plt.Circle(agent['space.position'], 0.4, edgecolor='black', facecolor=color, linewidth=0.2)
+            ax.add_patch(patch)
+        plt.title(f't = {convert_time(frame.time, "ms", "hour"):g} h')
+        plt.axis('off')
+        ax.set_xlim((-0.5, dims[0] - 0.5))
+        ax.set_ylim((-0.5, dims[1] - 0.5))
+        ax.set_aspect('equal')
+        plt.tight_layout()
+        if filename:
+            plt.savefig(f'{filename}_{counter}.png', dpi=100)
+        if show:
+            plt.show()
+        plt.close(fig)

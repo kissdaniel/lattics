@@ -1,7 +1,6 @@
-from lattics import attributes, kinetics, models, spaces, substrates, utils
+from lattics import attributes, events, kinetics, models, recorders, spaces, substrates, utils
 from lattics._agent import Agent
 from lattics._context import UpdateContext
-from lattics._event import Event
 from lattics._population import Population
 from lattics._simulation import Simulation
 from lattics._units import (
@@ -13,6 +12,7 @@ from lattics._units import (
     convert_velocity,
     convert_volume,
 )
+from lattics.events import Event
 from lattics.spaces import HomogeneousSpace, Lattice2DSpace
 from lattics.substrates import Substrate, SubstrateInfo, SubstrateNode
 from lattics.utils.create import create_agent, create_population, create_simulation_2d, populate_agents
@@ -39,9 +39,11 @@ __all__ = [
     'create_agent',
     'create_population',
     'create_simulation_2d',
+    'events',
     'kinetics',
     'models',
     'populate_agents',
+    'recorders',
     'spaces',
     'substrates',
     'utils',

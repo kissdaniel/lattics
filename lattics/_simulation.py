@@ -11,15 +11,16 @@ import tqdm
 
 from ._agent import Agent
 from ._context import UpdateContext
-from ._event import Event
 from ._population import Population
 from ._scheduler import EPSILON, ScheduledUpdate, effective_period, next_grid_point
 from ._units import convert_time
 from ._validation import check_attributes
 from .attributes import _UNITS, MISSING, known_names
+from .events import Event
 
 if TYPE_CHECKING:
     from .models._base import BaseModel
+    from .recorders import Recorder
     from .spaces._base import BaseSpace
     from .substrates import BaseSubstrateField, Substrate, SubstrateNode
 
@@ -66,27 +67,12 @@ class Simulation:
         self._substrates = dict()
         self._substrate_nodes = list()
         self._fields = dict()
-        self._history = list()
+        self._recorders = list()
         self._schedule_state = dict()
         self._removed_agents = list()
+        self._collected = 0
+        self._running = False
         self._time = 0
-
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        del state['_events']
-        del state['_models']
-        del state['_history']
-        del state['_schedule_state']
-        del state['_removed_agents']
-        return state
-
-    def __setstate__(self, state):
-        self.__dict__.update(state)
-        self._events = list()
-        self._models = list()
-        self._history = list()
-        self._schedule_state = dict()
-        self._removed_agents = list()
 
     @property
     def agents(self) -> list[Agent]:
@@ -139,7 +125,7 @@ class Simulation:
     def removed_agents(self) -> list[Agent]:
         """Get the agents removed at the latest time point of the simulation,
         in the order of their removal. The list is renewed at every time
-        point, after the history is recorded.
+        point, after the recorders have received it.
 
         Returns
         -------
@@ -327,6 +313,89 @@ class Simulation:
             raise KeyError(f'The substrate \'{name}\' {reason}.')
         return self._fields[name]
 
+    def add_recorder(self, recorder: 'Recorder') -> 'Recorder':
+        """Adds a recorder, see :mod:`lattics.recorders`.
+
+        Parameters
+        ----------
+        recorder : Recorder
+            The recorder to be added
+
+        Returns
+        -------
+        Recorder
+            The same recorder, to read its data after the run
+        """
+        self._recorders.append(recorder)
+        return recorder
+
+    def save(self, path: str) -> None:
+        """Saves the complete state of the simulation between two runs: the
+        agents, the space, the substrates, the models, the pending events,
+        the recorders with their data, the schedule and the state of the
+        random number generator. A simulation loaded with :meth:`load`
+        continues exactly as this one would.
+
+        The file can be loaded with the same version of LattiCS; for long-term
+        storage of results use the recorders. Event handlers, conditions of
+        recorders and custom models must be defined at module level (not as
+        lambdas or nested functions and classes).
+
+        Parameters
+        ----------
+        path : str
+            The path of the file
+
+        Raises
+        ------
+        RuntimeError
+            If called during a run
+        TypeError
+            If a part of the simulation cannot be saved
+        """
+        import lattics
+
+        if self._running:
+            raise RuntimeError('A simulation can be saved only between two runs.')
+        content = {'format': 'lattics-checkpoint', 'version': lattics.__version__, 'simulation': self}
+        try:
+            data = pickle.dumps(content, protocol=pickle.HIGHEST_PROTOCOL)
+        except (pickle.PicklingError, AttributeError, TypeError) as error:
+            raise TypeError(
+                f'The simulation cannot be saved: {error}. Event handlers, conditions of recorders and custom '
+                'models must be defined at module level, not as lambdas or nested functions and classes.'
+            ) from error
+        with open(path, 'wb') as f:
+            f.write(data)
+
+    @classmethod
+    def load(cls, path: str) -> 'Simulation':
+        """Loads a simulation saved with :meth:`save`. Only load files from
+        trusted sources: reading a file may execute code stored in it.
+
+        Parameters
+        ----------
+        path : str
+            The path of the file
+
+        Returns
+        -------
+        Simulation
+            The simulation, ready to continue with :meth:`run`
+        """
+        import lattics
+
+        with open(path, 'rb') as f:
+            content = pickle.load(f)
+        if not isinstance(content, dict) or content.get('format') != 'lattics-checkpoint':
+            raise ValueError(f'{path} is not a saved LattiCS simulation.')
+        if content['version'] != lattics.__version__:
+            warnings.warn(
+                f'{path} was saved with LattiCS {content["version"]}, this is {lattics.__version__}; '
+                'the simulation may not continue correctly.'
+            )
+        return content['simulation']
+
     def remove_agent(self, agent: Agent) -> None:
         """Removes the specified agent from the simulation and from its space.
 
@@ -344,8 +413,6 @@ class Simulation:
         self,
         time: tuple[float, str],
         dt: tuple[float, str],
-        dt_history: tuple[float, str] = None,
-        save_mode: str = 'never',
         verbosity: int = 1,
     ) -> None:
         """Runs the simulation from the current state for the specified duration.
@@ -356,9 +423,10 @@ class Simulation:
         finest time step, so a larger ``dt`` gives a faster but less accurate
         run. Events are executed at their exact time.
 
-        At each time point the history is recorded first, then the due events
+        At each time point the due recorders record first, then the due events
         are executed, then the due models, the agents of the space and the
-        substrate fields are updated, in this order. The space removes the
+        substrate fields are updated, in this order. The recorders also
+        record at the end of the run, if they are due. The space removes the
         agents that request it before it divides the agents.
 
         Parameters
@@ -368,11 +436,6 @@ class Simulation:
             rounded up to a multiple of ``dt``.
         dt : tuple[float, str]
             The time step of the simulation
-        dt_history : tuple[float, str], optional
-            The time between two history entries
-        save_mode : str, optional
-            When to write the history to a file: ``'never'`` (default),
-            ``'always'`` or ``'on_completion'``
         verbosity : int, optional
             ``1`` (default) prints the update intervals and shows a progress
             bar, ``0`` is silent
@@ -384,15 +447,7 @@ class Simulation:
         t_end = t0 + steps * dt_ms
 
         updates = [self._prepare_update(update, dt_ms, t0) for update in self._scheduled_updates()]
-        recorder = None
-        if dt_history:
-            recorder = ScheduledUpdate(
-                'history',
-                'History',
-                convert_time(dt_history[0], dt_history[1], 'ms'),
-                lambda now, period, last: self._make_history_entry(save_mode),
-            )
-            self._prepare_update(recorder, dt_ms, t0)
+        recordings = [self._prepare_update(update, dt_ms, t0) for update in self._recorder_updates()]
 
         problems, unused = self._check_attributes()
         if problems and self._strict:
@@ -401,7 +456,7 @@ class Simulation:
         for name, field in self._fields.items():
             notes += [(f'Substrate \'{name}\'', note) for note in field.collect_notes()]
         if verbosity >= 1:
-            self._print_summary(time_ms, dt_ms, updates + ([recorder] if recorder else []), unused, notes)
+            self._print_summary(time_ms, dt_ms, recordings + updates, unused, notes)
         self._warn_invalid_intervals(updates)
         for message in problems:
             warnings.warn(message)
@@ -411,38 +466,68 @@ class Simulation:
             progressbar = tqdm.tqdm(total=steps, mininterval=1.0, colour='#d2de32', bar_format=progressbar_format)
             progressbar.set_description(f'ID={self._id}')
 
-        now = t0
-        while now < t_end - EPSILON:
-            self._time = now
-            if recorder and recorder.is_due(now):
-                recorder.run(now)
-            self._removed_agents = list()
-            self._execute_events(now)
-            for update in updates:
-                if update.is_due(now):
-                    update.run(now)
-            next_points = [next_grid_point(update.next_due, t0, dt_ms) for update in updates]
-            if recorder:
-                next_points.append(next_grid_point(recorder.next_due, t0, dt_ms))
-            if self._events:
-                next_points.append(self._events[0][0])
-            next_time = min(next_points + [t_end])
-            if verbosity >= 1:
-                progressbar.update(round((next_time - now) / dt_ms))
-                days = convert_time(next_time, 'ms', 'day')
-                progressbar.set_postfix(T=f'{days:.2f}', N=f'{len(self._population)}', refresh=False)
-            now = next_time
-
-        self._time = t_end
-        if recorder and recorder.is_due(t_end):
-            recorder.run(t_end)
-        for update in updates + ([recorder] if recorder else []):
+        self._running = True
+        try:
+            self._run_loop(t0, t_end, dt_ms, updates, recordings, progressbar if verbosity >= 1 else None)
+        finally:
+            self._running = False
+        for update in recordings + updates:
             self._schedule_state[update.key] = (update.next_due, update.last_run)
         if verbosity >= 1:
             progressbar.close()
 
-        if save_mode == 'on_completion':
-            self._save_history()
+    def _run_loop(
+        self,
+        t0: float,
+        t_end: float,
+        dt_ms: float,
+        updates: list[ScheduledUpdate],
+        recordings: list[ScheduledUpdate],
+        progressbar,
+    ) -> None:
+        now = t0
+        while now < t_end - EPSILON:
+            self._time = now
+            self._record(now, recordings)
+            self._removed_agents = list()
+            self._collected = 0
+            self._execute_events(now)
+            for update in updates:
+                if update.is_due(now):
+                    update.run(now)
+            next_points = [next_grid_point(update.next_due, t0, dt_ms) for update in recordings + updates]
+            if self._events:
+                next_points.append(self._events[0][0])
+            next_time = min(next_points + [t_end])
+            if progressbar is not None:
+                progressbar.update(round((next_time - now) / dt_ms))
+                days = convert_time(next_time, 'ms', 'day')
+                progressbar.set_postfix(T=f'{days:.2f}', N=f'{len(self._population)}', refresh=False)
+            now = next_time
+        self._time = t_end
+        # The removed agents are kept (removed_agents); the next run passes on only the ones added later
+        self._record(t_end, recordings)
+
+    def _record(self, now: float, recordings: list[ScheduledUpdate]) -> None:
+        removed = self._removed_agents[self._collected :]
+        self._collected = len(self._removed_agents)
+        ctx = self._context(dt=0)
+        for recorder in self._recorders:
+            recorder.collect(ctx, removed)
+        for update in recordings:
+            if update.is_due(now):
+                update.run(now)
+
+    def _recorder_updates(self) -> list[ScheduledUpdate]:
+        return [
+            ScheduledUpdate(
+                ('recorder', recorder),
+                type(recorder).__name__,
+                recorder.interval,
+                lambda now, period, last, recorder=recorder: recorder.record(self._context(period, last)),
+            )
+            for recorder in self._recorders
+        ]
 
     def _scheduled_updates(self) -> list[ScheduledUpdate]:
         """The periodically updated parts of the simulation, in the order of their execution."""
@@ -536,18 +621,7 @@ class Simulation:
     def _execute_events(self, now: float) -> None:
         while self._events and self._events[0][0] <= now + EPSILON:
             _, _, event = heapq.heappop(self._events)
-            event.execute(self)
-
-    def _make_history_entry(self, save_mode):
-        state = pickle.dumps(self)
-        self._history.append(state)
-        if save_mode == 'always':
-            self._save_history()
-
-    def _save_history(self):
-        filename = f'{self._id}.lsd'
-        with open(filename, 'wb') as f:
-            pickle.dump(self._history, f)
+            event.execute(self._context(dt=0))
 
     def _context(self, dt: float, last_update_time: float = None) -> UpdateContext:
         return UpdateContext(

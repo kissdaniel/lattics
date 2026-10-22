@@ -130,6 +130,16 @@ class UpdateContext:
         """
         return self._require_simulation().substrate_field(name)
 
+    def substrate_names(self) -> tuple[str, ...]:
+        """Returns the names of the substrates that have a concentration field.
+
+        Returns
+        -------
+        tuple[str, ...]
+            The names, in the order the substrates were added
+        """
+        return tuple(self._require_simulation()._fields)
+
     def add_agent(self, agent: 'Agent') -> None:
         """Adds a new agent to the simulation, for example the daughter cell of a division.
 

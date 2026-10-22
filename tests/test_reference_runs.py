@@ -8,14 +8,12 @@ the results can be verified. When a change is meant to alter the results, rewrit
 import json
 import math
 import pathlib
-import pickle
 
 import numpy as np
 import pytest
 
 from lattics import (
     Agent,
-    Event,
     HomogeneousSpace,
     Lattice2DSpace,
     Simulation,
@@ -23,12 +21,14 @@ from lattics import (
     SubstrateInfo,
     SubstrateNode,
 )
+from lattics.events import SetConcentration
 from lattics.kinetics import FirstOrderDecay
 from lattics.models import (
     ConcentrationDependentToxicityModel,
     MultiPhaseTimeBasedCellCycleModel,
     StochasticTransitionModel,
 )
+from lattics.recorders import AgentCount, SubstrateLevel
 
 REFERENCE_DIR = pathlib.Path(__file__).parent / 'reference'
 SEED = 12345
@@ -69,14 +69,13 @@ def run_lattice_growth() -> dict:
         for name, value in attributes.items():
             agent.set_attribute(name, value)
         simulation.add_agent(agent)
-    simulation.run(time=(3, 'day'), dt=(30, 'min'), dt_history=(6, 'hour'), save_mode='never', verbosity=0)
+    agents = simulation.add_recorder(AgentCount(interval=(6, 'hour')))
+    g0 = simulation.add_recorder(AgentCount(interval=(6, 'hour'), where=('cellcycle.current_phase', 'G0')))
+    simulation.run(time=(3, 'day'), dt=(30, 'min'), verbosity=0)
 
-    history = [pickle.loads(entry) for entry in simulation._history]
     return {
-        'agent_counts': [len(state.agents) for state in history],
-        'g0_counts': [
-            sum(a.get_attribute('cellcycle.current_phase') == 'G0' for a in state.agents) for state in history
-        ],
+        'agent_counts': agents.series.values,
+        'g0_counts': g0.series.values,
         'final_agents': sorted(
             [
                 [int(v) for v in a.get_attribute('space.position')],
@@ -87,10 +86,6 @@ def run_lattice_growth() -> dict:
             for a in simulation.agents
         ),
     }
-
-
-def _set_node_concentration(simulation, node, name, concentration):
-    node.get_attribute('substrate.transport')[name].concentration = concentration
 
 
 def run_homogeneous_drug_treatment() -> dict:
@@ -134,22 +129,15 @@ def run_homogeneous_drug_treatment() -> dict:
         simulation.add_agent(agent)
     for day, dose in [(0, 1e6), (1, 5e5)]:
         simulation.add_event(
-            Event(
-                time=(day, 'day'), handler=_set_node_concentration, node=vessels, name='drug', concentration=dose
-            )
+            SetConcentration(time=(day, 'day'), substrate='drug', concentration=dose, node=vessels)
         )
-    simulation.run(time=(2, 'day'), dt=(30, 'sec'), dt_history=(1, 'hour'), save_mode='never', verbosity=0)
+    field = simulation.add_recorder(SubstrateLevel('drug', interval=(1, 'hour')))
+    necrotic = simulation.add_recorder(AgentCount(interval=(1, 'hour'), where=('toxicity.state', 'necrotic')))
+    simulation.run(time=(2, 'day'), dt=(30, 'sec'), verbosity=0)
 
-    history = [pickle.loads(entry) for entry in simulation._history]
     return {
-        'field_concentrations': [float(state.substrate_field('drug').concentration) for state in history],
-        'necrotic_counts': [
-            sum(
-                a.has_attribute('toxicity.state') and a.get_attribute('toxicity.state') == 'necrotic'
-                for a in state.agents
-            )
-            for state in history
-        ],
+        'field_concentrations': field.series.values,
+        'necrotic_counts': necrotic.series.values,
         'final_node_concentrations': [
             float(node.get_attribute('substrate.transport')['drug'].concentration) for node in (vessels, organs)
         ],

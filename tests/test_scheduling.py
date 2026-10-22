@@ -73,7 +73,7 @@ def test_events_run_at_their_exact_time():
 
     sim, model = _recording_simulation((1, 'hour'))
     seen = []
-    sim.add_event(Event(time=(45, 'min'), handler=lambda simulation: seen.append(simulation.time)))
+    sim.add_event(Event(time=(45, 'min'), handler=lambda ctx: seen.append(ctx.time)))
     sim.run(time=(2, 'hour'), dt=(1, 'hour'), verbosity=0)
     assert seen == [45 * MINUTE] and model.calls == [(0, HOUR), (HOUR, HOUR)]
 
@@ -84,18 +84,19 @@ def test_events_with_the_same_time_keep_their_order():
     sim, _ = _recording_simulation(None)
     seen = []
     for label in 'abc':
-        sim.add_event(Event(time=(10, 'min'), handler=lambda simulation, label=label: seen.append(label)))
+        sim.add_event(Event(time=(10, 'min'), handler=lambda ctx, label=label: seen.append(label)))
     sim.run(time=(1, 'hour'), dt=(30, 'min'), verbosity=0)
     assert seen == ['a', 'b', 'c']
 
 
-def test_history_is_recorded_at_its_interval():
-    import pickle
+def test_recorders_record_at_their_interval_and_at_the_end():
+    from lattics.recorders import AgentCount
 
     sim, _ = _recording_simulation(None)
-    sim.run(time=(3, 'hour'), dt=(30, 'min'), dt_history=(1, 'hour'), verbosity=0)
+    counts = sim.add_recorder(AgentCount(interval=(1, 'hour')))
+    sim.run(time=(3, 'hour'), dt=(30, 'min'), verbosity=0)
     expected = [0, HOUR, 2 * HOUR, 3 * HOUR]
-    actual = [pickle.loads(entry).time for entry in sim._history]
+    actual = counts.series.timepoints
     assert actual == expected
 
 
@@ -131,7 +132,7 @@ def test_time_step_below_the_substrate_interval_does_not_change_the_result():
         )
         sim.add_substrate_node(node)
 
-        def dose(simulation):
+        def dose(ctx):
             node.get_attribute('substrate.transport')['drug'].concentration = 1000.0
 
         sim.add_event(Event(time=(0, 'sec'), handler=dose))

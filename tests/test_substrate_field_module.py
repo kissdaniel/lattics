@@ -136,7 +136,7 @@ def test_removed_agents_stop_exchanging():
     agent.set_attribute('space.volume', (3000, 'um3'))
     agent.set_attribute('substrate.transport', {'drug': SubstrateInfo(type='flux', uptake_rate=(1e-3, 'um3/ms'))})
     sim.add_agent(agent)
-    sim.add_event(Event(time=(10, 'min'), handler=lambda simulation: simulation.remove_agent(agent)))
+    sim.add_event(Event(time=(10, 'min'), handler=lambda ctx: ctx.remove_agent(agent)))
     sim.run(time=(10, 'min'), dt=(1, 'min'), verbosity=0)
     before = agent.get_attribute('substrate.transport')['drug'].concentration
     sim.run(time=(10, 'min'), dt=(1, 'min'), verbosity=0)
@@ -259,7 +259,7 @@ def _pk_scenario(space_class, with_agents=False):
                 warnings.simplefilter('ignore')
                 sim.add_agent(agent)
 
-    def dose(simulation):
+    def dose(ctx):
         vessels.get_attribute('substrate.transport')['drug'].concentration = 1000.0
 
     sim.add_event(Event(time=(0, 'hour'), handler=dose))

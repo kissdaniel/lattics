@@ -58,6 +58,16 @@ class BaseSubstrateField(ABC):
         """
 
     @abstractmethod
+    def set_concentration(self, value: float) -> None:
+        """Sets the concentration of the whole field to the given value.
+
+        Parameters
+        ----------
+        value : float
+            The new concentration
+        """
+
+    @abstractmethod
     def update(self, ctx: UpdateContext) -> None:
         """Advances the field from ``ctx.time`` to ``ctx.time + ctx.dt``: the
         exchange with the agents and nodes, the diffusion and the kinetics.

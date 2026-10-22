@@ -20,6 +20,9 @@ class HomogeneousSubstrateField(BaseSubstrateField):
     def concentration_at(self, position=None) -> float:
         return self._concentration
 
+    def set_concentration(self, value: float) -> None:
+        self._concentration = float(value)
+
     def update(self, ctx: UpdateContext) -> None:
         self._exchange(ctx.dt)
         self._concentration = self._substrate.apply_kinetics(self._concentration, ctx.dt)
