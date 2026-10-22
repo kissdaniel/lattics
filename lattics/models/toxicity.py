@@ -42,8 +42,7 @@ class ConcentrationDependentToxicityModel(BaseModel):
             agent.set_attribute('mechanics.binding_affinity', 0)
 
     def _initialize_required_attributes(self, agent: Agent, ctx: UpdateContext) -> None:
-        if not agent.has_attribute('substrate.transport'):
-            raise AttributeError()
+        self._require_attributes(agent, 'substrate.transport')
 
     def _mm_fun(self, x, vmax, ed50):
         return vmax * (x / (ed50 + x))

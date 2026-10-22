@@ -55,8 +55,8 @@ class Lattice2DSpace(BaseSpace):
         'mechanics.motility',
         'mechanics.binding_affinity',
         'mechanics.displacement_limit',
-        'substrate.transport',
     )
+    optional_reads = ('substrate.transport',)
     writes = (
         'space.position',
         'space.local_density',
@@ -100,6 +100,7 @@ class Lattice2DSpace(BaseSpace):
             dimensions.append(round(n_sites))
         self._dimensions = tuple(dimensions)
         self._agent_layer = np.empty(self._dimensions, dtype='object')
+        self._randomly_placed = 0
         self._site_volume = self._grid_spacing**2 * self._thickness
 
     def add_agent(self, agent: Agent) -> None:
@@ -121,6 +122,7 @@ class Lattice2DSpace(BaseSpace):
         self._validate_volume(agent)
         if not agent.has_attribute('space.position'):
             agent.set_attribute('space.position', self._random_free_site())
+            self._randomly_placed += 1
         self._validate_position(agent)
         self._validate_optional_attributes(agent)
         position = agent.get_attribute('space.position')
@@ -138,6 +140,13 @@ class Lattice2DSpace(BaseSpace):
                 'The agent\'s volume is larger than the volume of a lattice site. '
                 'This may lead to unexpected behavior.'
             )
+
+    def collect_notes(self) -> list[str]:
+        notes = []
+        if self._randomly_placed:
+            notes.append(f'{self._randomly_placed} agents without \'space.position\' placed on random free sites')
+            self._randomly_placed = 0
+        return notes
 
     def _random_free_site(self) -> np.ndarray:
         # Random draws are fast while the lattice is sparse; fall back to listing the free sites

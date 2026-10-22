@@ -4,7 +4,8 @@ Attributes are referred to by plain names everywhere, for example ``agent.get_at
 Every built-in name carries the prefix of the subsystem (model) that defines its meaning, even if other models
 read it. Agents accept any other name as well, so users can freely introduce their own attributes.
 
-This module lists the built-in names together with their default values.
+This module lists the built-in names together with their default values. Custom attributes can be declared with
+:meth:`lattics.Simulation.declare`; the validation at the start of a run then treats them as intentional.
 """
 
 
@@ -52,6 +53,25 @@ _REGISTRY = {
     'cellcycle.phase_m_length': MISSING,
     # Toxicity model
     'toxicity.state': MISSING,
+}
+
+
+# Names used by earlier versions of LattiCS, reported by the validation at the start of a run
+_RENAMED = {
+    'position': 'space.position',
+    'volume': 'space.volume',
+    'duplication_needed': 'space.division_requested',
+    'duplication_completed': 'space.last_division_time',
+    'space.duplication_needed': 'space.division_requested',
+    'space.duplication_completed': 'space.last_division_time',
+    'space.division_completed': 'space.last_division_time',
+    'removal_needed': 'space.removal_requested',
+    'state': 'toxicity.state',
+    'motility': 'mechanics.motility',
+    'binding_affinity': 'mechanics.binding_affinity',
+    'mechanics.local_density': 'space.local_density',
+    'substrate_info': 'substrate.transport',
+    'cellcycle_is_active': 'cellcycle.is_active',
 }
 
 

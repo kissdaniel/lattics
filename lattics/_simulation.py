@@ -1,9 +1,10 @@
+import copy
 import heapq
 import math
 import pickle
 import uuid
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import tqdm
@@ -14,6 +15,8 @@ from ._event import Event
 from ._population import Population
 from ._scheduler import EPSILON, ScheduledUpdate, effective_period, next_grid_point
 from ._units import convert_time
+from ._validation import check_attributes
+from .attributes import MISSING, known_names
 
 if TYPE_CHECKING:
     from .models._base import BaseModel
@@ -27,7 +30,7 @@ class Simulation:
     The class provides high-level access to configure and execute a simulation.
     """
 
-    def __init__(self, id: str = None, seed: int = None) -> None:
+    def __init__(self, id: str = None, seed: int = None, strict: bool = False) -> None:
         """Constructor method.
 
         Parameters
@@ -41,10 +44,17 @@ class Simulation:
             generator, so the same seed gives the same results. If not
             provided, a random seed is generated; it can be read from
             :attr:`seed` to repeat the simulation.
+        strict : bool
+            At the start of every run the attributes of the agents are
+            checked against the attributes the models and the space read
+            and write. The problems found are reported as warnings, or, if
+            ``strict`` is ``True``, raise a ``ValueError``.
         """
         self._id = self._get_id(id)
         self._seed = seed if seed is not None else np.random.SeedSequence().entropy
         self._rng = np.random.default_rng(self._seed)
+        self._strict = strict
+        self._declared = dict()
         self._population = Population()
         self._space = None
         self._events = list()
@@ -156,6 +166,7 @@ class Simulation:
             The agent to be added
         """
         self._population.add(agent)
+        self._apply_declared_defaults(agent)
         if self._space:
             self._space.add_agent(agent)
         else:
@@ -167,6 +178,31 @@ class Simulation:
         ctx = self._context(dt=0)
         for m in self._models:
             m.initialize(agent, ctx)
+
+    def declare(self, name: str, default: Any = MISSING) -> None:
+        """Declares a custom agent attribute. The validation at the start of a
+        run treats declared names as intentional: it does not suggest a
+        similar built-in name for them, and does not list them as unused.
+
+        Parameters
+        ----------
+        name : str
+            The name of the attribute, for example ``'experiment.label'``
+        default : Any, optional
+            The value given to the agents that do not have the attribute: to
+            the agents already added now, and to later agents when they are
+            added. Each agent receives its own copy.
+
+        Raises
+        ------
+        ValueError
+            If the name is a built-in attribute
+        """
+        if name in known_names():
+            raise ValueError(f'\'{name}\' is a built-in attribute, it does not need to be declared.')
+        self._declared[name] = default
+        for agent in self._population:
+            self._apply_declared_defaults(agent)
 
     def set_space(self, space: 'BaseSpace') -> None:
         """Sets the simulation space to the instance passed as a parameter.
@@ -282,9 +318,15 @@ class Simulation:
             )
             self._prepare_update(recorder, dt_ms, t0)
 
+        problems, unused = self._check_attributes()
+        if problems and self._strict:
+            raise ValueError('The attributes of the agents are not consistent:\n' + '\n'.join(problems))
+        notes = self._space.collect_notes() if self._space else []
         if verbosity >= 1:
-            self._print_summary(time_ms, dt_ms, updates + ([recorder] if recorder else []))
+            self._print_summary(time_ms, dt_ms, updates + ([recorder] if recorder else []), unused, notes)
         self._warn_invalid_intervals(updates)
+        for message in problems:
+            warnings.warn(message)
 
         if verbosity >= 1:
             progressbar_format = "{l_bar}{bar}| [{elapsed}<{remaining}{postfix}]"
@@ -361,7 +403,9 @@ class Simulation:
         update.next_due, update.last_run = self._schedule_state.get(update.key, (start, None))
         return update
 
-    def _print_summary(self, duration: float, dt: float, updates: list[ScheduledUpdate]) -> None:
+    def _print_summary(
+        self, duration: float, dt: float, updates: list[ScheduledUpdate], unused: list[str], notes: list[str]
+    ) -> None:
         print(
             f'Simulation {self._id}: {_format_duration(duration)}, time step {_format_duration(dt)}, '
             f'seed {self._seed}'
@@ -378,6 +422,19 @@ class Simulation:
                     f'(requested {_format_duration(update.interval)}, rounded to the time step)'
                 )
             print(f'  {update.name:<{width}}  {interval}')
+        for note in notes:
+            print(f'  {type(self._space).__name__}: {note}')
+        if unused:
+            print(f'  Agent attributes not used by any component: {", ".join(unused)}')
+
+    def _check_attributes(self) -> tuple[list[str], list[str]]:
+        components = self._models + ([self._space] if self._space else [])
+        return check_attributes(list(self._population), components, self._declared)
+
+    def _apply_declared_defaults(self, agent: Agent) -> None:
+        for name, default in self._declared.items():
+            if default is not MISSING and not agent.has_attribute(name):
+                agent.set_attribute(name, copy.deepcopy(default))
 
     def _warn_invalid_intervals(self, updates: list[ScheduledUpdate]) -> None:
         for update in updates:

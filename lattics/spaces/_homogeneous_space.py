@@ -27,8 +27,8 @@ class HomogeneousSpace(BaseSpace):
         'space.volume',
         'space.division_requested',
         'space.removal_requested',
-        'substrate.transport',
     )
+    optional_reads = ('substrate.transport',)
     writes = (
         'space.local_density',
         'space.division_requested',

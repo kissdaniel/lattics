@@ -14,8 +14,10 @@ class BaseModel(abc.ABC):
     population at once (for example with vectorized code) may override
     :meth:`update` instead.
 
-    The class attributes ``reads`` and ``writes`` list the names of the agent
-    attributes the model uses and sets.
+    The class attributes list the names of the agent attributes the model
+    uses: ``reads`` the attributes it needs, ``optional_reads`` the ones it
+    uses only when an agent has them, and ``writes`` the ones it sets. The
+    simulation checks them against the agents at the start of every run.
 
     Models draw random numbers from ``ctx.rng``, the generator of the
     simulation, so that a seeded simulation is reproducible.
@@ -28,6 +30,7 @@ class BaseModel(abc.ABC):
     """
 
     reads: tuple[str, ...] = ()
+    optional_reads: tuple[str, ...] = ()
     writes: tuple[str, ...] = ()
 
     def __init__(self, update_interval: tuple[float, str] = None) -> None:
@@ -78,6 +81,13 @@ class BaseModel(abc.ABC):
 
     def reset_attributes(self, agent: Agent, ctx: UpdateContext) -> None:
         pass
+
+    def _require_attributes(self, agent: Agent, *names: str) -> None:
+        """Raises an error naming the attributes the agent does not have."""
+        missing = [name for name in names if not agent.has_attribute(name)]
+        if missing:
+            listed = ', '.join(f'\'{name}\'' for name in missing)
+            raise AttributeError(f'{type(self).__name__} requires the agent attribute(s) {listed}.')
 
     def _initialize_required_attributes(self, agent: Agent, ctx: UpdateContext) -> None:
         pass

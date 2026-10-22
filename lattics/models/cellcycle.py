@@ -34,11 +34,11 @@ class TimeBasedCellCycleModel(BaseModel):
 
     reads = (
         'cellcycle.mean_length',
-        'cellcycle.random_initial',
         'cellcycle.is_active',
         'space.division_requested',
         'space.last_division_time',
     )
+    optional_reads = ('cellcycle.random_initial',)
     writes = (
         'cellcycle.length',
         'cellcycle.current_time',
@@ -88,8 +88,7 @@ class TimeBasedCellCycleModel(BaseModel):
             return rng.normal(loc=loc, scale=scale)
 
     def _initialize_required_attributes(self, agent: Agent, ctx: UpdateContext) -> None:
-        if not agent.has_attribute('cellcycle.mean_length'):
-            raise AttributeError()
+        self._require_attributes(agent, 'cellcycle.mean_length')
         attr = agent.get_attribute('cellcycle.mean_length')
         mean_length = convert_time(attr[0], attr[1], 'ms')
         length = self._generate_cellcycle_length(mean_length, ctx.rng)
@@ -124,19 +123,21 @@ class MultiPhaseTimeBasedCellCycleModel(BaseModel):
 
     reads = (
         'cellcycle.phase_g1_mean',
-        'cellcycle.phase_g1_sd',
         'cellcycle.phase_s_mean',
-        'cellcycle.phase_s_sd',
         'cellcycle.phase_g2_mean',
-        'cellcycle.phase_g2_sd',
         'cellcycle.phase_m_mean',
-        'cellcycle.phase_m_sd',
-        'cellcycle.random_initial',
         'cellcycle.inhibition_density_limit',
         'cellcycle.is_active',
         'space.local_density',
         'space.division_requested',
         'space.last_division_time',
+    )
+    optional_reads = (
+        'cellcycle.phase_g1_sd',
+        'cellcycle.phase_s_sd',
+        'cellcycle.phase_g2_sd',
+        'cellcycle.phase_m_sd',
+        'cellcycle.random_initial',
     )
     writes = (
         'cellcycle.phase_g1_length',
@@ -238,14 +239,13 @@ class MultiPhaseTimeBasedCellCycleModel(BaseModel):
         return rng.gamma(shape=shape, scale=scale)
 
     def _initialize_required_attributes(self, agent: Agent, ctx: UpdateContext) -> None:
-        if not agent.has_attribute('cellcycle.phase_g1_mean'):
-            raise AttributeError()
-        if not agent.has_attribute('cellcycle.phase_s_mean'):
-            raise AttributeError()
-        if not agent.has_attribute('cellcycle.phase_g2_mean'):
-            raise AttributeError()
-        if not agent.has_attribute('cellcycle.phase_m_mean'):
-            raise AttributeError()
+        self._require_attributes(
+            agent,
+            'cellcycle.phase_g1_mean',
+            'cellcycle.phase_s_mean',
+            'cellcycle.phase_g2_mean',
+            'cellcycle.phase_m_mean',
+        )
         self._set_cellcycle_phase_lengths(agent, ctx.rng)
 
     def _initialize_optional_attributes(self, agent: Agent, ctx: UpdateContext) -> None:

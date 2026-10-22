@@ -24,8 +24,9 @@ class BaseSpace(ABC):
     (:meth:`update_agents`, every ``interval``) and the substrate fields
     (:meth:`update_substrates`, every ``substrate_interval``).
 
-    The class attributes ``reads`` and ``writes`` list the names of the agent
-    attributes the space uses and sets.
+    The class attributes list the names of the agent attributes the space
+    uses: ``reads`` the attributes it needs, ``optional_reads`` the ones it
+    uses only when an agent has them, and ``writes`` the ones it sets.
 
     Parameters
     ----------
@@ -46,6 +47,7 @@ class BaseSpace(ABC):
     """
 
     reads: tuple[str, ...] = ()
+    optional_reads: tuple[str, ...] = ()
     writes: tuple[str, ...] = ()
 
     def __init__(
@@ -84,6 +86,17 @@ class BaseSpace(ABC):
     def _validate_volume(self, agent: Agent) -> None:
         if not agent.has_attribute('space.volume'):
             raise ValueError('The agent must have an attribute named \'space.volume\'.')
+
+    def collect_notes(self) -> list[str]:
+        """Returns the notes for the run summary collected since the previous
+        run, for example about agents placed automatically, and clears them.
+
+        Returns
+        -------
+        list[str]
+            The notes
+        """
+        return []
 
     def _bind(self, population: Population, rng: np.random.Generator) -> None:
         """Connects the space to the population and the random number generator of the simulation it is set to."""
