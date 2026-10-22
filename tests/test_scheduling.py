@@ -1,8 +1,6 @@
 import math
 import warnings
 
-import pytest
-
 HOUR = 3600000.0
 MINUTE = 60000.0
 
@@ -149,17 +147,37 @@ def test_summary_shows_the_effective_intervals(capsys):
     assert 'Recording' in out and 'every 1 hour (requested 45 min, rounded to the time step)' in out
 
 
-def test_lattice_warns_when_motility_is_truncated():
+def _free_walkers(count, motility, size=200):
     import lattics
 
-    sim = lattics.Simulation()
-    sim.set_space(lattics.Lattice2DSpace(size=((200, 'um'), (200, 'um')), interval=(1, 'hour')))
+    sim = lattics.Simulation(seed=8)
+    sim.set_space(lattics.Lattice2DSpace(size=((20 * size, 'um'), (20 * size, 'um')), interval=(1, 'hour')))
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
+        # without binding every move to a free site is accepted, so the agents perform random walks
         lattics.populate_agents(
-            sim, count=5, attributes={'space.volume': (1000, 'um3'), 'mechanics.motility': (1e-4, 'um/ms')}
+            sim, count=count, attributes={'space.volume': (1000, 'um3'), 'mechanics.motility': motility}
         )
-    # 1e-4 um/ms * 1 hour / 20 um = 18 > 1
-    with pytest.warns(UserWarning, match='displacement probability'):
-        sim.run(time=(1, 'hour'), dt=(1, 'hour'), verbosity=0)
+    return sim
+
+
+def test_fast_motility_is_split_into_sweeps(capsys):
+    # 1e-4 um/ms * 1 hour / 20 um = 18 expected trials per update
+    sim = _free_walkers(5, (1e-4, 'um/ms'))
+    with warnings.catch_warnings():
+        warnings.simplefilter('error')
+        sim.run(time=(1, 'hour'), dt=(1, 'hour'), verbosity=1)
     assert math.isclose(1e-4 * HOUR / 20, 18)
+    assert 'Lattice2DSpace: the agents move in 18 displacement sweeps per update' in capsys.readouterr().out
+
+
+def test_sweeps_keep_the_expected_number_of_steps():
+    import numpy as np
+
+    # 4 expected trials in a single update: a random walk of 4 steps has a mean squared displacement of 4
+    # (truncating the motility to one trial per update would give 1)
+    sim = _free_walkers(400, (4 * 20 / HOUR, 'um/ms'))
+    start = {a.id: np.array(a.get_attribute('space.position'), dtype=float) for a in sim.agents}
+    sim.run(time=(1, 'hour'), dt=(1, 'hour'), verbosity=0)
+    squared = [np.sum((a.get_attribute('space.position') - start[a.id]) ** 2) for a in sim.agents]
+    assert 3.5 < np.mean(squared) < 4.5

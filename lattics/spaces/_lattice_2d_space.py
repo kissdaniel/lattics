@@ -6,7 +6,7 @@ from scipy import ndimage
 
 from lattics._agent import Agent
 from lattics._context import UpdateContext
-from lattics._kernels.lattice import bresenham_2d, displacement_trial_2d
+from lattics._kernels.lattice import bresenham_2d, displacement_sweeps_2d
 from lattics.attributes import default_of
 from lattics.substrates import Lattice2DSubstrateField, Substrate, SubstrateNode
 
@@ -191,17 +191,14 @@ class Lattice2DSpace(BaseSpace):
     def create_field(self, substrate: Substrate, nodes: list[SubstrateNode]) -> Lattice2DSubstrateField:
         return Lattice2DSubstrateField(substrate, self, nodes)
 
-    def interval_warnings(self, period: float) -> list[str]:
+    def interval_notes(self, period: float) -> list[str]:
         if not len(self._population):
             return []
         max_motility = max(a.get_attribute('mechanics.motility') for a in self._population)
-        probability = max_motility * period / self._grid_spacing
-        if probability <= 1:
+        sweeps = _sweeps(max_motility * period / self._grid_spacing)
+        if sweeps == 1:
             return []
-        return [
-            f'The displacement probability per update is {probability:.2f} > 1, so the motility of the agents is '
-            'truncated to one lattice step per update. Use a shorter update interval for the agents.'
-        ]
+        return [f'the agents move in {sweeps} displacement sweeps per update (at the current motilities)']
 
     def _update_agents(self, ctx: UpdateContext, dt: float) -> None:
         self._displacement_trials(dt)
@@ -251,10 +248,12 @@ class Lattice2DSpace(BaseSpace):
             agents = list(self._population)
             self._rng.shuffle(agents)
             positions = np.array([a.get_attribute('space.position') for a in agents], dtype='int32')
-            disp_probs = np.array(
-                [a.get_attribute('mechanics.motility') * dt / self._grid_spacing for a in agents],
-                dtype='float32',
+            # The expected number of trials of an agent in the update; above one it is split into sweeps
+            expected_trials = np.array(
+                [a.get_attribute('mechanics.motility') * dt / self._grid_spacing for a in agents]
             )
+            sweeps = _sweeps(expected_trials.max())
+            disp_probs = (expected_trials / sweeps).astype('float32')
             binding_affs = np.array(
                 [a.get_attribute('mechanics.binding_affinity') for a in agents], dtype='float32'
             )
@@ -266,10 +265,7 @@ class Lattice2DSpace(BaseSpace):
             # Indicates whether a certain agent changed its position during the MC trial
             change_flags = np.full(len(agents), False, dtype='bool')
 
-            for i, dprob in enumerate(disp_probs):
-                # Check if trial is needed based on the displacement probability
-                if self._rng.random() < dprob:
-                    displacement_trial_2d(i, positions, binding_affs, idx_array, change_flags, self._rng)
+            displacement_sweeps_2d(positions, disp_probs, binding_affs, idx_array, change_flags, sweeps, self._rng)
 
             for i, cflag in enumerate(change_flags):
                 if cflag:
@@ -354,6 +350,11 @@ class Lattice2DSpace(BaseSpace):
             site = (int(position[0]), int(position[1]))
             density = (counts[limit][site] - 1) / (self._neighborhood_sizes[limit][site] - 1)
             agent.set_attribute('space.local_density', density)
+
+
+def _sweeps(expected_trials: float) -> int:
+    """The number of sweeps that keeps the probability of a trial per sweep at most one."""
+    return max(1, math.ceil(expected_trials - 1e-9))
 
 
 def _disk(radius: float) -> np.ndarray:

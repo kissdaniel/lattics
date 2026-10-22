@@ -187,6 +187,23 @@ class BaseSpace(ABC):
         """
         return []
 
+    def interval_notes(self, period: float) -> list[str]:
+        """Describes how the space handles the given update period, for the run
+        summary, for example when it splits an update into smaller steps.
+        Subclasses override this method.
+
+        Parameters
+        ----------
+        period : float
+            The effective update period of the agents, in milliseconds
+
+        Returns
+        -------
+        list[str]
+            The notes
+        """
+        return []
+
     @abstractmethod
     def _update_agents(self, ctx: UpdateContext, dt: float) -> None:
         """Processes the division and removal requests and the space-specific

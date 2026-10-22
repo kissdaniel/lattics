@@ -453,6 +453,9 @@ class Simulation:
         if problems and self._strict:
             raise ValueError('The attributes of the agents are not consistent:\n' + '\n'.join(problems))
         notes = [(type(self._space).__name__, note) for note in self._space.collect_notes()] if self._space else []
+        for update in updates:
+            if update.key[0] == 'agents':
+                notes += [(type(self._space).__name__, note) for note in self._space.interval_notes(update.period)]
         for name, field in self._fields.items():
             notes += [(f'Substrate \'{name}\'', note) for note in field.collect_notes()]
         if verbosity >= 1:

@@ -120,9 +120,15 @@ def pairwise_interaction_energy_2d(position_one, bindig_aff_one, position_two, b
         return np.float32(0)
 
 
+# The neighbors that form bonds: the four sites sharing an edge (von Neumann neighborhood). The order is the order
+# of the summation, which matters in float32.
+_BOND_NEIGHBORS_2D = np.array([[-1, 0], [0, -1], [0, 1], [1, 0]], dtype=np.int32)
+
+
 @numba.njit(float32(int32, int32[:], float32[:], int32[:, :]), cache=True)
 def total_interaction_energy_2d(idx, agent_pos, bind_affs, agent_idx_array):
-    """Computes the sum of pairwise interaction energies of a given agent.
+    """Computes the sum of pairwise interaction energies of a given agent with
+    the agents on the four sites sharing an edge with it.
 
     Args:
         idx (int): identifier (index) of the selected agent
@@ -134,7 +140,7 @@ def total_interaction_energy_2d(idx, agent_pos, bind_affs, agent_idx_array):
     Returns:
         float: the total interaction energy of the agent
     """
-    neighborhood = get_neighborhood_2d('moore')
+    neighborhood = _BOND_NEIGHBORS_2D
     n_size = neighborhood.shape[0]
     agent_bind = bind_affs[idx]
     size_x = agent_idx_array.shape[0]
@@ -188,3 +194,26 @@ def displacement_trial_2d(idx, positions, binding_affs, agent_idx_array, change_
                 displace_agent_2d(positions, idx, current_pos, agent_idx_array)
             else:
                 change_flags[idx] = bool(True)
+
+
+@numba.njit(cache=True)
+def displacement_sweeps_2d(positions, probabilities, binding_affs, agent_idx_array, change_flags, sweeps, rng):
+    """Performs the displacement trials of an update: in every sweep, each agent
+    (in the order of the arrays) starts a trial with its probability.
+
+    Args:
+        positions (2D array of ints): the positions of all agents
+        probabilities (array of floats): the probability of a trial per sweep
+        binding_affs (array of floats): the binding affinities of all agents
+        agent_idx_array (2D array of ints): identifiers (indexes) of the agents
+            based on their positions
+        change_flags (array of bools): indicating whether an agent was
+            relocated during the trials
+        sweeps (int): the number of sweeps
+        rng (numpy.random.Generator): the random number generator of the
+            simulation
+    """
+    for _ in range(sweeps):
+        for i in range(probabilities.shape[0]):
+            if rng.random() < probabilities[i]:
+                displacement_trial_2d(np.int32(i), positions, binding_affs, agent_idx_array, change_flags, rng)
