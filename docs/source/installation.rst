@@ -14,15 +14,15 @@ Create a new virtual environment:
 
 Activate the environment:
 
-.. code-block:: console	
+.. code-block:: console
 
 	source lattics/bin/activate
 
-Install the LattiCS package from the Git repository:
+Install the LattiCS package from the Git repository (the ``[viz]`` extra installs matplotlib for the plotting helpers; omit it if you do not need them):
 
 .. code-block:: console
-	
-	pip install git+https://github.com/kissdaniel/lattics.git
+
+	pip install "lattics[viz] @ git+https://github.com/kissdaniel/lattics.git"
 
 Start a Python shell and verify that the package can be successfully imported:
 
@@ -44,15 +44,15 @@ Create a new virtual environment:
 
 Activate the environment:
 
-.. code-block:: console	
+.. code-block:: console
 
 	lattics\Scripts\activate.bat
 
-Install the LattiCS package from the Git repository:
+Install the LattiCS package from the Git repository (the ``[viz]`` extra installs matplotlib for the plotting helpers; omit it if you do not need them):
 
 .. code-block:: console
-	
-	pip install git+https://github.com/kissdaniel/lattics.git
+
+	pip install "lattics[viz] @ git+https://github.com/kissdaniel/lattics.git"
 
 Start a Python shell and verify that the package can be successfully imported:
 

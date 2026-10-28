@@ -32,8 +32,8 @@ Getting started
 ---------------
 
 .. toctree::
-   :maxdepth: 1   
-   
+   :maxdepth: 1
+
    Installation <installation>
    Examples <examples/main>
    Learn <learn/main>

@@ -1,8 +1,12 @@
-API Reference
-=============
+User Guide
+==========
 
-.. autosummary::
-   :toctree: api/
+.. toctree::
+   :maxdepth: 2
 
-   lattics.core
    lattics.models
+   lattics.utils
+
+Developer Guide
+===============
+   lattics

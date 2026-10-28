@@ -119,10 +119,10 @@ html_logo = "_static/lattics_logo_s.png"
 # documentation.
 #
 html_theme_options = {
-   "logo": {
-      "image_light": "_static/logo-light_s.png",
-      "image_dark": "_static/logo-dark_s.png",
-   }
+    "logo": {
+        "image_light": "_static/logo-light_s.png",
+        "image_dark": "_static/logo-dark_s.png",
+    }
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,

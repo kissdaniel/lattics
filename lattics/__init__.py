@@ -1,10 +1,52 @@
-from ._version import get_versions
+from lattics import attributes, events, kinetics, models, recorders, spaces, substrates, utils
+from lattics._agent import Agent
+from lattics._context import UpdateContext
+from lattics._population import Population
+from lattics._simulation import Simulation
+from lattics._units import (
+    convert_diffusivity,
+    convert_flow_rate,
+    convert_length,
+    convert_rate,
+    convert_time,
+    convert_velocity,
+    convert_volume,
+)
+from lattics.events import Event
+from lattics.spaces import HomogeneousSpace, Lattice2DSpace
+from lattics.substrates import Substrate, SubstrateInfo, SubstrateNode
+from lattics.utils.create import create_agent, create_population, create_simulation_2d, populate_agents
 
-from .core import Agent, Simulation, Event
-from .spaces import HomogeneousSpace, Lattice2DSpace
-from .substrates import *
-from .models import *
-from .utils import *
+__all__ = [
+    'Agent',
+    'Event',
+    'HomogeneousSpace',
+    'Lattice2DSpace',
+    'Population',
+    'Simulation',
+    'Substrate',
+    'SubstrateInfo',
+    'SubstrateNode',
+    'UpdateContext',
+    'attributes',
+    'convert_diffusivity',
+    'convert_flow_rate',
+    'convert_length',
+    'convert_rate',
+    'convert_time',
+    'convert_velocity',
+    'convert_volume',
+    'create_agent',
+    'create_population',
+    'create_simulation_2d',
+    'events',
+    'kinetics',
+    'models',
+    'populate_agents',
+    'recorders',
+    'spaces',
+    'substrates',
+    'utils',
+]
 
-__version__ = get_versions()["version"]
-del get_versions
+__version__ = "0.9.0"

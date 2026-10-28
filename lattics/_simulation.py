@@ -1,0 +1,673 @@
+import copy
+import heapq
+import math
+import pickle
+import uuid
+import warnings
+from typing import TYPE_CHECKING, Any
+
+import numpy as np
+import tqdm
+
+from ._agent import Agent
+from ._context import UpdateContext
+from ._population import Population
+from ._scheduler import EPSILON, ScheduledUpdate, effective_period, next_grid_point
+from ._units import convert_time
+from ._validation import check_attributes
+from .attributes import _UNITS, MISSING, known_names
+from .events import Event
+
+if TYPE_CHECKING:
+    from .models._base import BaseModel
+    from .recorders import Recorder
+    from .spaces._base import BaseSpace
+    from .substrates import BaseSubstrateField, Substrate, SubstrateNode
+
+
+class Simulation:
+    """Represents a simulation instance. This object manages the participating
+    agents (:class:`Agent`), the environment (:class:`SimulationDomain`), and
+    the various chemical substances (:class:`Substrate`) present within it.
+    The class provides high-level access to configure and execute a simulation.
+    """
+
+    def __init__(self, id: str = None, seed: int = None, strict: bool = False) -> None:
+        """Constructor method.
+
+        Parameters
+        ----------
+        id : str
+            The identifier for the simulation instance. If not provided, a
+            random identifier will be generated.
+        seed : int
+            The seed of the random number generator of the simulation. Every
+            random number of the models and the space is drawn from this
+            generator, so the same seed gives the same results. If not
+            provided, a random seed is generated; it can be read from
+            :attr:`seed` to repeat the simulation.
+        strict : bool
+            At the start of every run the attributes of the agents are
+            checked against the attributes the models and the space read
+            and write. The problems found are reported as warnings, or, if
+            ``strict`` is ``True``, raise a ``ValueError``. The same applies
+            to physical quantities given without a unit when an agent or a
+            substrate node is added.
+        """
+        self._id = self._get_id(id)
+        self._seed = seed if seed is not None else np.random.SeedSequence().entropy
+        self._rng = np.random.default_rng(self._seed)
+        self._strict = strict
+        self._declared = dict()
+        self._population = Population()
+        self._space = None
+        self._events = list()
+        self._event_count = 0
+        self._models = list()
+        self._substrates = dict()
+        self._substrate_nodes = list()
+        self._fields = dict()
+        self._recorders = list()
+        self._schedule_state = dict()
+        self._removed_agents = list()
+        self._collected = 0
+        self._running = False
+        self._time = 0
+
+    @property
+    def agents(self) -> list[Agent]:
+        """Get the agents currently present in the simulation, as a new list.
+        The order of agents is maintained throughout the simulation, with new
+        agent instances always being added at the end.
+
+        Returns
+        -------
+        list[Agent]
+            Collection of the agents
+        """
+        return list(self._population)
+
+    @property
+    def population(self) -> Population:
+        """Get the population, the single collection that stores the agents.
+
+        Returns
+        -------
+        Population
+            The population of the simulation
+        """
+        return self._population
+
+    @property
+    def seed(self) -> int:
+        """Get the seed of the random number generator of the simulation.
+
+        Returns
+        -------
+        int
+            The seed given to the constructor, or the generated one
+        """
+        return self._seed
+
+    @property
+    def rng(self) -> np.random.Generator:
+        """Get the random number generator of the simulation, for example to
+        draw random numbers in event handlers.
+
+        Returns
+        -------
+        numpy.random.Generator
+            The random number generator
+        """
+        return self._rng
+
+    @property
+    def removed_agents(self) -> list[Agent]:
+        """Get the agents removed at the latest time point of the simulation,
+        in the order of their removal. The list is renewed at every time
+        point, after the recorders have received it.
+
+        Returns
+        -------
+        list[Agent]
+            The removed agents
+        """
+        return list(self._removed_agents)
+
+    @property
+    def time(self) -> int:
+        """Get the current internal time of the simulation, representing the
+        elapsed time since the simulation started.
+
+        Returns
+        -------
+        int
+            Internal time of the simulation, in milliseconds.
+        """
+
+        return self._time
+
+    def add_agent(self, agent: Agent) -> None:
+        """Adds the specified agent to the simulation. The agent will be added
+        to the collection of all agents and, if a simulation domain is defined,
+        will also be placed within the simulation domain.
+
+        Parameters
+        ----------
+        agent : Agent
+            The agent to be added
+
+        Notes
+        -----
+        Attributes with a physical unit (see :func:`lattics.attributes.internal_unit`)
+        are given as ``(value, unit)`` tuples and converted to the internal
+        unit here. A number without a unit is taken in the internal unit;
+        the simulation warns about it, or raises a ``ValueError`` if it is
+        strict.
+        """
+        self._report_unitless(_unitless_attributes(agent))
+        self._add_agent(agent)
+
+    def _add_agent(self, agent: Agent) -> None:
+        # Also used for the agents created during the run (daughters), whose values are already converted
+        self._population.add(agent)
+        self._apply_declared_defaults(agent)
+        for name, (unit, converter) in _UNITS.items():
+            if agent.has_attribute(name) and isinstance(agent.get_attribute(name), tuple):
+                value, given_unit = agent.get_attribute(name)
+                agent.set_attribute(name, converter(value, given_unit, unit))
+        if self._space:
+            self._space.add_agent(agent)
+        else:
+            warnings.warn(
+                'No simulation domain has been defined. '
+                'You can proceed without one, but this may '
+                'lead to unexpected consequences.'
+            )
+        ctx = self._context(dt=0)
+        for m in self._models:
+            m.initialize(agent, ctx)
+
+    def declare(self, name: str, default: Any = MISSING) -> None:
+        """Declares a custom agent attribute. The validation at the start of a
+        run treats declared names as intentional: it does not suggest a
+        similar built-in name for them, and does not list them as unused.
+
+        Parameters
+        ----------
+        name : str
+            The name of the attribute, for example ``'experiment.label'``
+        default : Any, optional
+            The value given to the agents that do not have the attribute: to
+            the agents already added now, and to later agents when they are
+            added. Each agent receives its own copy.
+
+        Raises
+        ------
+        ValueError
+            If the name is a built-in attribute
+        """
+        if name in known_names():
+            raise ValueError(f'\'{name}\' is a built-in attribute, it does not need to be declared.')
+        self._declared[name] = default
+        for agent in self._population:
+            self._apply_declared_defaults(agent)
+
+    def set_space(self, space: 'BaseSpace') -> None:
+        """Sets the simulation space to the instance passed as a parameter.
+        Agents added before are placed in the space now.
+
+        Parameters
+        ----------
+        space : BaseSpace
+            The simulation space instance to be used
+        """
+        if self._space:
+            raise AttributeError('Simulation space is already set and cannot be modified.')
+        space._bind(self._population, self._rng)
+        self._space = space
+        for agent in self._population:
+            space.add_agent(agent)
+        for substrate in self._substrates.values():
+            self._fields[substrate.name] = space.create_field(substrate, self._substrate_nodes)
+
+    def add_event(self, event: Event) -> None:
+        """Schedules the event. Events are executed at their exact time;
+        events with the same time are executed in the order they were added.
+
+        Parameters
+        ----------
+        event : Event
+            The event to be scheduled
+        """
+        heapq.heappush(self._events, (event.time, self._event_count, event))
+        self._event_count += 1
+
+    def add_model(self, model: 'BaseModel') -> None:
+        """Adds the provided model to the simulation and initializes the
+        agents already present with it.
+
+        Parameters
+        ----------
+        model : BaseModel
+            A subclass of the ``BaseModel`` abstract base class.
+        """
+        self._models.append(model)
+        ctx = self._context(dt=0)
+        for a in self._population:
+            model.initialize(a, ctx)
+
+    def add_substrate(self, substrate: 'Substrate') -> None:
+        """Adds a substrate. The space of the simulation creates its
+        concentration field, now or when the space is set.
+
+        Parameters
+        ----------
+        substrate : Substrate
+            The definition of the substrate
+
+        Raises
+        ------
+        ValueError
+            If a substrate with the same name is already added
+        """
+        if substrate.name in self._substrates:
+            raise ValueError(f'A substrate named \'{substrate.name}\' is already added.')
+        self._substrates[substrate.name] = substrate
+        if self._space:
+            self._fields[substrate.name] = self._space.create_field(substrate, self._substrate_nodes)
+
+    def add_substrate_node(self, node: 'SubstrateNode') -> None:
+        """Adds a substrate node, a source or sink of substrates that is not an
+        agent. It exchanges the substrates listed in its ``substrate.transport``
+        attribute.
+
+        Parameters
+        ----------
+        node : SubstrateNode
+            The node to be added
+        """
+        self._report_unitless(_unitless_rates(node))
+        self._substrate_nodes.append(node)
+
+    def substrate_field(self, name: str) -> 'BaseSubstrateField':
+        """Returns the concentration field of the substrate.
+
+        Parameters
+        ----------
+        name : str
+            The name of the substrate
+
+        Returns
+        -------
+        BaseSubstrateField
+            The field
+
+        Raises
+        ------
+        KeyError
+            If there is no field for the substrate
+        """
+        if name not in self._fields:
+            reason = 'is not added' if name not in self._substrates else 'has no field, the space is not set'
+            raise KeyError(f'The substrate \'{name}\' {reason}.')
+        return self._fields[name]
+
+    def add_recorder(self, recorder: 'Recorder') -> 'Recorder':
+        """Adds a recorder, see :mod:`lattics.recorders`.
+
+        Parameters
+        ----------
+        recorder : Recorder
+            The recorder to be added
+
+        Returns
+        -------
+        Recorder
+            The same recorder, to read its data after the run
+        """
+        self._recorders.append(recorder)
+        return recorder
+
+    def save(self, path: str) -> None:
+        """Saves the complete state of the simulation between two runs: the
+        agents, the space, the substrates, the models, the pending events,
+        the recorders with their data, the schedule and the state of the
+        random number generator. A simulation loaded with :meth:`load`
+        continues exactly as this one would.
+
+        The file can be loaded with the same version of LattiCS; for long-term
+        storage of results use the recorders. Event handlers, conditions of
+        recorders and custom models must be defined at module level (not as
+        lambdas or nested functions and classes).
+
+        Parameters
+        ----------
+        path : str
+            The path of the file
+
+        Raises
+        ------
+        RuntimeError
+            If called during a run
+        TypeError
+            If a part of the simulation cannot be saved
+        """
+        import lattics
+
+        if self._running:
+            raise RuntimeError('A simulation can be saved only between two runs.')
+        content = {'format': 'lattics-checkpoint', 'version': lattics.__version__, 'simulation': self}
+        try:
+            data = pickle.dumps(content, protocol=pickle.HIGHEST_PROTOCOL)
+        except (pickle.PicklingError, AttributeError, TypeError) as error:
+            raise TypeError(
+                f'The simulation cannot be saved: {error}. Event handlers, conditions of recorders and custom '
+                'models must be defined at module level, not as lambdas or nested functions and classes.'
+            ) from error
+        with open(path, 'wb') as f:
+            f.write(data)
+
+    @classmethod
+    def load(cls, path: str) -> 'Simulation':
+        """Loads a simulation saved with :meth:`save`. Only load files from
+        trusted sources: reading a file may execute code stored in it.
+
+        Parameters
+        ----------
+        path : str
+            The path of the file
+
+        Returns
+        -------
+        Simulation
+            The simulation, ready to continue with :meth:`run`
+        """
+        import lattics
+
+        with open(path, 'rb') as f:
+            content = pickle.load(f)
+        if not isinstance(content, dict) or content.get('format') != 'lattics-checkpoint':
+            raise ValueError(f'{path} is not a saved LattiCS simulation.')
+        if content['version'] != lattics.__version__:
+            warnings.warn(
+                f'{path} was saved with LattiCS {content["version"]}, this is {lattics.__version__}; '
+                'the simulation may not continue correctly.'
+            )
+        return content['simulation']
+
+    def remove_agent(self, agent: Agent) -> None:
+        """Removes the specified agent from the simulation and from its space.
+
+        Parameters
+        ----------
+        agent : Agent
+            The agent to be removed
+        """
+        self._population.remove(agent)
+        self._removed_agents.append(agent)
+        if self._space:
+            self._space.remove_agent(agent)
+
+    def run(
+        self,
+        time: tuple[float, str],
+        dt: tuple[float, str],
+        verbosity: int = 1,
+    ) -> None:
+        """Runs the simulation from the current state for the specified duration.
+
+        The simulation advances on a grid of time points spaced by ``dt``. Every
+        model, the agents of the space and the substrate fields are updated with
+        their own interval, rounded up to a multiple of ``dt``: ``dt`` is the
+        finest time step, so a larger ``dt`` gives a faster but less accurate
+        run. Events are executed at their exact time.
+
+        At each time point the due recorders record first, then the due events
+        are executed, then the due models, the agents of the space and the
+        substrate fields are updated, in this order. The recorders also
+        record at the end of the run, if they are due. The space removes the
+        agents that request it before it divides the agents.
+
+        Parameters
+        ----------
+        time : tuple[float, str]
+            The duration to be simulated, for example ``(5, 'day')``. It is
+            rounded up to a multiple of ``dt``.
+        dt : tuple[float, str]
+            The time step of the simulation
+        verbosity : int, optional
+            ``1`` (default) prints the update intervals and shows a progress
+            bar, ``0`` is silent
+        """
+        time_ms = convert_time(time[0], time[1], 'ms')
+        dt_ms = convert_time(dt[0], dt[1], 'ms')
+        steps = int(math.ceil(time_ms / dt_ms - EPSILON))
+        t0 = self._time
+        t_end = t0 + steps * dt_ms
+
+        updates = [self._prepare_update(update, dt_ms, t0) for update in self._scheduled_updates()]
+        recordings = [self._prepare_update(update, dt_ms, t0) for update in self._recorder_updates()]
+
+        problems, unused = self._check_attributes()
+        if problems and self._strict:
+            raise ValueError('The attributes of the agents are not consistent:\n' + '\n'.join(problems))
+        notes = [(type(self._space).__name__, note) for note in self._space.collect_notes()] if self._space else []
+        for update in updates:
+            if update.key[0] == 'agents':
+                notes += [(type(self._space).__name__, note) for note in self._space.interval_notes(update.period)]
+        for name, field in self._fields.items():
+            notes += [(f'Substrate \'{name}\'', note) for note in field.collect_notes()]
+        if verbosity >= 1:
+            self._print_summary(time_ms, dt_ms, recordings + updates, unused, notes)
+        self._warn_invalid_intervals(updates)
+        for message in problems:
+            warnings.warn(message)
+
+        if verbosity >= 1:
+            progressbar_format = "{l_bar}{bar}| [{elapsed}<{remaining}{postfix}]"
+            progressbar = tqdm.tqdm(total=steps, mininterval=1.0, colour='#d2de32', bar_format=progressbar_format)
+            progressbar.set_description(f'ID={self._id}')
+
+        self._running = True
+        try:
+            self._run_loop(t0, t_end, dt_ms, updates, recordings, progressbar if verbosity >= 1 else None)
+        finally:
+            self._running = False
+        for update in recordings + updates:
+            self._schedule_state[update.key] = (update.next_due, update.last_run)
+        if verbosity >= 1:
+            progressbar.close()
+
+    def _run_loop(
+        self,
+        t0: float,
+        t_end: float,
+        dt_ms: float,
+        updates: list[ScheduledUpdate],
+        recordings: list[ScheduledUpdate],
+        progressbar,
+    ) -> None:
+        now = t0
+        while now < t_end - EPSILON:
+            self._time = now
+            self._record(now, recordings)
+            self._removed_agents = list()
+            self._collected = 0
+            self._execute_events(now)
+            for update in updates:
+                if update.is_due(now):
+                    update.run(now)
+            next_points = [next_grid_point(update.next_due, t0, dt_ms) for update in recordings + updates]
+            if self._events:
+                next_points.append(self._events[0][0])
+            next_time = min(next_points + [t_end])
+            if progressbar is not None:
+                progressbar.update(round((next_time - now) / dt_ms))
+                days = convert_time(next_time, 'ms', 'day')
+                progressbar.set_postfix(T=f'{days:.2f}', N=f'{len(self._population)}', refresh=False)
+            now = next_time
+        self._time = t_end
+        # The removed agents are kept (removed_agents); the next run passes on only the ones added later
+        self._record(t_end, recordings)
+
+    def _record(self, now: float, recordings: list[ScheduledUpdate]) -> None:
+        removed = self._removed_agents[self._collected :]
+        self._collected = len(self._removed_agents)
+        ctx = self._context(dt=0)
+        for recorder in self._recorders:
+            recorder.collect(ctx, removed)
+        for update in recordings:
+            if update.is_due(now):
+                update.run(now)
+
+    def _recorder_updates(self) -> list[ScheduledUpdate]:
+        return [
+            ScheduledUpdate(
+                ('recorder', recorder),
+                type(recorder).__name__,
+                recorder.interval,
+                lambda now, period, last, recorder=recorder: recorder.record(self._context(period, last)),
+            )
+            for recorder in self._recorders
+        ]
+
+    def _scheduled_updates(self) -> list[ScheduledUpdate]:
+        """The periodically updated parts of the simulation, in the order of their execution."""
+        updates = [
+            ScheduledUpdate(
+                ('model', model),
+                type(model).__name__,
+                model.interval,
+                lambda now, period, last, model=model: model.update(self._population, self._context(period, last)),
+            )
+            for model in self._models
+        ]
+        if self._space:
+            space_name = type(self._space).__name__
+            updates.append(
+                ScheduledUpdate(
+                    ('agents', self._space),
+                    f'{space_name} (agents)',
+                    self._space.interval,
+                    lambda now, period, last: self._space.update_agents(self._context(period, last)),
+                )
+            )
+        for name, field in self._fields.items():
+            updates.append(
+                ScheduledUpdate(
+                    ('substrate', name),
+                    f'Substrate \'{name}\'',
+                    self._substrates[name].interval,
+                    lambda now, period, last, field=field: field.update(self._context(period, last)),
+                )
+            )
+        return updates
+
+    def _prepare_update(self, update: ScheduledUpdate, dt: float, start: float) -> ScheduledUpdate:
+        update.period = effective_period(update.interval, dt)
+        update.next_due, update.last_run = self._schedule_state.get(update.key, (start, None))
+        return update
+
+    def _print_summary(
+        self,
+        duration: float,
+        dt: float,
+        updates: list[ScheduledUpdate],
+        unused: list[str],
+        notes: list[tuple[str, str]],
+    ) -> None:
+        print(
+            f'Simulation {self._id}: {_format_duration(duration)}, time step {_format_duration(dt)}, '
+            f'seed {self._seed}'
+        )
+        width = max(len(update.name) for update in updates) if updates else 0
+        for update in updates:
+            if update.interval is None:
+                interval = f'every time step ({_format_duration(update.period)})'
+            elif abs(update.period - update.interval) <= EPSILON:
+                interval = f'every {_format_duration(update.period)}'
+            else:
+                interval = (
+                    f'every {_format_duration(update.period)} '
+                    f'(requested {_format_duration(update.interval)}, rounded to the time step)'
+                )
+            print(f'  {update.name:<{width}}  {interval}')
+        for source, note in notes:
+            print(f'  {source}: {note}')
+        if unused:
+            print(f'  Agent attributes not used by any component: {", ".join(unused)}')
+
+    def _check_attributes(self) -> tuple[list[str], list[str]]:
+        components = self._models + ([self._space] if self._space else [])
+        return check_attributes(
+            list(self._population), components, self._declared, self._substrates, self._substrate_nodes
+        )
+
+    def _report_unitless(self, messages: list[str]) -> None:
+        if messages and self._strict:
+            raise ValueError('\n'.join(messages))
+        for message in messages:
+            warnings.warn(message)
+
+    def _apply_declared_defaults(self, agent: Agent) -> None:
+        for name, default in self._declared.items():
+            if default is not MISSING and not agent.has_attribute(name):
+                agent.set_attribute(name, copy.deepcopy(default))
+
+    def _warn_invalid_intervals(self, updates: list[ScheduledUpdate]) -> None:
+        for update in updates:
+            if update.key[0] == 'agents':
+                for message in self._space.interval_warnings(update.period):
+                    warnings.warn(message)
+
+    def _execute_events(self, now: float) -> None:
+        while self._events and self._events[0][0] <= now + EPSILON:
+            _, _, event = heapq.heappop(self._events)
+            event.execute(self._context(dt=0))
+
+    def _context(self, dt: float, last_update_time: float = None) -> UpdateContext:
+        return UpdateContext(
+            time=self._time,
+            dt=dt,
+            population=self._population,
+            space=self._space,
+            simulation=self,
+            last_update_time=last_update_time,
+            rng=self._rng,
+        )
+
+    def _get_id(self, identifier):
+        return identifier if identifier else str(uuid.uuid4())
+
+
+def _unitless_attributes(agent: Agent) -> list[str]:
+    messages = []
+    for name, (unit, _) in _UNITS.items():
+        if agent.has_attribute(name) and not isinstance(agent.get_attribute(name), tuple):
+            messages.append(
+                f'The agent attribute \'{name}\' is given without a unit, it is taken in {unit}. '
+                f'Give it as (value, unit), for example (1, \'{unit}\').'
+            )
+    return messages + _unitless_rates(agent)
+
+
+def _unitless_rates(item) -> list[str]:
+    messages = []
+    if item.has_attribute('substrate.transport'):
+        for substrate, info in item.get_attribute('substrate.transport').items():
+            if getattr(info, 'unitless_rates', ()):
+                messages.append(
+                    f'The rates {", ".join(info.unitless_rates)} of the SubstrateInfo of \'{substrate}\' are '
+                    'given without a unit, they are taken in um3/ms. Give them as (value, unit), for example '
+                    '(0.5, \'um3/sec\').'
+                )
+    return messages
+
+
+def _format_duration(milliseconds: float) -> str:
+    for unit in ('week', 'day', 'hour', 'min', 'sec'):
+        value = convert_time(milliseconds, 'ms', unit)
+        if value >= 1:
+            return f'{value:g} {unit}'
+    return f'{milliseconds:g} ms'

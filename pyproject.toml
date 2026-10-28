@@ -1,5 +1,69 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lattics"
+dynamic = ["version"]
+description = "Lattice-based Cellular Simulation"
+readme = "README.rst"
+authors = [{ name = "Daniel Kiss", email = "kissdanieldezso@gmail.com" }]
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+dependencies = [
+    "numba>=0.57",
+    "numpy>=1.22",
+    "scipy>=1.8",
+    "tqdm>=4.60",
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+]
+
+[project.optional-dependencies]
+# Plotting helpers in lattics.utils.visualize
+viz = ["matplotlib>=3.5"]
+# Building the documentation (extensions and theme of docs/source/conf.py)
+docs = [
+    "ipython",
+    "matplotlib",
+    "numpydoc",
+    "pydata-sphinx-theme",
+    "sphinx",
+    "sphinx-copybutton",
+    "sphinx-rtd-theme",
+    "sphinx-subfigure",
+]
+# Development: tests, formatting and linting (same versions as in .pre-commit-config.yaml), packaging
+dev = [
+    "lattics[viz,docs]",
+    "black==26.5.1",
+    "build",
+    "coverage",
+    "flake8==7.4.0",
+    "isort==9.0.1",
+    "pre-commit",
+    "pytest",
+    "twine",
+]
+
+[project.urls]
+Homepage = "https://github.com/kissdaniel/lattics"
+Documentation = "https://kissdaniel.github.io/lattics"
+
+[tool.setuptools.dynamic]
+version = { attr = "lattics.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["lattics*"]
+
 [tool.black]
 line-length = 115
+target-version = ["py310"]
+skip-string-normalization = true
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -18,3 +82,6 @@ exclude = '''
   | tests/data
 )/
 '''
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
